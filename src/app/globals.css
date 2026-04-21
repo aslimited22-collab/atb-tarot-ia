@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0010;
+  --purple: #4a0080;
+  --purple-deep: #2a0050;
+  --gold: #d4af37;
+  --text: #ffffff;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+h1, h2, h3, .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+
+.gold { color: var(--gold); }
+.bg-mystic { background: radial-gradient(ellipse at top, #2a0050 0%, #0a0010 70%); }
+.card { background: rgba(74,0,128,0.12); border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; }
+.btn-gold { background: var(--gold); color: #1a0030; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: opacity .2s; }
+.btn-gold:hover { opacity: 0.9; }
+.btn-outline { border: 1px solid var(--gold); color: var(--gold); padding: 0.75rem 1.5rem; border-radius: 8px; }
+.input { background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.25); border-radius: 8px; padding: 0.75rem 1rem; color: white; width: 100%; }
+.input:focus { outline: none; border-color: var(--gold); }
