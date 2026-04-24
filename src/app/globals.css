@@ -23,8 +23,8 @@ html, body {
   background: var(--bg);
   color: var(--text-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  font-size: 17px;
-  line-height: 1.55;
+  font-size: 19px;
+  line-height: 1.65;
 }
 
 h1, h2, h3, .serif {
@@ -63,13 +63,14 @@ h1, h2, h3, .serif {
   background: linear-gradient(135deg, #e8b84b 0%, #c9950a 100%);
   color: #120025;
   font-weight: 700;
-  padding: 0.85rem 1.75rem;
-  border-radius: 14px;
-  font-size: 1rem;
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  font-size: 1.1rem;
   display: inline-block;
   text-align: center;
   transition: opacity .15s;
   letter-spacing: 0.01em;
+  min-height: 52px;
 }
 .btn-gold:hover { opacity: 0.88; }
 
@@ -78,21 +79,22 @@ h1, h2, h3, .serif {
   border: 2px solid var(--gold);
   color: var(--gold);
   background: transparent;
-  padding: 0.75rem 1.5rem;
-  border-radius: 14px;
+  padding: 0.85rem 1.75rem;
+  border-radius: 16px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  min-height: 52px;
 }
 
 /* Input */
 .input {
   background: var(--surface2);
   border: 1.5px solid rgba(196,181,253,0.25);
-  border-radius: 12px;
-  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
   color: var(--text-primary);
   width: 100%;
-  font-size: 1rem;
+  font-size: 1.1rem;
   transition: border-color .15s;
 }
 .input:focus  { outline: none; border-color: var(--gold); background: var(--surface3); }
@@ -102,8 +104,8 @@ h1, h2, h3, .serif {
 .bubble-user {
   background: linear-gradient(135deg, #e8b84b, #c9950a);
   color: #120025;
-  font-size: 1.05rem;
-  line-height: 1.65;
+  font-size: 1.1rem;
+  line-height: 1.75;
   font-weight: 500;
 }
 
@@ -112,8 +114,8 @@ h1, h2, h3, .serif {
   background: var(--surface2);
   color: var(--text-primary);
   border: 1px solid rgba(196,181,253,0.2);
-  font-size: 1.05rem;
-  line-height: 1.65;
+  font-size: 1.1rem;
+  line-height: 1.75;
 }
 
 /* Typing dots */

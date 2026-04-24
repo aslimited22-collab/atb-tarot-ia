@@ -42,6 +42,7 @@ export default function ChatPage() {
 
   const BASIC_URL   = process.env.NEXT_PUBLIC_KIWIFY_BASIC_URL   || "#";
   const PREMIUM_URL = process.env.NEXT_PUBLIC_KIWIFY_PREMIUM_URL || "#";
+  const VIDEO_URL   = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL   || "#";
 
   useEffect(() => {
     fetch("/api/chat").then((r) => r.json()).then((d) => {
@@ -148,7 +149,23 @@ export default function ChatPage() {
           </div>
         ) : (
           <>
-            {messages.map((m,i) => <ChatBubble key={i} role={m.role} content={m.content} typing={m.typing} />)}
+            {messages.map((m,i) => (
+              <div key={i}>
+                <ChatBubble role={m.role} content={m.content} typing={m.typing} />
+                {m.role === "assistant" && !m.typing && m.content && i === messages.length - 1 && plan !== "free" && (
+                  <div style={{ margin:"12px 0 4px 0", display:"flex", justifyContent:"flex-start" }}>
+                    <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer"
+                      style={{ display:"inline-flex", alignItems:"center", gap:10, background:"linear-gradient(135deg,#3b0764,#2a0055)", border:"1.5px solid rgba(232,184,75,0.45)", borderRadius:16, padding:"12px 18px", textDecoration:"none", maxWidth:360 }}>
+                      <span style={{ fontSize:22 }}>📞</span>
+                      <div>
+                        <div style={{ fontSize:14, fontWeight:700, color:"#e8b84b", lineHeight:1.3 }}>Quer conversar ao vivo comigo?</div>
+                        <div style={{ fontSize:13, color:"#c4b5fd", marginTop:2 }}>Agende sua Vídeo Chamada — R$877</div>
+                      </div>
+                    </a>
+                  </div>
+                )}
+              </div>
+            ))}
             {showUpgrade && !sending && <UpgradeCard basicUrl={BASIC_URL} premiumUrl={PREMIUM_URL} />}
           </>
         )}

@@ -6,3 +6,5 @@ node_modules
 *.log
 
 .vercel
+
+.claude/settings.local.json
