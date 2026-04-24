@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ATB_SYSTEM_PROMPT, ATB_FREE_SYSTEM_PROMPT, deepseekStream } from "@/lib/deepseek";
 import { MESSAGE_LIMITS, THROTTLE_SECONDS } from "@/lib/plans";
 import { sanitizeInput, rateLimit, getClientIp } from "@/lib/security";
@@ -82,7 +83,8 @@ export async function POST(req: Request) {
     }
 
     used += 1;
-    await supabase.from("users").update({ messages_today: used, last_message_date: today }).eq("id", user.id);
+    const admin = createAdminClient();
+    await admin.from("users").update({ messages_today: used, last_message_date: today }).eq("id", user.id);
 
     const { data: history } = await supabase
       .from("chat_messages")
