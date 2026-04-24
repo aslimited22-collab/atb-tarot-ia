@@ -6,77 +6,101 @@ import { createClient } from "@/lib/supabase/client";
 import type { Plan } from "@/lib/types";
 
 const LINKS = [
-  { href: "/dashboard", label: "Dashboard", icon: "🏠", min: "free" as Plan },
-  { href: "/dashboard/chat", label: "Chat com ATB", icon: "💬", min: "free" as Plan },
-  { href: "/dashboard/oracle", label: "Oráculo Diário", icon: "🔮", min: "free" as Plan },
-  { href: "/dashboard/journal", label: "Diário da Ansiedade", icon: "📖", min: "basic" as Plan },
-  { href: "/dashboard/addiction", label: "Guia de Vícios", icon: "🕯️", min: "premium" as Plan },
+  { href: "/dashboard",            label: "Dashboard",           icon: "🏠", min: "free"    as Plan },
+  { href: "/dashboard/chat",       label: "Chat com ATB",        icon: "💬", min: "free"    as Plan },
+  { href: "/dashboard/oracle",     label: "Oráculo Diário",      icon: "🔮", min: "free"    as Plan },
+  { href: "/dashboard/journal",    label: "Diário da Ansiedade", icon: "📖", min: "basic"   as Plan },
+  { href: "/dashboard/addiction",  label: "Guia de Vícios",      icon: "🕯️", min: "premium" as Plan },
 ];
-
-const ORDER: Record<Plan, number> = { free: 0, basic: 1, premium: 2 };
+const ORDER: Record<Plan,number> = { free:0, basic:1, premium:2 };
+const PLAN_LABEL: Record<Plan,string> = { free:"Grátis", basic:"Basic", premium:"Premium" };
+const SIDE_BG = "#1a0035";
+const SEP = "rgba(196,181,253,0.15)";
 
 export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const router   = useRouter();
   const [open, setOpen] = useState(false);
 
   async function logout() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await createClient().auth.signOut();
     router.push("/login");
   }
 
   const initial = (email[0] || "?").toUpperCase();
 
-  const content = (
-    <>
-      <div className="p-5 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gold text-[#1a0030] flex items-center justify-center font-bold">{initial}</div>
-          <div className="truncate">
-            <div className="text-xs text-white/60 truncate">{email}</div>
-            <div className="text-xs gold capitalize">{plan}</div>
+  const nav = (
+    <div style={{ display:"flex", flexDirection:"column", height:"100%" }}>
+      {/* Avatar */}
+      <div style={{ padding:"20px 16px", borderBottom:`1px solid ${SEP}` }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <div style={{ width:44, height:44, borderRadius:"50%", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:18, flexShrink:0 }}>{initial}</div>
+          <div style={{ overflow:"hidden" }}>
+            <div style={{ fontSize:13, color:"#c4b5fd", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{email}</div>
+            <div style={{ fontSize:13, fontWeight:700, color:"#e8b84b", marginTop:2 }}>{PLAN_LABEL[plan]}</div>
           </div>
         </div>
       </div>
-      <nav className="flex-1 py-4">
+
+      {/* Links */}
+      <nav style={{ flex:1, paddingTop:8 }}>
         {LINKS.map((l) => {
           const locked = ORDER[plan] < ORDER[l.min];
           const active = pathname === l.href;
           return (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-5 py-3 text-sm transition ${active ? "bg-purple/30 border-l-2 border-gold" : "hover:bg-white/5"}`}
-            >
-              <span>{l.icon}</span>
-              <span className="flex-1">{l.label}</span>
-              {locked && <span className="text-[10px] gold border border-gold px-1.5 py-0.5 rounded">{l.min === "premium" ? "Premium" : "Basic"}</span>}
+            <Link key={l.href} href={l.href} onClick={() => setOpen(false)} style={{
+              display:"flex", alignItems:"center", gap:12,
+              padding:"14px 16px",
+              background: active ? "rgba(232,184,75,0.12)" : "transparent",
+              borderLeft: active ? "3px solid #e8b84b" : "3px solid transparent",
+              color: active ? "#f5f0ff" : "#c4b5fd",
+              fontWeight: active ? 700 : 400,
+              fontSize:16,
+              textDecoration:"none",
+            }}>
+              <span style={{ fontSize:22 }}>{l.icon}</span>
+              <span style={{ flex:1 }}>{l.label}</span>
+              {locked && <span style={{ fontSize:11, fontWeight:600, background:"rgba(232,184,75,0.15)", color:"#e8b84b", border:"1px solid rgba(232,184,75,0.4)", borderRadius:20, padding:"2px 8px" }}>{l.min==="premium"?"Premium":"Basic"}</span>}
             </Link>
           );
         })}
       </nav>
-      <div className="p-4 border-t border-white/10">
-        <button onClick={logout} className="w-full btn-outline text-sm">Sair</button>
+
+      {/* Logout */}
+      <div style={{ padding:"12px 16px", borderTop:`1px solid ${SEP}` }}>
+        <button onClick={logout} style={{ width:"100%", padding:"12px", borderRadius:12, border:`1.5px solid ${SEP}`, background:"transparent", color:"#c4b5fd", fontSize:16, fontWeight:500, cursor:"pointer" }}>
+          Sair
+        </button>
       </div>
-    </>
+    </div>
   );
 
   return (
     <>
-      <aside className="hidden md:flex flex-col w-64 min-h-screen bg-[#12001a] border-r border-white/10 sticky top-0">
-        {content}
+      {/* Desktop */}
+      <aside style={{ width:260, minHeight:"100vh", background:SIDE_BG, borderRight:`1px solid ${SEP}`, position:"sticky", top:0, display:"none" }} className="md:block">
+        <div style={{ padding:"18px 16px", borderBottom:`1px solid ${SEP}` }}>
+          <span className="serif text-2xl" style={{ color:"#e8b84b" }}>ATB Tarot</span>
+        </div>
+        {nav}
       </aside>
-      <div className="md:hidden sticky top-0 z-30 bg-[#12001a] border-b border-white/10 flex items-center justify-between p-4">
-        <button onClick={() => setOpen(!open)} className="text-2xl" aria-label="Menu">☰</button>
-        <span className="serif text-lg gold">ATB Tarot</span>
-        <div className="w-8 h-8 rounded-full bg-gold text-[#1a0030] flex items-center justify-center font-bold text-sm">{initial}</div>
+
+      {/* Mobile bar */}
+      <div className="md:hidden sticky top-0 z-30" style={{ background:SIDE_BG, borderBottom:`1px solid ${SEP}`, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px" }}>
+        <button onClick={() => setOpen(!open)} style={{ fontSize:26, background:"none", border:"none", cursor:"pointer", color:"#c4b5fd" }}>☰</button>
+        <span className="serif text-xl" style={{ color:"#e8b84b" }}>ATB Tarot</span>
+        <div style={{ width:36, height:36, borderRadius:"50%", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:15 }}>{initial}</div>
       </div>
+
+      {/* Mobile drawer */}
       {open && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black/70" onClick={() => setOpen(false)}>
-          <div className="w-64 h-full bg-[#12001a] flex flex-col" onClick={(e) => e.stopPropagation()}>
-            {content}
+        <div className="md:hidden fixed inset-0 z-40" style={{ background:"rgba(0,0,0,0.65)" }} onClick={() => setOpen(false)}>
+          <div style={{ width:280, height:"100%", background:SIDE_BG, display:"flex", flexDirection:"column" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding:"16px", borderBottom:`1px solid ${SEP}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span className="serif text-xl" style={{ color:"#e8b84b" }}>ATB Tarot</span>
+              <button onClick={() => setOpen(false)} style={{ fontSize:22, background:"none", border:"none", cursor:"pointer", color:"#c4b5fd" }}>✕</button>
+            </div>
+            {nav}
           </div>
         </div>
       )}

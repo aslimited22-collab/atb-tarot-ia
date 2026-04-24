@@ -9,16 +9,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
-    .from("users")
-    .select("plan, email")
-    .eq("id", user.id)
-    .maybeSingle();
+    .from("users").select("plan, email").eq("id", user.id).maybeSingle();
 
   const plan: Plan = (profile?.plan as Plan) || "free";
   const email = profile?.email || user.email || "";
 
   return (
-    <div className="min-h-screen md:flex bg-mystic">
+    <div className="min-h-screen md:flex" style={{ background: "#120025" }}>
       <Sidebar email={email} plan={plan} />
       <div className="flex-1 min-w-0">{children}</div>
     </div>

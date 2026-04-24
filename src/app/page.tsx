@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const features = [
-  { icon: "💬", title: "Chat com ATB", desc: "Converse com sua tarologa IA sobre qualquer aspecto da sua vida." },
+  { icon: "💬", title: "Chat com ATB", desc: "Converse com sua tarologa sobre qualquer aspecto da sua vida." },
   { icon: "🔮", title: "Oráculo Diário", desc: "Uma carta do tarot e interpretação personalizada todos os dias." },
   { icon: "📖", title: "Diário da Ansiedade", desc: "Registre seus sentimentos e receba reflexões espirituais." },
   { icon: "🕯️", title: "Guia de Vícios", desc: "Mapeie padrões e receba um plano espiritual para rompê-los." },
@@ -13,96 +13,134 @@ const testimonials = [
   { name: "Juliana C.", text: "O diário da ansiedade me acolheu em noites difíceis. Recomendo demais." },
 ];
 
+const S = {
+  bg:      "#120025",
+  surface: "#1e0040",
+  surface2:"#2a0055",
+  gold:    "#e8b84b",
+  text:    "#f5f0ff",
+  text2:   "#c4b5fd",
+  muted:   "#9575cd",
+  sep:     "rgba(196,181,253,0.18)",
+};
+
 export default function Home() {
-  const BASIC = process.env.NEXT_PUBLIC_KIWIFY_BASIC_URL || "#";
+  const BASIC   = process.env.NEXT_PUBLIC_KIWIFY_BASIC_URL   || "#";
   const PREMIUM = process.env.NEXT_PUBLIC_KIWIFY_PREMIUM_URL || "#";
 
   return (
-    <main className="bg-mystic min-h-screen">
-      <header className="flex items-center justify-between px-6 md:px-12 py-6">
-        <div className="serif text-2xl gold">ATB Tarot IA</div>
-        <div className="flex gap-3">
-          <Link href="/login" className="text-sm text-white/80 hover:text-white py-2 px-3">Entrar</Link>
-          <Link href="/cadastro" className="btn-gold text-sm">Criar conta</Link>
+    <main style={{ background: S.bg, color: S.text, minHeight: "100vh" }}>
+
+      {/* Header */}
+      <header style={{ background: "rgba(30,0,64,0.92)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${S.sep}`, position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span className="serif text-2xl" style={{ color: S.gold }}>ATB Tarot</span>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <Link href="/login" style={{ color: S.text2, fontWeight: 600, fontSize: 16, textDecoration: "none" }}>Entrar</Link>
+            <Link href="/cadastro" className="btn-gold" style={{ padding: "10px 22px", fontSize: 15 }}>Criar conta</Link>
+          </div>
         </div>
       </header>
 
-      <section className="text-center px-6 py-20 md:py-28">
-        <h1 className="serif text-5xl md:text-7xl gold mb-6">Consulte ATB, sua Tarologa IA</h1>
-        <p className="text-lg md:text-xl max-w-2xl mx-auto text-white/80 mb-8">
+      {/* Hero */}
+      <section style={{ textAlign: "center", padding: "80px 24px 72px", background: "radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 65%)" }}>
+        <div style={{ fontSize: 68, marginBottom: 18 }}>🔮</div>
+        <h1 className="serif" style={{ fontSize: "clamp(2.4rem,6vw,5rem)", color: S.text, lineHeight: 1.12, marginBottom: 18 }}>
+          Consulte ATB,<br/>sua Tarologa
+        </h1>
+        <p style={{ fontSize: "1.2rem", color: S.text2, maxWidth: 520, margin: "0 auto 36px", lineHeight: 1.7 }}>
           Orientação mística, acolhedora e direta — 24 horas por dia. Tarot, ansiedade, relacionamentos e vícios em um só lugar.
         </p>
-        <Link href="/cadastro" className="btn-gold inline-block">Começar gratuitamente</Link>
+        <Link href="/cadastro" className="btn-gold" style={{ fontSize: "1.15rem", padding: "16px 40px" }}>
+          Começar gratuitamente
+        </Link>
       </section>
 
-      <section className="px-6 md:px-12 py-16 max-w-6xl mx-auto">
-        <h2 className="serif text-4xl gold text-center mb-12">O que você encontra aqui</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Features */}
+      <section style={{ padding: "60px 24px", maxWidth: 1100, margin: "0 auto" }}>
+        <h2 className="serif" style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)", color: S.gold, textAlign: "center", marginBottom: 36 }}>
+          O que você encontra aqui
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16 }}>
           {features.map((f) => (
-            <div key={f.title} className="card p-6 text-center">
-              <div className="text-4xl mb-3">{f.icon}</div>
-              <h3 className="serif text-xl gold mb-2">{f.title}</h3>
-              <p className="text-sm text-white/70">{f.desc}</p>
+            <div key={f.title} className="card" style={{ padding: "28px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>{f.icon}</div>
+              <h3 className="serif" style={{ fontSize: "1.25rem", color: S.gold, marginBottom: 8 }}>{f.title}</h3>
+              <p style={{ color: S.text2, fontSize: 15, lineHeight: 1.65 }}>{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section id="planos" className="px-6 md:px-12 py-16 max-w-6xl mx-auto">
-        <h2 className="serif text-4xl gold text-center mb-12">Planos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card p-8 flex flex-col">
-            <h3 className="serif text-2xl mb-2">Free</h3>
-            <div className="text-3xl font-bold mb-4">Grátis</div>
-            <ul className="space-y-2 text-sm text-white/80 mb-6 flex-1">
-              <li>✓ 3 mensagens por dia no chat</li>
-              <li>✓ Oráculo diário completo</li>
-              <li>✗ Diário da Ansiedade</li>
-              <li>✗ Guia de Vícios</li>
-            </ul>
-            <Link href="/cadastro" className="btn-outline text-center">Começar grátis</Link>
-          </div>
+      {/* Planos */}
+      <section id="planos" style={{ padding: "60px 24px", background: "radial-gradient(ellipse at 50% 100%, #2a0055 0%, #120025 70%)" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <h2 className="serif" style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)", color: S.gold, textAlign: "center", marginBottom: 36 }}>
+            Planos
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16 }}>
 
-          <div className="card p-8 flex flex-col border-gold">
-            <h3 className="serif text-2xl gold mb-2">Basic</h3>
-            <div className="text-3xl font-bold mb-4">R$29<span className="text-base font-normal text-white/60">/mês</span></div>
-            <ul className="space-y-2 text-sm text-white/80 mb-6 flex-1">
-              <li>✓ 20 mensagens por dia no chat</li>
-              <li>✓ Oráculo diário completo</li>
-              <li>✓ Diário da Ansiedade</li>
-              <li>✗ Guia de Vícios</li>
-            </ul>
-            <a href={BASIC} className="btn-gold text-center">Assinar Basic</a>
-          </div>
+            <div className="card" style={{ padding: "32px 24px", display: "flex", flexDirection: "column" }}>
+              <h3 className="serif" style={{ fontSize: "1.6rem", color: S.text, marginBottom: 4 }}>Free</h3>
+              <div style={{ fontSize: "2rem", fontWeight: 700, color: S.text, marginBottom: 20 }}>Grátis</div>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
+                <li style={{ color: S.text2, marginBottom: 8, fontSize: 15 }}>✓ 1 pergunta no chat</li>
+                <li style={{ color: S.muted, marginBottom: 8, fontSize: 15 }}>✗ Oráculo diário</li>
+                <li style={{ color: S.muted, marginBottom: 8, fontSize: 15 }}>✗ Diário da Ansiedade</li>
+                <li style={{ color: S.muted, fontSize: 15 }}>✗ Guia de Vícios</li>
+              </ul>
+              <Link href="/cadastro" className="btn-outline" style={{ textAlign: "center", display: "block" }}>Começar grátis</Link>
+            </div>
 
-          <div className="card p-8 flex flex-col" style={{ borderColor: "#d4af37" }}>
-            <h3 className="serif text-2xl gold mb-2">Premium</h3>
-            <div className="text-3xl font-bold mb-4">R$59<span className="text-base font-normal text-white/60">/mês</span></div>
-            <ul className="space-y-2 text-sm text-white/80 mb-6 flex-1">
-              <li>✓ Mensagens ilimitadas no chat</li>
-              <li>✓ Oráculo diário completo</li>
-              <li>✓ Diário da Ansiedade</li>
-              <li>✓ Guia de Vícios</li>
-            </ul>
-            <a href={PREMIUM} className="btn-gold text-center">Assinar Premium</a>
+            <div className="card" style={{ padding: "32px 24px", display: "flex", flexDirection: "column", border: "1.5px solid rgba(232,184,75,0.5)" }}>
+              <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, marginBottom: 4 }}>Basic</h3>
+              <div style={{ fontSize: "2rem", fontWeight: 700, color: S.text, marginBottom: 20 }}>
+                R$29 <span style={{ fontSize: 14, fontWeight: 400, color: S.muted }}>/mês</span>
+              </div>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
+                <li style={{ color: S.text2, marginBottom: 8, fontSize: 15 }}>✓ 20 mensagens por dia</li>
+                <li style={{ color: S.text2, marginBottom: 8, fontSize: 15 }}>✓ Oráculo diário completo</li>
+                <li style={{ color: S.text2, marginBottom: 8, fontSize: 15 }}>✓ Diário da Ansiedade</li>
+                <li style={{ color: S.muted, fontSize: 15 }}>✗ Guia de Vícios</li>
+              </ul>
+              <a href={BASIC} className="btn-gold" style={{ textAlign: "center", display: "block" }}>Assinar Basic</a>
+            </div>
+
+            <div className="card-gold" style={{ padding: "32px 24px", display: "flex", flexDirection: "column" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, background: S.gold, color: "#120025", borderRadius: 20, padding: "3px 12px", display: "inline-block", marginBottom: 10, alignSelf: "flex-start" }}>MAIS POPULAR</div>
+              <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, marginBottom: 4 }}>Premium</h3>
+              <div style={{ fontSize: "2rem", fontWeight: 700, color: S.text, marginBottom: 20 }}>
+                R$59 <span style={{ fontSize: 14, fontWeight: 400, color: S.muted }}>/mês</span>
+              </div>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
+                <li style={{ color: S.text, marginBottom: 8, fontSize: 15 }}>✓ Mensagens ilimitadas</li>
+                <li style={{ color: S.text, marginBottom: 8, fontSize: 15 }}>✓ Oráculo diário completo</li>
+                <li style={{ color: S.text, marginBottom: 8, fontSize: 15 }}>✓ Diário da Ansiedade</li>
+                <li style={{ color: S.text, fontSize: 15 }}>✓ Guia de Vícios</li>
+              </ul>
+              <a href={PREMIUM} className="btn-gold" style={{ textAlign: "center", display: "block" }}>Assinar Premium</a>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="px-6 md:px-12 py-16 max-w-6xl mx-auto">
-        <h2 className="serif text-4xl gold text-center mb-12">Depoimentos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Depoimentos */}
+      <section style={{ padding: "60px 24px", maxWidth: 1100, margin: "0 auto" }}>
+        <h2 className="serif" style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)", color: S.gold, textAlign: "center", marginBottom: 36 }}>
+          Depoimentos
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
           {testimonials.map((t) => (
-            <div key={t.name} className="card p-6">
-              <p className="italic text-white/80 mb-4">"{t.text}"</p>
-              <div className="gold font-semibold">— {t.name}</div>
+            <div key={t.name} className="card" style={{ padding: "24px" }}>
+              <p style={{ fontStyle: "italic", color: S.text2, lineHeight: 1.75, marginBottom: 14, fontSize: 16 }}>"{t.text}"</p>
+              <div style={{ fontWeight: 600, color: S.gold, fontSize: 15 }}>— {t.name}</div>
             </div>
           ))}
         </div>
       </section>
 
-      <footer className="text-center text-white/50 text-sm py-10 border-t border-white/10">
-        © {new Date().getFullYear()} ATB Tarot IA — Todos os direitos reservados.
+      <footer style={{ textAlign: "center", padding: "24px", borderTop: `1px solid ${S.sep}`, color: S.muted, fontSize: 14 }}>
+        © {new Date().getFullYear()} ATB Tarot — Todos os direitos reservados.
       </footer>
     </main>
   );

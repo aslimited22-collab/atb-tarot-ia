@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  title: "ATB Tarot IA",
-  description: "Consulte ATB, sua Tarologa IA",
+  title: "ATB Tarot",
+  description: "Consulte ATB, sua Tarologa",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

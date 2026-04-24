@@ -10,6 +10,11 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
+    const { data: profile } = await supabase.from("users").select("plan").eq("id", user.id).maybeSingle();
+    if ((profile?.plan || "free") === "free") {
+      return NextResponse.json({ error: "Oráculo disponível apenas para assinantes. Faça upgrade." }, { status: 403 });
+    }
+
     const today = new Date().toISOString().slice(0, 10);
 
     const { data: existing } = await supabase
@@ -53,7 +58,7 @@ export async function GET() {
     });
 
     return NextResponse.json(parsed);
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "erro" }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
   }
 }

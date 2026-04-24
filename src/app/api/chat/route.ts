@@ -1,21 +1,46 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { ATB_SYSTEM_PROMPT, deepseekStream } from "@/lib/deepseek";
-import { MESSAGE_LIMITS } from "@/lib/plans";
+import { ATB_SYSTEM_PROMPT, ATB_FREE_SYSTEM_PROMPT, deepseekStream } from "@/lib/deepseek";
+import { MESSAGE_LIMITS, THROTTLE_SECONDS } from "@/lib/plans";
+import { sanitizeInput, rateLimit, getClientIp } from "@/lib/security";
 import type { Plan } from "@/lib/types";
 
 export const runtime = "nodejs";
 
+const FREE_CTA = "\n\npara saber o resto dessa leitura e tudo o que as cartas ainda têm a revelar pra você, clique no botão aqui embaixo e deixa eu terminar de te contar o que está escrito no seu caminho.";
+
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+
+    // Rate limit por IP: 60 req/min (contra bots)
+    const rl = rateLimit(`chat:${ip}`, 60, 60_000);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Aguarde um momento." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+      );
+    }
+
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-    const { message } = await req.json();
-    if (!message || typeof message !== "string") {
-      return NextResponse.json({ error: "mensagem inválida" }, { status: 400 });
+    // Limite de corpo: rejeitar payloads > 8KB
+    const contentLength = Number(req.headers.get("content-length") || 0);
+    if (contentLength > 8_000) {
+      return NextResponse.json({ error: "Mensagem muito longa." }, { status: 413 });
     }
+
+    const body = await req.json();
+    const raw = body?.message;
+
+    // Sanitiza e valida input
+    const sanity = sanitizeInput(raw, 1500);
+    if (!sanity.ok) {
+      return NextResponse.json({ error: sanity.reason }, { status: 400 });
+    }
+    const message = sanity.value;
 
     const { data: profile } = await supabase
       .from("users")
@@ -35,6 +60,27 @@ export async function POST(req: Request) {
       );
     }
 
+    const { data: lastMsg } = await supabase
+      .from("chat_messages")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .eq("role", "user")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const throttle = THROTTLE_SECONDS[plan];
+    if (lastMsg?.created_at) {
+      const diff = (Date.now() - new Date(lastMsg.created_at).getTime()) / 1000;
+      if (diff < throttle) {
+        const wait = Math.ceil(throttle - diff);
+        return NextResponse.json(
+          { error: `Aguarde ${wait}s antes de enviar outra mensagem.` },
+          { status: 429, headers: { "Retry-After": String(wait) } }
+        );
+      }
+    }
+
     used += 1;
     await supabase.from("users").update({ messages_today: used, last_message_date: today }).eq("id", user.id);
 
@@ -49,14 +95,17 @@ export async function POST(req: Request) {
 
     await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: message });
 
+    const isFree = plan === "free";
+    const systemPrompt = isFree ? ATB_FREE_SYSTEM_PROMPT : ATB_SYSTEM_PROMPT;
+
     const upstream = await deepseekStream([
-      { role: "system", content: ATB_SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt },
       ...prior,
       { role: "user", content: message },
     ]);
 
     if (!upstream.ok || !upstream.body) {
-      return NextResponse.json({ error: "Erro ao contatar IA" }, { status: 502 });
+      return NextResponse.json({ error: "Erro na consulta" }, { status: 502 });
     }
 
     let full = "";
@@ -82,12 +131,13 @@ export async function POST(req: Request) {
               try {
                 const json = JSON.parse(payload);
                 const delta = json.choices?.[0]?.delta?.content;
-                if (delta) {
-                  full += delta;
-                  controller.enqueue(encoder.encode(delta));
-                }
+                if (delta) { full += delta; controller.enqueue(encoder.encode(delta)); }
               } catch {}
             }
+          }
+          if (isFree) {
+            controller.enqueue(encoder.encode(FREE_CTA));
+            full += FREE_CTA;
           }
         } catch (e) {
           controller.error(e);
@@ -105,7 +155,7 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" },
     });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "erro" }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
   }
 }
 
@@ -123,7 +173,7 @@ export async function GET() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("plan, messages_today, last_message_date")
+    .select("plan, messages_today, last_message_date, name, email")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -133,9 +183,10 @@ export async function GET() {
   const limit = MESSAGE_LIMITS[plan];
   const remaining = limit === Infinity ? -1 : Math.max(0, limit - used);
 
-  return NextResponse.json({
-    messages: (data || []).reverse(),
-    plan,
-    remaining,
-  });
+  const rawName = (profile?.name as string) || "";
+  const emailPrefix = (profile?.email || user.email || "").split("@")[0] || "";
+  const fallback = emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : "";
+  const displayName = rawName.trim().split(" ")[0] || fallback || "Alma";
+
+  return NextResponse.json({ messages: (data || []).reverse(), plan, remaining, name: displayName });
 }

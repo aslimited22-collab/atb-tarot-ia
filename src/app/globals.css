@@ -1,29 +1,133 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: #0a0010;
-  --purple: #4a0080;
-  --purple-deep: #2a0050;
-  --gold: #d4af37;
-  --text: #ffffff;
+  --bg:           #120025;
+  --surface:      #1e0040;
+  --surface2:     #2a0055;
+  --surface3:     #3b0764;
+  --gold:         #e8b84b;
+  --gold-dim:     #c9950a;
+  --text-primary: #f5f0ff;
+  --text-second:  #c4b5fd;
+  --text-muted:   #9575cd;
+  --separator:    rgba(196,181,253,0.18);
+  --shadow:       0 4px 24px rgba(0,0,0,0.45);
 }
+
+* { -webkit-font-smoothing: antialiased; box-sizing: border-box; }
 
 html, body {
   background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
 }
 
-h1, h2, h3, .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+h1, h2, h3, .serif {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: var(--text-primary);
+}
 
 .gold { color: var(--gold); }
-.bg-mystic { background: radial-gradient(ellipse at top, #2a0050 0%, #0a0010 70%); }
-.card { background: rgba(74,0,128,0.12); border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; }
-.btn-gold { background: var(--gold); color: #1a0030; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: opacity .2s; }
-.btn-gold:hover { opacity: 0.9; }
-.btn-outline { border: 1px solid var(--gold); color: var(--gold); padding: 0.75rem 1.5rem; border-radius: 8px; }
-.input { background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.25); border-radius: 8px; padding: 0.75rem 1rem; color: white; width: 100%; }
-.input:focus { outline: none; border-color: var(--gold); }
+
+/* Fundo geral das páginas */
+.bg-mystic {
+  background: radial-gradient(ellipse at 30% 0%, #3b0764 0%, #120025 60%);
+  min-height: 100vh;
+}
+
+/* Card padrão — superfície roxa média, texto claro */
+.card {
+  background: var(--surface);
+  border-radius: 18px;
+  border: 1px solid rgba(196,181,253,0.18);
+  box-shadow: var(--shadow);
+}
+
+/* Card dourado destaque */
+.card-gold {
+  background: linear-gradient(135deg, #2a0055, #3b0764);
+  border-radius: 18px;
+  border: 1.5px solid rgba(232,184,75,0.45);
+  box-shadow: 0 4px 24px rgba(232,184,75,0.12);
+}
+
+.border-gold { border: 1.5px solid var(--gold) !important; }
+
+/* Botão dourado sólido */
+.btn-gold {
+  background: linear-gradient(135deg, #e8b84b 0%, #c9950a 100%);
+  color: #120025;
+  font-weight: 700;
+  padding: 0.85rem 1.75rem;
+  border-radius: 14px;
+  font-size: 1rem;
+  display: inline-block;
+  text-align: center;
+  transition: opacity .15s;
+  letter-spacing: 0.01em;
+}
+.btn-gold:hover { opacity: 0.88; }
+
+/* Botão contorno */
+.btn-outline {
+  border: 2px solid var(--gold);
+  color: var(--gold);
+  background: transparent;
+  padding: 0.75rem 1.5rem;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Input */
+.input {
+  background: var(--surface2);
+  border: 1.5px solid rgba(196,181,253,0.25);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  color: var(--text-primary);
+  width: 100%;
+  font-size: 1rem;
+  transition: border-color .15s;
+}
+.input:focus  { outline: none; border-color: var(--gold); background: var(--surface3); }
+.input::placeholder { color: var(--text-muted); }
+
+/* Bolha do usuário — dourado */
+.bubble-user {
+  background: linear-gradient(135deg, #e8b84b, #c9950a);
+  color: #120025;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  font-weight: 500;
+}
+
+/* Bolha da ATB — roxo com texto bem claro */
+.bubble-atb {
+  background: var(--surface2);
+  color: var(--text-primary);
+  border: 1px solid rgba(196,181,253,0.2);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+/* Typing dots */
+.typing-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: typingBounce 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.30s; }
+
+@keyframes typingBounce {
+  0%,60%,100% { transform: translateY(0); opacity: 0.35; }
+  30%          { transform: translateY(-6px); opacity: 1; }
+}
