@@ -30,6 +30,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/oracle") ||
     pathname.startsWith("/api/journal") ||
     pathname.startsWith("/api/addiction") ||
+    pathname.startsWith("/api/limpeza") ||
     pathname.startsWith("/api/auth");
 
   if (isAiRoute) {

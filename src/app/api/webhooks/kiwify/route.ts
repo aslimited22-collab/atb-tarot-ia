@@ -102,6 +102,42 @@ export async function POST(req: Request) {
 
   const admin = createAdminClient();
 
+  const productId: string | undefined =
+    order.Product?.product_id ||
+    order.product?.product_id ||
+    payload.Product?.product_id ||
+    payload.product?.product_id ||
+    payload.product_id;
+
+  const limpezaProductId = process.env.KIWIFY_LIMPEZA_PRODUCT_ID;
+  const isLimpezaByProduct = limpezaProductId && productId && productId === limpezaProductId;
+  const isLimpezaByValue = !limpezaProductId && valueBRL >= 95 && valueBRL <= 110;
+
+  if ((event === "order.approved" || event === "order_approved") && (isLimpezaByProduct || isLimpezaByValue)) {
+    const { data: userRow } = await admin.from("users").select("id").eq("email", email.toLowerCase()).maybeSingle();
+    await admin.from("purchases").insert({
+      email: email.toLowerCase(),
+      name: customerName ?? null,
+      kiwify_order_id: orderId ?? "unknown",
+      plan: "limpeza",
+      event: "limpeza_purchased",
+      amount_cents: Math.round(valueBRL * 100),
+      user_id: userRow?.id ?? null,
+    });
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    await resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: "arthurbs8@gmail.com",
+      subject: "Nova compra: Limpeza Espiritual",
+      html: `<p><strong>Cliente:</strong> ${customerName || "Não informado"}</p>
+             <p><strong>Email:</strong> ${email}</p>
+             <p><strong>Produto:</strong> Limpeza Espiritual</p>
+             <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
+             <p><strong>Pedido:</strong> ${orderId ?? "N/A"}</p>`,
+    });
+    return NextResponse.json({ ok: true, plan: "limpeza" });
+  }
+
   if ((event === "order.approved" || event === "order_approved") && valueBRL >= 500) {
     await admin.from("purchases").insert({
       email: email.toLowerCase(),
