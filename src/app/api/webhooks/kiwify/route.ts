@@ -10,6 +10,17 @@ export const runtime = "nodejs";
 const usedNonces = new Map<string, number>();
 const NONCE_TTL = 10 * 60 * 1000;
 
+// Escapa HTML para evitar injection em emails de notificação
+function escapeHtml(s: string | undefined | null): string {
+  if (!s) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function cleanNonces() {
   const now = Date.now();
   for (const [k, t] of usedNonces) {
@@ -124,17 +135,20 @@ export async function POST(req: Request) {
       amount_cents: Math.round(valueBRL * 100),
       user_id: userRow?.id ?? null,
     });
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: "arthurbs8@gmail.com",
-      subject: "Nova compra: Limpeza Espiritual",
-      html: `<p><strong>Cliente:</strong> ${customerName || "Não informado"}</p>
-             <p><strong>Email:</strong> ${email}</p>
-             <p><strong>Produto:</strong> Limpeza Espiritual</p>
-             <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
-             <p><strong>Pedido:</strong> ${orderId ?? "N/A"}</p>`,
-    });
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
+    if (adminEmail && process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+        to: adminEmail,
+        subject: "Nova compra: Limpeza Espiritual",
+        html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
+               <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+               <p><strong>Produto:</strong> Limpeza Espiritual</p>
+               <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
+               <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>`,
+      });
+    }
     return NextResponse.json({ ok: true, plan: "limpeza" });
   }
 
@@ -148,17 +162,20 @@ export async function POST(req: Request) {
       amount_cents: Math.round(valueBRL * 100),
       user_id: null,
     });
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: "arthurbs8@gmail.com",
-      subject: "Nova compra: Chamada de Vídeo com ATB",
-      html: `<p><strong>Cliente:</strong> ${customerName || "Não informado"}</p>
-             <p><strong>Email:</strong> ${email}</p>
-             <p><strong>Produto:</strong> Chamada de Vídeo com ATB</p>
-             <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
-             <p><strong>Pedido:</strong> ${orderId ?? "N/A"}</p>`,
-    });
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
+    if (adminEmail && process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+        to: adminEmail,
+        subject: "Nova compra: Chamada de Vídeo com ATB",
+        html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
+               <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+               <p><strong>Produto:</strong> Chamada de Vídeo com ATB</p>
+               <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
+               <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>`,
+      });
+    }
     return NextResponse.json({ ok: true, plan: "video_call" });
   }
 

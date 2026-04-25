@@ -56,6 +56,27 @@ export async function POST(req: Request) {
       );
     }
 
+    // Throttle de 5s entre mensagens (evita race condition + spam de cliques)
+    const { data: lastUserMsg } = await supabase
+      .from("limpeza_messages")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .eq("role", "user")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (lastUserMsg?.created_at) {
+      const diff = (Date.now() - new Date(lastUserMsg.created_at).getTime()) / 1000;
+      if (diff < 5) {
+        const wait = Math.ceil(5 - diff);
+        return NextResponse.json(
+          { error: `Aguarde ${wait}s antes de enviar outra mensagem.` },
+          { status: 429, headers: { "Retry-After": String(wait) } }
+        );
+      }
+    }
+
     const { count } = await supabase
       .from("limpeza_messages")
       .select("id", { count: "exact", head: true })
@@ -143,7 +164,16 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const ip = getClientIp(req);
+  const rl = rateLimit(`limpeza-get:${ip}`, 60, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Muitas requisições." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+    );
+  }
+
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

@@ -53,7 +53,7 @@ export default function CadastroPage() {
           <label style={{ display: "block", color: "#c4b5fd", fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Email</label>
           <input className="input" style={{ marginBottom: 20 }} type="email" placeholder="seu@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <label style={{ display: "block", color: "#c4b5fd", fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Senha</label>
-          <input className="input" style={{ marginBottom: 28 }} type="password" placeholder="Mínimo 6 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
+          <input className="input" style={{ marginBottom: 28 }} type="password" placeholder="Mínimo 8 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
           <button disabled={loading} className="btn-gold w-full" style={{ padding: "16px", fontSize: "1.1rem" }}>
             {loading ? "Criando..." : "Criar conta grátis"}
           </button>

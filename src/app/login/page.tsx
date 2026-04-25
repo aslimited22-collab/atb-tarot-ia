@@ -15,9 +15,15 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase().trim(),
+      password,
+    });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      // Mensagem genérica anti user-enumeration
+      return toast.error("Email ou senha incorretos.");
+    }
     toast.success("Bem-vindo(a) de volta.");
     router.push("/dashboard");
     router.refresh();

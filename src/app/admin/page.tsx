@@ -3,12 +3,20 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import AdminClient from "./client";
 
-const ADMIN_EMAIL = "aslimited22@gmail.com";
+export const dynamic = "force-dynamic";
+
+// Lista de admins separada por vírgula. Fallback no email original para não quebrar prod
+// caso a env var não esteja configurada.
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "aslimited22@gmail.com")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 export default async function AdminPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email !== ADMIN_EMAIL) redirect("/login");
+  const userEmail = (user?.email || "").toLowerCase();
+  if (!user || !ADMIN_EMAILS.includes(userEmail)) redirect("/login");
 
   const admin = createAdminClient();
 
