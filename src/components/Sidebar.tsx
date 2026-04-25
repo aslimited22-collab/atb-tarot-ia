@@ -6,11 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 import type { Plan } from "@/lib/types";
 
 const LINKS = [
-  { href: "/dashboard",            label: "Início",               icon: "🏠", min: "free"    as Plan },
-  { href: "/dashboard/chat",       label: "Conversar com ATB",    icon: "💬", min: "free"    as Plan },
-  { href: "/dashboard/oracle",     label: "Carta do Dia",         icon: "🔮", min: "free"    as Plan },
-  { href: "/dashboard/journal",    label: "Meu Diário",           icon: "📖", min: "basic"   as Plan },
-  { href: "/dashboard/addiction",  label: "Guia Espiritual",      icon: "🕯️", min: "premium" as Plan },
+  { href: "/dashboard",                    label: "Início",               icon: "🏠", min: "free"    as Plan },
+  { href: "/dashboard/chat",               label: "Conversar com ATB",    icon: "💬", min: "free"    as Plan },
+  { href: "/dashboard/oracle",             label: "Carta do Dia",         icon: "🔮", min: "free"    as Plan },
+  { href: "/dashboard/journal",            label: "Meu Diário",           icon: "📖", min: "basic"   as Plan },
+  { href: "/dashboard/addiction",          label: "Guia Espiritual",      icon: "🕯️", min: "premium" as Plan },
+  { href: "/dashboard/numerologia",        label: "Números da Sorte",     icon: "🍀", min: "premium" as Plan },
+  { href: "/dashboard/limpeza-espiritual", label: "Limpeza Espiritual",   icon: "🕊️", min: "free"    as Plan },
 ];
 const ORDER: Record<Plan,number> = { free:0, basic:1, premium:2 };
 const PLAN_LABEL: Record<Plan,string> = { free:"Grátis", basic:"Básico", premium:"Premium" };
