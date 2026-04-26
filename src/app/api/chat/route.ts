@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ATB_SYSTEM_PROMPT, ATB_FREE_SYSTEM_PROMPT, deepseekStream } from "@/lib/deepseek";
-import { MESSAGE_LIMITS, THROTTLE_SECONDS } from "@/lib/plans";
+import { MESSAGE_LIMITS_MONTH, THROTTLE_SECONDS, DAILY_LIMIT_FREE, currentMonthKey, currentDayKey } from "@/lib/plans";
 import { sanitizeInput, rateLimit, getClientIp } from "@/lib/security";
 import type { Plan } from "@/lib/types";
 
@@ -45,20 +45,34 @@ export async function POST(req: Request) {
 
     const { data: profile } = await supabase
       .from("users")
-      .select("plan, messages_today, last_message_date")
+      .select("plan, messages_today, last_message_date, messages_month, last_message_month")
       .eq("id", user.id)
       .maybeSingle();
 
     const plan: Plan = (profile?.plan as Plan) || "free";
-    const today = new Date().toISOString().slice(0, 10);
-    let used = profile?.last_message_date === today ? profile?.messages_today ?? 0 : 0;
-    const limit = MESSAGE_LIMITS[plan];
+    const today = currentDayKey();
+    const monthKey = currentMonthKey();
 
-    if (used >= limit) {
-      return NextResponse.json(
-        { error: "Você atingiu o limite de mensagens do seu plano. Faça upgrade para continuar." },
-        { status: 429 }
-      );
+    // Free: limite DIARIO (1/dia) - mantido para incentivar conversao
+    // Basic/Premium: limite MENSAL (30/mes, 100/mes)
+    let usedToday = profile?.last_message_date === today ? profile?.messages_today ?? 0 : 0;
+    let usedMonth = profile?.last_message_month === monthKey ? profile?.messages_month ?? 0 : 0;
+
+    if (plan === "free") {
+      if (usedToday >= DAILY_LIMIT_FREE) {
+        return NextResponse.json(
+          { error: "Você usou sua mensagem grátis de hoje. Faça upgrade para continuar." },
+          { status: 429 }
+        );
+      }
+    } else {
+      const limit = MESSAGE_LIMITS_MONTH[plan];
+      if (usedMonth >= limit) {
+        return NextResponse.json(
+          { error: `Você atingiu o limite de ${limit} mensagens deste mês no seu plano. Faça upgrade ou aguarde o próximo mês.` },
+          { status: 429 }
+        );
+      }
     }
 
     const { data: lastMsg } = await supabase
@@ -82,9 +96,18 @@ export async function POST(req: Request) {
       }
     }
 
-    used += 1;
+    usedToday += 1;
+    usedMonth += 1;
     const admin = createAdminClient();
-    await admin.from("users").update({ messages_today: used, last_message_date: today }).eq("id", user.id);
+    await admin
+      .from("users")
+      .update({
+        messages_today: usedToday,
+        last_message_date: today,
+        messages_month: usedMonth,
+        last_message_month: monthKey,
+      })
+      .eq("id", user.id);
 
     const { data: history } = await supabase
       .from("chat_messages")
@@ -175,15 +198,23 @@ export async function GET() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("plan, messages_today, last_message_date, name, email")
+    .select("plan, messages_today, last_message_date, messages_month, last_message_month, name, email")
     .eq("id", user.id)
     .maybeSingle();
 
   const plan: Plan = (profile?.plan as Plan) || "free";
-  const today = new Date().toISOString().slice(0, 10);
-  const used = profile?.last_message_date === today ? profile?.messages_today ?? 0 : 0;
-  const limit = MESSAGE_LIMITS[plan];
-  const remaining = limit === Infinity ? -1 : Math.max(0, limit - used);
+  const today = currentDayKey();
+  const monthKey = currentMonthKey();
+
+  let remaining: number;
+  if (plan === "free") {
+    const usedToday = profile?.last_message_date === today ? profile?.messages_today ?? 0 : 0;
+    remaining = Math.max(0, DAILY_LIMIT_FREE - usedToday);
+  } else {
+    const usedMonth = profile?.last_message_month === monthKey ? profile?.messages_month ?? 0 : 0;
+    const limit = MESSAGE_LIMITS_MONTH[plan];
+    remaining = Math.max(0, limit - usedMonth);
+  }
 
   const rawName = (profile?.name as string) || "";
   const emailPrefix = (profile?.email || user.email || "").split("@")[0] || "";

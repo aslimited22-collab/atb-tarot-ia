@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PlanBadge } from "@/components/PlanBadge";
-import { MESSAGE_LIMITS } from "@/lib/plans";
+import { MESSAGE_LIMITS_MONTH, DAILY_LIMIT_FREE, currentMonthKey, currentDayKey } from "@/lib/plans";
 import { dailyLuckyNumbers } from "@/lib/numerology";
 import type { Plan } from "@/lib/types";
 
@@ -19,13 +19,25 @@ export default async function DashboardHome() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase
-    .from("users").select("plan, email, messages_today, last_message_date").eq("id", user!.id).maybeSingle();
+    .from("users").select("plan, email, messages_today, last_message_date, messages_month, last_message_month").eq("id", user!.id).maybeSingle();
 
   const plan: Plan = (profile?.plan as Plan) || "free";
-  const today = new Date().toISOString().slice(0, 10);
-  const used = profile?.last_message_date === today ? profile?.messages_today ?? 0 : 0;
-  const limit = MESSAGE_LIMITS[plan];
-  const remaining = limit === Infinity ? "∞" : Math.max(0, limit - used);
+  const today = currentDayKey();
+  const monthKey = currentMonthKey();
+
+  // Free: limite diario | Basic/Premium: limite mensal
+  let remaining: number;
+  let periodLabel: string;
+  if (plan === "free") {
+    const usedToday = profile?.last_message_date === today ? profile?.messages_today ?? 0 : 0;
+    remaining = Math.max(0, DAILY_LIMIT_FREE - usedToday);
+    periodLabel = "Mensagem grátis hoje";
+  } else {
+    const usedMonth = profile?.last_message_month === monthKey ? profile?.messages_month ?? 0 : 0;
+    const limit = MESSAGE_LIMITS_MONTH[plan];
+    remaining = Math.max(0, limit - usedMonth);
+    periodLabel = `Mensagens restantes este mês (de ${limit})`;
+  }
 
   const luckyNumbers = dailyLuckyNumbers(user!.id);
   const isPremium = plan === "premium";
@@ -52,7 +64,7 @@ export default async function DashboardHome() {
 
       {/* Remaining */}
       <div className="card-gold" style={{ padding: "20px 24px", marginBottom: 24 }}>
-        <div style={{ fontSize: 12, color: "#c4b5fd", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Mensagens restantes hoje</div>
+        <div style={{ fontSize: 12, color: "#c4b5fd", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{periodLabel}</div>
         <div className="serif" style={{ fontSize: "3rem", color: "#e8b84b", fontWeight: 700, lineHeight: 1 }}>{remaining}</div>
       </div>
 

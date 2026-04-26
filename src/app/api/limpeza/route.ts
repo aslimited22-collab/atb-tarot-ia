@@ -103,12 +103,57 @@ export async function POST(req: Request) {
       content: m.content,
     }));
 
+    // Busca o profile coletado para personalizar o system prompt
+    const { data: profile } = await supabase
+      .from("limpeza_profile")
+      .select("full_name, age, marital_status, main_feeling, situation")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!profile) {
+      return NextResponse.json(
+        { error: "Por favor preencha seus dados antes de começar a limpeza.", needsProfile: true },
+        { status: 400 }
+      );
+    }
+
+    const FEELING_LABELS: Record<string, string> = {
+      tristeza_profunda: "tristeza profunda na alma",
+      ansiedade: "ansiedade que não passa",
+      raiva: "raiva e mágoa engolidas",
+      medo: "medo de tudo",
+      vazio: "sensação de vazio",
+      inveja_alheia: "sensação de inveja perto dela",
+      energia_pesada: "energia pesada na vida",
+      amor_bloqueado: "amor bloqueado, solidão",
+      outro: "outro tipo de dor que ela vai contar",
+    };
+
+    const MARITAL_LABELS: Record<string, string> = {
+      solteira: "solteira",
+      casada: "casada",
+      divorciada: "divorciada/separada",
+      viuva: "viúva",
+      uniao_estavel: "em união estável",
+      outro: "estado civil reservado",
+    };
+
+    const profileContext = `CONTEXTO ESPIRITUAL DESTA CLIENTE (use esses dados para personalizar TUDO):
+- Nome: ${profile.full_name}
+- Idade: ${profile.age} anos
+- Estado civil: ${MARITAL_LABELS[profile.marital_status] || profile.marital_status}
+- Dor principal que ela sente: ${FEELING_LABELS[profile.main_feeling] || profile.main_feeling}
+- O que ela disse com as próprias palavras: "${profile.situation}"
+
+Use essas informações para chamá-la pelo nome, levar em conta a fase da vida dela, e adaptar a leitura ao que ela está sentindo. Não repita esses dados literalmente, apenas use como contexto interno.`;
+
     await supabase.from("limpeza_messages").insert({ user_id: user.id, role: "user", content: message });
 
     let upstream: Response;
     try {
       upstream = await openaiStream([
         { role: "system", content: LIMPEZA_GPT_SYSTEM_PROMPT },
+        { role: "system", content: profileContext },
         ...prior,
         { role: "user", content: message },
       ]);

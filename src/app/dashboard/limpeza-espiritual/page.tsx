@@ -31,6 +31,13 @@ export default async function LimpezaPage({
 
   let messages: Array<{ id: string; role: string; content: string }> = [];
   let remaining = 3;
+  let limpezaProfile: {
+    full_name: string | null;
+    age: number | null;
+    marital_status: string | null;
+    main_feeling: string | null;
+    situation: string | null;
+  } | null = null;
 
   if (purchased) {
     const { data } = await supabase
@@ -42,6 +49,13 @@ export default async function LimpezaPage({
     messages = data || [];
     const userCount = messages.filter((m) => m.role === "user").length;
     remaining = Math.max(0, 3 - userCount);
+
+    const { data: profileData } = await supabase
+      .from("limpeza_profile")
+      .select("full_name, age, marital_status, main_feeling, situation")
+      .eq("user_id", user!.id)
+      .maybeSingle();
+    limpezaProfile = profileData;
   }
 
   const kiwifyUrl = process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL || "#";
@@ -54,6 +68,7 @@ export default async function LimpezaPage({
       kiwifyUrl={kiwifyUrl}
       initialMessages={messages}
       initialRemaining={remaining}
+      hasProfile={!!limpezaProfile?.main_feeling}
     />
   );
 }

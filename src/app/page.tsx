@@ -99,11 +99,32 @@ export default function Home() {
         position: "relative",
         overflow: "hidden",
       }}>
+        {/* Estrelas decorativas SVG no fundo */}
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.4, pointerEvents: "none" }} preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="starGlow">
+              <stop offset="0%" stopColor="#e8b84b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#e8b84b" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          {[
+            [10, 15, 4], [85, 20, 3], [25, 75, 5], [70, 80, 4], [50, 10, 2],
+            [15, 50, 3], [90, 60, 4], [40, 90, 3], [75, 40, 2], [5, 35, 3],
+            [60, 65, 5], [35, 30, 2], [95, 85, 3],
+          ].map(([x, y, r], i) => (
+            <circle key={i} cx={`${x}%`} cy={`${y}%`} r={r} fill="url(#starGlow)" />
+          ))}
+        </svg>
         <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative", zIndex: 1 }}>
           <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <div style={{ fontSize: 64, marginBottom: 12 }}>🕊️</div>
+            {/* Ornamento decorativo */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 14 }}>
+              <svg width="40" height="20" viewBox="0 0 40 20"><path d="M0 10 L15 10 M20 5 L20 15 M25 10 L40 10" stroke="#e8b84b" strokeWidth="1.5" fill="none" /></svg>
+              <div style={{ fontSize: 64 }}>🕊️</div>
+              <svg width="40" height="20" viewBox="0 0 40 20"><path d="M0 10 L15 10 M20 5 L20 15 M25 10 L40 10" stroke="#e8b84b" strokeWidth="1.5" fill="none" /></svg>
+            </div>
             <div style={{ fontSize: 13, color: "#f5c860", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8 }}>
-              ✨ Sessão Sagrada Exclusiva ✨
+              Sessão Sagrada Exclusiva
             </div>
             <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3.2rem)", color: S.gold, lineHeight: 1.15, marginBottom: 14 }}>
               Limpeza Espiritual<br />com ATB

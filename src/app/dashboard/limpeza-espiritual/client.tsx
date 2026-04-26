@@ -52,6 +52,7 @@ export default function LimpezaClient({
   kiwifyUrl,
   initialMessages,
   initialRemaining,
+  hasProfile,
 }: {
   purchased: boolean;
   justPurchased?: boolean;
@@ -59,7 +60,9 @@ export default function LimpezaClient({
   kiwifyUrl: string;
   initialMessages: Msg[];
   initialRemaining: number;
+  hasProfile?: boolean;
 }) {
+  const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>(initialMessages);
   const [remaining, setRemaining] = useState(initialRemaining);
   const [input, setInput] = useState("");
@@ -79,6 +82,11 @@ export default function LimpezaClient({
 
   if (!purchased) {
     return <PurchaseGate firstName={firstName} kiwifyUrl={kiwifyUrl} />;
+  }
+
+  // Comprou mas ainda não preencheu o formulário de coleta de dados
+  if (!hasProfile) {
+    return <ProfileForm firstName={firstName} onSaved={() => router.refresh()} />;
   }
 
   async function send(text: string) {
@@ -365,6 +373,326 @@ function Bubble({ role, content }: { role: string; content: string }) {
         )}
         {content}
       </div>
+    </div>
+  );
+}
+
+function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () => void }) {
+  const [fullName, setFullName] = useState(firstName !== "querida" ? firstName : "");
+  const [age, setAge] = useState<string>("");
+  const [marital, setMarital] = useState("");
+  const [feeling, setFeeling] = useState("");
+  const [situation, setSituation] = useState("");
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const FEELINGS = [
+    { value: "tristeza_profunda", label: "Tristeza profunda na alma", icon: "😔" },
+    { value: "ansiedade", label: "Ansiedade que não passa", icon: "💔" },
+    { value: "raiva", label: "Raiva e mágoa engolidas", icon: "🔥" },
+    { value: "medo", label: "Medo de tudo", icon: "😰" },
+    { value: "vazio", label: "Sensação de vazio", icon: "🌑" },
+    { value: "inveja_alheia", label: "Sinto inveja perto de mim", icon: "👁️" },
+    { value: "energia_pesada", label: "Energia pesada na minha vida", icon: "⛓️" },
+    { value: "amor_bloqueado", label: "Amor bloqueado, sozinha", icon: "💔" },
+    { value: "outro", label: "Outra coisa", icon: "✨" },
+  ];
+
+  const MARITAL = [
+    { value: "solteira", label: "Solteira" },
+    { value: "casada", label: "Casada" },
+    { value: "divorciada", label: "Divorciada / Separada" },
+    { value: "viuva", label: "Viúva" },
+    { value: "uniao_estavel", label: "União estável" },
+    { value: "outro", label: "Outro" },
+  ];
+
+  async function submit() {
+    if (!fullName.trim() || !age || !marital || !feeling || !situation.trim()) {
+      toast.error("Por favor preencha tudo, minha querida.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/limpeza/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: fullName.trim(),
+          age: Number(age),
+          marital_status: marital,
+          main_feeling: feeling,
+          situation: situation.trim(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error || "Erro ao salvar.");
+        setLoading(false);
+        return;
+      }
+      toast.success("Dados recebidos. ATB já vai te receber.");
+      onSaved();
+    } catch {
+      toast.error("Erro de conexão.");
+      setLoading(false);
+    }
+  }
+
+  const canNext1 = fullName.trim().length >= 2 && age && Number(age) >= 13 && Number(age) <= 120 && marital;
+  const canNext2 = !!feeling;
+  const canSubmit = situation.trim().length >= 10;
+
+  return (
+    <div style={{ padding: "24px 16px 80px", maxWidth: 620, margin: "0 auto", color: "#f5f0ff" }}>
+      <style>{`
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div style={{ fontSize: 60, marginBottom: 12, animation: "pulse 2s infinite" }}>🕊️</div>
+        <h1 className="serif" style={{ fontSize: "2rem", color: "#e8b84b", lineHeight: 1.15, marginBottom: 10 }}>
+          Antes de começar sua limpeza
+        </h1>
+        <p style={{ fontSize: "1rem", color: "#c4b5fd", lineHeight: 1.6, maxWidth: 460, margin: "0 auto" }}>
+          Me conte um pouquinho sobre você, minha querida alma. Isso ajuda ATB a fazer a sua limpeza certinha, do jeito que você precisa.
+        </p>
+      </div>
+
+      {/* Progress */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+        {[1, 2, 3].map((n) => (
+          <div key={n} style={{
+            flex: 1,
+            height: 6,
+            borderRadius: 4,
+            background: step >= n ? "#e8b84b" : "rgba(232,184,75,0.2)",
+            transition: "background 0.3s",
+          }} />
+        ))}
+      </div>
+
+      {/* Step 1: Dados básicos */}
+      {step === 1 && (
+        <div className="card" style={{ padding: "24px 22px" }}>
+          <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 18, textAlign: "center" }}>
+            Quem é você
+          </h2>
+
+          <label style={{ display: "block", color: "#c4b5fd", fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
+            Como posso te chamar?
+          </label>
+          <input
+            className="input"
+            style={{ marginBottom: 16, fontSize: 16 }}
+            type="text"
+            placeholder="Seu nome"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            maxLength={60}
+          />
+
+          <label style={{ display: "block", color: "#c4b5fd", fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
+            Sua idade
+          </label>
+          <input
+            className="input"
+            style={{ marginBottom: 16, fontSize: 16 }}
+            type="number"
+            placeholder="Anos"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            min={13}
+            max={120}
+          />
+
+          <label style={{ display: "block", color: "#c4b5fd", fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
+            Estado civil
+          </label>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 4 }}>
+            {MARITAL.map((m) => (
+              <button
+                key={m.value}
+                type="button"
+                onClick={() => setMarital(m.value)}
+                style={{
+                  padding: "12px 10px",
+                  background: marital === m.value ? "rgba(232,184,75,0.18)" : "rgba(196,181,253,0.05)",
+                  border: marital === m.value ? "2px solid #e8b84b" : "1px solid rgba(196,181,253,0.2)",
+                  borderRadius: 12,
+                  color: marital === m.value ? "#fbf8ff" : "#c4b5fd",
+                  fontSize: 14,
+                  fontWeight: marital === m.value ? 700 : 500,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setStep(2)}
+            disabled={!canNext1}
+            className="btn-gold w-full"
+            style={{
+              padding: "16px",
+              fontSize: "1.05rem",
+              marginTop: 22,
+              opacity: canNext1 ? 1 : 0.5,
+              cursor: canNext1 ? "pointer" : "not-allowed",
+            }}
+          >
+            Próximo →
+          </button>
+        </div>
+      )}
+
+      {/* Step 2: Sentimento */}
+      {step === 2 && (
+        <div className="card" style={{ padding: "24px 22px" }}>
+          <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 8, textAlign: "center" }}>
+            O que mais pesa em você
+          </h2>
+          <p style={{ fontSize: 14, color: "#c4b5fd", textAlign: "center", marginBottom: 18, lineHeight: 1.5 }}>
+            Escolha o sentimento que você mais sente agora
+          </p>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+            {FEELINGS.map((f) => (
+              <button
+                key={f.value}
+                type="button"
+                onClick={() => setFeeling(f.value)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "14px 16px",
+                  background: feeling === f.value ? "rgba(232,184,75,0.18)" : "rgba(196,181,253,0.05)",
+                  border: feeling === f.value ? "2px solid #e8b84b" : "1px solid rgba(196,181,253,0.2)",
+                  borderRadius: 12,
+                  color: feeling === f.value ? "#fbf8ff" : "#c4b5fd",
+                  fontSize: 15,
+                  fontWeight: feeling === f.value ? 700 : 500,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <span style={{ fontSize: 24 }}>{f.icon}</span>
+                <span>{f.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+            <button
+              onClick={() => setStep(1)}
+              style={{
+                padding: "16px 22px",
+                background: "rgba(196,181,253,0.1)",
+                border: "1px solid rgba(196,181,253,0.3)",
+                color: "#c4b5fd",
+                borderRadius: 999,
+                fontSize: 15,
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              ← Voltar
+            </button>
+            <button
+              onClick={() => setStep(3)}
+              disabled={!canNext2}
+              className="btn-gold"
+              style={{
+                flex: 1,
+                padding: "16px",
+                fontSize: "1.05rem",
+                opacity: canNext2 ? 1 : 0.5,
+                cursor: canNext2 ? "pointer" : "not-allowed",
+              }}
+            >
+              Próximo →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Situação */}
+      {step === 3 && (
+        <div className="card" style={{ padding: "24px 22px" }}>
+          <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 8, textAlign: "center" }}>
+            Conta pra ATB
+          </h2>
+          <p style={{ fontSize: 14, color: "#c4b5fd", textAlign: "center", marginBottom: 18, lineHeight: 1.5 }}>
+            Me conte com suas palavras o que está acontecendo. Sem julgamento, fica entre nós duas.
+          </p>
+
+          <textarea
+            value={situation}
+            onChange={(e) => setSituation(e.target.value)}
+            placeholder="Por exemplo: faz uns meses que sinto que tudo trava na minha vida, que tem alguém com olho gordo em mim, sinto cansaço sem motivo..."
+            rows={7}
+            maxLength={500}
+            style={{
+              width: "100%",
+              background: "#1e0040",
+              border: "1px solid rgba(232,184,75,0.35)",
+              borderRadius: 14,
+              padding: "14px 16px",
+              color: "#fbf8ff",
+              fontSize: 15,
+              lineHeight: 1.6,
+              fontFamily: "inherit",
+              resize: "vertical",
+              minHeight: 120,
+            }}
+          />
+          <div style={{ fontSize: 12, color: "#9575cd", textAlign: "right", marginTop: 4 }}>
+            {situation.length}/500
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+            <button
+              onClick={() => setStep(2)}
+              disabled={loading}
+              style={{
+                padding: "16px 22px",
+                background: "rgba(196,181,253,0.1)",
+                border: "1px solid rgba(196,181,253,0.3)",
+                color: "#c4b5fd",
+                borderRadius: 999,
+                fontSize: 15,
+                cursor: loading ? "not-allowed" : "pointer",
+                fontWeight: 600,
+              }}
+            >
+              ← Voltar
+            </button>
+            <button
+              onClick={submit}
+              disabled={!canSubmit || loading}
+              className="btn-gold"
+              style={{
+                flex: 1,
+                padding: "16px",
+                fontSize: "1.05rem",
+                opacity: canSubmit && !loading ? 1 : 0.5,
+                cursor: canSubmit && !loading ? "pointer" : "not-allowed",
+              }}
+            >
+              {loading ? "Salvando..." : "✨ Começar minha limpeza"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <p style={{ textAlign: "center", fontSize: 12, color: "#9575cd", marginTop: 18, lineHeight: 1.55 }}>
+        🔒 Suas informações ficam protegidas e são usadas só pela ATB para personalizar sua limpeza.
+      </p>
     </div>
   );
 }
