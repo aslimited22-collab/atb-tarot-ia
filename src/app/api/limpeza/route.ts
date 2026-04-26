@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { LIMPEZA_SYSTEM_PROMPT, deepseekStream } from "@/lib/deepseek";
+import { LIMPEZA_GPT_SYSTEM_PROMPT, openaiStream } from "@/lib/openai";
 import { sanitizeInput, rateLimit, getClientIp } from "@/lib/security";
 
 export const runtime = "nodejs";
@@ -105,11 +105,29 @@ export async function POST(req: Request) {
 
     await supabase.from("limpeza_messages").insert({ user_id: user.id, role: "user", content: message });
 
-    const upstream = await deepseekStream([
-      { role: "system", content: LIMPEZA_SYSTEM_PROMPT },
-      ...prior,
-      { role: "user", content: message },
-    ]);
+    let upstream: Response;
+    try {
+      upstream = await openaiStream([
+        { role: "system", content: LIMPEZA_GPT_SYSTEM_PROMPT },
+        ...prior,
+        { role: "user", content: message },
+      ]);
+    } catch (err) {
+      // Falha de rede / API OpenAI: remove a mensagem do usuário do banco
+      // para que ele possa reenviar sem perder a tentativa
+      await supabase
+        .from("limpeza_messages")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("role", "user")
+        .eq("content", message)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      return NextResponse.json(
+        { error: "Tivemos um problema de conexão com nossos santos. Tente novamente em alguns segundos." },
+        { status: 502 }
+      );
+    }
 
     if (!upstream.ok || !upstream.body) {
       return NextResponse.json({ error: "Erro na consulta espiritual" }, { status: 502 });

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import toast from "react-hot-toast";
 
 type Msg = { id?: string; role: string; content: string };
@@ -136,6 +137,21 @@ export default function LimpezaClient({
 
   return (
     <div style={{ padding: "24px 16px 80px", maxWidth: 760, margin: "0 auto", color: "#f5f0ff" }}>
+      <style>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+          40% { transform: translateY(-10px); opacity: 1; }
+        }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.08); }
+        }
+      `}</style>
+
+      {/* Voltar */}
+      <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#c4b5fd", fontSize: 15, textDecoration: "none", marginBottom: 16, padding: "8px 12px", borderRadius: 10, background: "rgba(196,181,253,0.08)" }}>
+        ← Voltar para o Painel
+      </Link>
 
       {/* Header sagrado */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
@@ -256,8 +272,24 @@ export default function LimpezaClient({
           ))}
           {streaming && <Bubble role="assistant" content={streaming} />}
           {loading && !streaming && (
-            <div style={{ color: "#9575cd", fontSize: 14, fontStyle: "italic", padding: "8px 12px" }}>
-              ATB está consultando os santos...
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "rgba(232,184,75,0.08)", borderRadius: 12, border: "1px solid rgba(232,184,75,0.2)" }}>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: "#e8b84b",
+                      animation: `bounce 1.4s ease-in-out ${i * 0.2}s infinite`,
+                    }}
+                  />
+                ))}
+              </div>
+              <span style={{ color: "#e8b84b", fontSize: 14, fontStyle: "italic" }}>
+                ATB está consultando os santos...
+              </span>
             </div>
           )}
         </div>
@@ -301,12 +333,7 @@ export default function LimpezaClient({
           </button>
         </div>
       ) : (
-        <div className="card-gold" style={{ padding: 20, textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 8 }}>🙏</div>
-          <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.6, margin: 0 }}>
-            Sua sessão sagrada de limpeza foi concluída. Agora siga as orientações que ATB lhe deu, com fé e devoção. Que os santos te abençoem.
-          </p>
-        </div>
+        <SessionComplete firstName={firstName} />
       )}
     </div>
   );
@@ -338,6 +365,63 @@ function Bubble({ role, content }: { role: string; content: string }) {
         )}
         {content}
       </div>
+    </div>
+  );
+}
+
+function SessionComplete({ firstName }: { firstName: string }) {
+  const VIDEO_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
+
+  return (
+    <div className="card-gold" style={{ padding: "28px 22px", textAlign: "center" }}>
+      <div style={{ fontSize: 56, marginBottom: 12 }}>🙏</div>
+
+      <h2 className="serif" style={{ fontSize: "1.5rem", color: "#e8b84b", marginBottom: 10 }}>
+        Sua limpeza foi feita, {firstName}
+      </h2>
+
+      <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.7, marginBottom: 16, maxWidth: 460, margin: "0 auto 16px" }}>
+        Agora siga as orientações que ATB te deu com muita fé. Faça os banhos,
+        acenda as velas, faça as orações. A energia já começou a girar a seu favor.
+      </p>
+
+      <p style={{ fontSize: 14, color: "#c4b5fd", lineHeight: 1.6, marginBottom: 22, fontStyle: "italic" }}>
+        ✨ Que Nossa Senhora te cubra com seu manto sagrado ✨
+      </p>
+
+      {/* Upsell vídeo chamada */}
+      <div style={{ background: "linear-gradient(135deg,#3b0764,#2a0055)", border: "1.5px solid rgba(232,184,75,0.5)", borderRadius: 16, padding: "20px 18px", marginTop: 20 }}>
+        <div style={{ fontSize: 36, marginBottom: 8 }}>📞</div>
+        <h3 className="serif" style={{ fontSize: "1.25rem", color: "#e8b84b", marginBottom: 8 }}>
+          Quer falar comigo ao vivo?
+        </h3>
+        <p style={{ fontSize: 14, color: "#d9cdfc", lineHeight: 1.6, marginBottom: 16 }}>
+          Se sua dor for muito profunda e você quiser uma sessão completa,
+          eu te atendo pelo WhatsApp olho no olho.
+        </p>
+        <a
+          href={VIDEO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-gold"
+          style={{ display: "inline-block", padding: "12px 24px", fontSize: 15, fontWeight: 700, textDecoration: "none" }}
+        >
+          Agendar Vídeo Chamada
+        </a>
+      </div>
+
+      <Link
+        href="/dashboard"
+        style={{
+          display: "inline-block",
+          marginTop: 18,
+          color: "#c4b5fd",
+          fontSize: 14,
+          textDecoration: "underline",
+        }}
+      >
+        Voltar para o Painel
+      </Link>
     </div>
   );
 }
