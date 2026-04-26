@@ -18,6 +18,7 @@ export default function Home() {
   const { t } = useT();
   const BASIC   = process.env.NEXT_PUBLIC_KIWIFY_BASIC_URL   || "#";
   const PREMIUM = process.env.NEXT_PUBLIC_KIWIFY_PREMIUM_URL || "#";
+  const LIMPEZA = process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL || "#";
 
   const features = [
     { icon: "💬", title: t("features.chat.title"), desc: t("features.chat.desc") },
@@ -56,9 +57,23 @@ export default function Home() {
         <p style={{ fontSize: "1.2rem", color: S.text2, maxWidth: 520, margin: "0 auto 36px", lineHeight: 1.7 }}>
           {t("hero.desc")}
         </p>
-        <Link href="/cadastro" className="btn-gold" style={{ fontSize: "1.15rem", padding: "16px 40px" }}>
-          {t("hero.cta")}
-        </Link>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <Link href="/cadastro" className="btn-gold" style={{ fontSize: "1.05rem", padding: "16px 32px", textDecoration: "none" }}>
+            {t("hero.cta")}
+          </Link>
+          <a href="#limpeza" className="btn-outline" style={{
+            fontSize: "1.05rem",
+            padding: "16px 32px",
+            textDecoration: "none",
+            color: S.gold,
+            border: `2px solid ${S.gold}`,
+            borderRadius: 999,
+            fontWeight: 700,
+            display: "inline-block",
+          }}>
+            🕊️ Limpeza Espiritual
+          </a>
+        </div>
       </section>
 
       {/* Features */}
@@ -74,6 +89,136 @@ export default function Home() {
               <p style={{ color: S.text2, fontSize: 15, lineHeight: 1.65 }}>{f.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Limpeza Espiritual — Produto único R$100 */}
+      <section id="limpeza" style={{
+        padding: "70px 24px",
+        background: "radial-gradient(ellipse at 50% 50%, #2a0055 0%, #120025 75%)",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <div style={{ fontSize: 64, marginBottom: 12 }}>🕊️</div>
+            <div style={{ fontSize: 13, color: "#f5c860", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8 }}>
+              ✨ Sessão Sagrada Exclusiva ✨
+            </div>
+            <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3.2rem)", color: S.gold, lineHeight: 1.15, marginBottom: 14 }}>
+              Limpeza Espiritual<br />com ATB
+            </h2>
+            <p style={{ fontSize: "1.15rem", color: S.text2, maxWidth: 580, margin: "0 auto", lineHeight: 1.7 }}>
+              Tire o peso da sua alma, abra os caminhos da vida e proteja-se de inveja com a força dos santos católicos. Uma sessão única e poderosa de descarrego com ATB.
+            </p>
+          </div>
+
+          {/* Cartas de tarot */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+            gap: 16,
+            marginBottom: 36,
+          }}>
+            {[
+              { icon: "🕯️", title: "Limpeza Profunda", saint: "Nossa Senhora Aparecida", desc: "Retire energia pesada, mau-olhado e dor da alma", color: "linear-gradient(135deg, #e8b84b 0%, #c89a2a 100%)" },
+              { icon: "🗝️", title: "Abrir Caminhos", saint: "Santo Antônio", desc: "Desate os nós que travam sua vida e prosperidade", color: "linear-gradient(135deg, #6a4a8a 0%, #4a2f6a 100%)" },
+              { icon: "⚔️", title: "Proteção Sagrada", saint: "São Miguel + São Jorge", desc: "Corte feitiços, demandas e inveja com a espada divina", color: "linear-gradient(135deg, #d4344a 0%, #8a1f30 100%)" },
+            ].map((c) => (
+              <div key={c.title} style={{
+                background: c.color,
+                borderRadius: 18,
+                padding: "24px 20px",
+                color: "#1e0040",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
+                border: "2px solid rgba(255,255,255,0.15)",
+              }}>
+                <div style={{ fontSize: 44, marginBottom: 10 }}>{c.icon}</div>
+                <h3 className="serif" style={{ fontSize: "1.3rem", fontWeight: 700, lineHeight: 1.15, marginBottom: 4 }}>{c.title}</h3>
+                <div style={{ fontSize: 12, opacity: 0.8, fontStyle: "italic", marginBottom: 10 }}>✦ {c.saint}</div>
+                <p style={{ fontSize: 14, lineHeight: 1.55, margin: 0, opacity: 0.92 }}>{c.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Lista de benefícios */}
+          <div className="card-gold" style={{ padding: "26px 24px", marginBottom: 30 }}>
+            <h3 className="serif" style={{ fontSize: "1.3rem", color: S.gold, textAlign: "center", marginBottom: 18 }}>
+              O que você recebe na sua Limpeza
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 14 }}>
+              {[
+                { icon: "🕯️", text: "3 mensagens sagradas com ATB focadas só na sua limpeza" },
+                { icon: "🗝️", text: "Identificação do que está pesando e bloqueando sua vida" },
+                { icon: "👑", text: "Invocação dos santos certos para o seu caso" },
+                { icon: "💧", text: "Banhos, defumações e orações personalizadas" },
+                { icon: "⚔️", text: "Proteção contra inveja, mau-olhado e feitiço" },
+                { icon: "✨", text: "Abertura de caminhos para prosperidade e amor" },
+              ].map((b, i) => (
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 22, flexShrink: 0 }}>{b.icon}</span>
+                  <span style={{ fontSize: 15, color: S.text, lineHeight: 1.55 }}>{b.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Santos */}
+          <div style={{ textAlign: "center", marginBottom: 30 }}>
+            <div style={{ fontSize: 12, color: S.text2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
+              Forças Sagradas que estarão com você
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24 }}>
+              {[
+                { icon: "👑", name: "N. S. Aparecida" },
+                { icon: "❤️‍🔥", name: "Sagrado Coração" },
+                { icon: "⚔️", name: "São Miguel" },
+                { icon: "🙏", name: "Santo Antônio" },
+                { icon: "🛡️", name: "São Jorge" },
+                { icon: "🪢", name: "N. S. Desatadora" },
+              ].map((s) => (
+                <div key={s.name} style={{ textAlign: "center", width: 90 }}>
+                  <div style={{ fontSize: 36, marginBottom: 4 }}>{s.icon}</div>
+                  <div style={{ fontSize: 11, color: S.text, lineHeight: 1.3 }}>{s.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA Compra */}
+          <div style={{
+            background: "linear-gradient(135deg, #1e0040 0%, #4a1a7a 50%, #1e0040 100%)",
+            border: "2px solid rgba(232,184,75,0.6)",
+            borderRadius: 20,
+            padding: "32px 24px",
+            textAlign: "center",
+            maxWidth: 560,
+            margin: "0 auto",
+            boxShadow: "0 12px 40px rgba(232,184,75,0.18)",
+          }}>
+            <div style={{ fontSize: 12, color: "#f5c860", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>
+              Investimento único
+            </div>
+            <div className="serif" style={{ fontSize: "3.4rem", color: S.gold, fontWeight: 800, lineHeight: 1, marginBottom: 4 }}>
+              R$ 100
+            </div>
+            <div style={{ fontSize: 13, color: S.muted, marginBottom: 20 }}>
+              Pagamento único • Acesso imediato após confirmação
+            </div>
+            <a
+              href={LIMPEZA}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-gold"
+              style={{ display: "inline-block", padding: "18px 36px", fontSize: "1.1rem", fontWeight: 700, textDecoration: "none" }}
+            >
+              ✨ Quero minha Limpeza Espiritual
+            </a>
+            <p style={{ fontSize: 12, color: S.muted, marginTop: 16, lineHeight: 1.55 }}>
+              🔒 Pagamento seguro pela Kiwify • Cartão, Pix ou Boleto<br />
+              Após pagar você cria sua conta e a limpeza fica liberada na hora
+            </p>
+          </div>
         </div>
       </section>
 
