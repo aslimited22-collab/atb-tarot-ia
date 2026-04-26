@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { LangSwitcher } from "@/components/LangSwitcher";
+import { AltarSvg } from "@/components/AltarSvg";
 
 const S = {
   bg:      "#120025",
@@ -117,79 +118,79 @@ export default function Home() {
         </svg>
         <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative", zIndex: 1 }}>
           <div style={{ textAlign: "center", marginBottom: 36 }}>
-            {/* Ornamento decorativo */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 14 }}>
-              <svg width="40" height="20" viewBox="0 0 40 20"><path d="M0 10 L15 10 M20 5 L20 15 M25 10 L40 10" stroke="#e8b84b" strokeWidth="1.5" fill="none" /></svg>
-              <div style={{ fontSize: 64 }}>🕊️</div>
-              <svg width="40" height="20" viewBox="0 0 40 20"><path d="M0 10 L15 10 M20 5 L20 15 M25 10 L40 10" stroke="#e8b84b" strokeWidth="1.5" fill="none" /></svg>
+            {/* Ilustração SVG do altar sagrado */}
+            <div style={{ marginBottom: 18 }}>
+              <AltarSvg size={280} />
             </div>
-            <div style={{ fontSize: 13, color: "#f5c860", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8 }}>
-              Sessão Sagrada Exclusiva
+
+            <div style={{ fontSize: 16, color: "#f5c860", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+              ✨ Sessão Sagrada Exclusiva ✨
             </div>
-            <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3.2rem)", color: S.gold, lineHeight: 1.15, marginBottom: 14 }}>
+            <h2 className="serif" style={{ fontSize: "clamp(2.4rem,6vw,3.8rem)", color: S.gold, lineHeight: 1.1, marginBottom: 18 }}>
               Limpeza Espiritual<br />com ATB
             </h2>
-            <p style={{ fontSize: "1.15rem", color: S.text2, maxWidth: 580, margin: "0 auto", lineHeight: 1.7 }}>
-              Tire o peso da sua alma, abra os caminhos da vida e proteja-se de inveja com a força dos santos católicos. Uma sessão única e poderosa de descarrego com ATB.
+            <p style={{ fontSize: "clamp(1.2rem, 2.5vw, 1.4rem)", color: S.text, maxWidth: 620, margin: "0 auto", lineHeight: 1.65, fontWeight: 500 }}>
+              Tire o peso da sua alma, abra os caminhos da sua vida e proteja-se de toda inveja com a força dos santos.
             </p>
           </div>
 
-          {/* Cartas de tarot */}
+          {/* Cartas de tarot — maiores para 60+ */}
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-            gap: 16,
-            marginBottom: 36,
+            gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
+            gap: 18,
+            marginBottom: 40,
           }}>
             {[
-              { icon: "🕯️", title: "Limpeza Profunda", saint: "Nossa Senhora Aparecida", desc: "Retire energia pesada, mau-olhado e dor da alma", color: "linear-gradient(135deg, #e8b84b 0%, #c89a2a 100%)" },
-              { icon: "🗝️", title: "Abrir Caminhos", saint: "Santo Antônio", desc: "Desate os nós que travam sua vida e prosperidade", color: "linear-gradient(135deg, #6a4a8a 0%, #4a2f6a 100%)" },
-              { icon: "⚔️", title: "Proteção Sagrada", saint: "São Miguel + São Jorge", desc: "Corte feitiços, demandas e inveja com a espada divina", color: "linear-gradient(135deg, #d4344a 0%, #8a1f30 100%)" },
+              { icon: "🕯️", title: "Limpeza Profunda", saint: "Nossa Senhora Aparecida", desc: "Tira energia pesada, mau-olhado e a dor da alma", color: "linear-gradient(135deg, #e8b84b 0%, #c89a2a 100%)" },
+              { icon: "🗝️", title: "Abrir Caminhos", saint: "Santo Antônio", desc: "Desata o que está travando sua vida e o seu dinheiro", color: "linear-gradient(135deg, #6a4a8a 0%, #4a2f6a 100%)" },
+              { icon: "⚔️", title: "Proteção", saint: "São Miguel e São Jorge", desc: "Corta feitiço, inveja e olho gordo com a espada divina", color: "linear-gradient(135deg, #d4344a 0%, #8a1f30 100%)" },
             ].map((c) => (
               <div key={c.title} style={{
                 background: c.color,
-                borderRadius: 18,
-                padding: "24px 20px",
+                borderRadius: 22,
+                padding: "30px 24px",
                 color: "#1e0040",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
-                border: "2px solid rgba(255,255,255,0.15)",
+                boxShadow: "0 12px 32px rgba(0,0,0,0.4)",
+                border: "3px solid rgba(255,255,255,0.2)",
+                textAlign: "center",
               }}>
-                <div style={{ fontSize: 44, marginBottom: 10 }}>{c.icon}</div>
-                <h3 className="serif" style={{ fontSize: "1.3rem", fontWeight: 700, lineHeight: 1.15, marginBottom: 4 }}>{c.title}</h3>
-                <div style={{ fontSize: 12, opacity: 0.8, fontStyle: "italic", marginBottom: 10 }}>✦ {c.saint}</div>
-                <p style={{ fontSize: 14, lineHeight: 1.55, margin: 0, opacity: 0.92 }}>{c.desc}</p>
+                <div style={{ fontSize: 60, marginBottom: 14 }}>{c.icon}</div>
+                <h3 className="serif" style={{ fontSize: "1.55rem", fontWeight: 700, lineHeight: 1.15, marginBottom: 6 }}>{c.title}</h3>
+                <div style={{ fontSize: 14, opacity: 0.85, fontStyle: "italic", marginBottom: 14, fontWeight: 500 }}>✦ {c.saint}</div>
+                <p style={{ fontSize: 16, lineHeight: 1.55, margin: 0, fontWeight: 500 }}>{c.desc}</p>
               </div>
             ))}
           </div>
 
-          {/* Lista de benefícios */}
-          <div className="card-gold" style={{ padding: "26px 24px", marginBottom: 30 }}>
-            <h3 className="serif" style={{ fontSize: "1.3rem", color: S.gold, textAlign: "center", marginBottom: 18 }}>
-              O que você recebe na sua Limpeza
+          {/* Lista de benefícios — fonte grande para 60+ */}
+          <div className="card-gold" style={{ padding: "32px 28px", marginBottom: 36 }}>
+            <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, textAlign: "center", marginBottom: 24 }}>
+              O que você recebe
             </h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 18 }}>
               {[
-                { icon: "🕯️", text: "3 mensagens sagradas com ATB focadas só na sua limpeza" },
-                { icon: "🗝️", text: "Identificação do que está pesando e bloqueando sua vida" },
-                { icon: "👑", text: "Invocação dos santos certos para o seu caso" },
-                { icon: "💧", text: "Banhos, defumações e orações personalizadas" },
-                { icon: "⚔️", text: "Proteção contra inveja, mau-olhado e feitiço" },
-                { icon: "✨", text: "Abertura de caminhos para prosperidade e amor" },
+                { icon: "🕯️", text: "Conversa sagrada com ATB só sobre a sua limpeza" },
+                { icon: "🗝️", text: "ATB descobre o que está te pesando" },
+                { icon: "👑", text: "Os santos certos para o seu caso" },
+                { icon: "💧", text: "Banho de ervas e oração feita pra você" },
+                { icon: "⚔️", text: "Proteção contra inveja e olho gordo" },
+                { icon: "✨", text: "Abertura dos seus caminhos" },
               ].map((b, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 22, flexShrink: 0 }}>{b.icon}</span>
-                  <span style={{ fontSize: 15, color: S.text, lineHeight: 1.55 }}>{b.text}</span>
+                <div key={i} style={{ display: "flex", gap: 16, alignItems: "center", padding: "8px 0" }}>
+                  <span style={{ fontSize: 32, flexShrink: 0 }}>{b.icon}</span>
+                  <span style={{ fontSize: 17, color: S.text, lineHeight: 1.5, fontWeight: 500 }}>{b.text}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Santos */}
-          <div style={{ textAlign: "center", marginBottom: 30 }}>
-            <div style={{ fontSize: 12, color: S.text2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
-              Forças Sagradas que estarão com você
+          {/* Santos — maiores para 60+ */}
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <div style={{ fontSize: 16, color: S.gold, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 20 }}>
+              ✨ Os santos que vão estar com você ✨
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 28 }}>
               {[
                 { icon: "👑", name: "N. S. Aparecida" },
                 { icon: "❤️‍🔥", name: "Sagrado Coração" },
@@ -198,47 +199,67 @@ export default function Home() {
                 { icon: "🛡️", name: "São Jorge" },
                 { icon: "🪢", name: "N. S. Desatadora" },
               ].map((s) => (
-                <div key={s.name} style={{ textAlign: "center", width: 90 }}>
-                  <div style={{ fontSize: 36, marginBottom: 4 }}>{s.icon}</div>
-                  <div style={{ fontSize: 11, color: S.text, lineHeight: 1.3 }}>{s.name}</div>
+                <div key={s.name} style={{
+                  textAlign: "center",
+                  width: 110,
+                  padding: "14px 8px",
+                  background: "rgba(232,184,75,0.06)",
+                  borderRadius: 14,
+                  border: "1px solid rgba(232,184,75,0.2)",
+                }}>
+                  <div style={{ fontSize: 48, marginBottom: 8 }}>{s.icon}</div>
+                  <div style={{ fontSize: 13, color: S.text, lineHeight: 1.35, fontWeight: 600 }}>{s.name}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* CTA Compra */}
+          {/* CTA Compra — botão GIGANTE para 60+ */}
           <div style={{
             background: "linear-gradient(135deg, #1e0040 0%, #4a1a7a 50%, #1e0040 100%)",
-            border: "2px solid rgba(232,184,75,0.6)",
-            borderRadius: 20,
-            padding: "32px 24px",
+            border: "3px solid rgba(232,184,75,0.7)",
+            borderRadius: 24,
+            padding: "40px 28px",
             textAlign: "center",
-            maxWidth: 560,
+            maxWidth: 600,
             margin: "0 auto",
-            boxShadow: "0 12px 40px rgba(232,184,75,0.18)",
+            boxShadow: "0 16px 50px rgba(232,184,75,0.22)",
           }}>
-            <div style={{ fontSize: 12, color: "#f5c860", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>
-              Investimento único
+            <div style={{ fontSize: 16, color: "#f5c860", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontWeight: 700 }}>
+              Pagamento único
             </div>
-            <div className="serif" style={{ fontSize: "3.4rem", color: S.gold, fontWeight: 800, lineHeight: 1, marginBottom: 4 }}>
+            <div className="serif" style={{ fontSize: "clamp(3.4rem, 8vw, 4.5rem)", color: S.gold, fontWeight: 800, lineHeight: 1, marginBottom: 6 }}>
               R$ 100
             </div>
-            <div style={{ fontSize: 13, color: S.muted, marginBottom: 20 }}>
-              Pagamento único • Acesso imediato após confirmação
+            <div style={{ fontSize: 16, color: "#fbf8ff", marginBottom: 28, fontWeight: 500 }}>
+              Você paga uma vez só
             </div>
             <a
               href={LIMPEZA}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-gold"
-              style={{ display: "inline-block", padding: "18px 36px", fontSize: "1.1rem", fontWeight: 700, textDecoration: "none" }}
+              style={{
+                display: "block",
+                padding: "22px 24px",
+                fontSize: "1.3rem",
+                fontWeight: 800,
+                textDecoration: "none",
+                width: "100%",
+                maxWidth: 480,
+                margin: "0 auto",
+                letterSpacing: "0.02em",
+              }}
             >
-              ✨ Quero minha Limpeza Espiritual
+              ✨ Quero minha Limpeza
             </a>
-            <p style={{ fontSize: 12, color: S.muted, marginTop: 16, lineHeight: 1.55 }}>
-              🔒 Pagamento seguro pela Kiwify • Cartão, Pix ou Boleto<br />
-              Após pagar você cria sua conta e a limpeza fica liberada na hora
-            </p>
+            <div style={{ marginTop: 22, padding: "14px 18px", background: "rgba(232,184,75,0.08)", borderRadius: 12, border: "1px solid rgba(232,184,75,0.2)" }}>
+              <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+                🔒 <strong>Pagamento totalmente seguro</strong><br />
+                Você pode pagar com Cartão, Pix ou Boleto<br />
+                Logo depois de pagar, sua limpeza está pronta
+              </p>
+            </div>
           </div>
         </div>
       </section>
