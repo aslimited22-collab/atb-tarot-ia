@@ -6,10 +6,10 @@ import { dailyLuckyNumbers } from "@/lib/numerology";
 import type { Plan } from "@/lib/types";
 
 const quick = [
-  { href: "/dashboard/chat",       icon: "💬", title: "Chat com ATB",        desc: "Converse com sua tarologa." },
-  { href: "/dashboard/oracle",     icon: "🔮", title: "Oráculo Diário",       desc: "Sua carta do dia." },
-  { href: "/dashboard/journal",    icon: "📖", title: "Diário da Ansiedade",  desc: "Registre seus sentimentos." },
-  { href: "/dashboard/addiction",  icon: "🕯️", title: "Guia de Vícios",       desc: "Rompa padrões espirituais." },
+  { href: "/dashboard/chat",       icon: "💬", title: "Conversar com ATB",     desc: "Faça sua pergunta para a tarologa" },
+  { href: "/dashboard/oracle",     icon: "🔮", title: "Carta do Dia",          desc: "Veja o que o tarot diz hoje" },
+  { href: "/dashboard/journal",    icon: "📖", title: "Meu Diário",            desc: "Conte como está se sentindo" },
+  { href: "/dashboard/addiction",  icon: "🕯️", title: "Guia Espiritual",       desc: "Rompa padrões antigos" },
 ];
 
 const VIDEO_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
@@ -42,30 +42,38 @@ export default async function DashboardHome() {
   const luckyNumbers = dailyLuckyNumbers(user!.id);
   const isPremium = plan === "premium";
 
+  const firstName = (profile?.email?.split("@")[0] || "querida").split(" ")[0];
+  const capitalized = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+
   return (
-    <div style={{ padding: "24px 20px", maxWidth: 700, margin: "0 auto" }}>
+    <div style={{ padding: "24px 20px 80px", maxWidth: 720, margin: "0 auto" }}>
 
-      {/* Greeting */}
-      <div style={{ marginBottom: 16 }}>
-        <h1 className="serif" style={{ fontSize: "2rem", color: "#f5f0ff", marginBottom: 4 }}>Bem-vindo(a)</h1>
-        <p style={{ color: "#9575cd", fontSize: 15 }}>{profile?.email || user?.email}</p>
+      {/* Saudação grande e amorosa */}
+      <div style={{ marginBottom: 22 }}>
+        <h1 className="serif" style={{ fontSize: "clamp(2rem, 5vw, 2.6rem)", color: "#f5f0ff", marginBottom: 6, lineHeight: 1.15 }}>
+          Bem-vinda, <span style={{ color: "#e8b84b" }}>{capitalized}</span> ✨
+        </h1>
+        <p style={{ color: "#fbf8ff", fontSize: 18, lineHeight: 1.5, fontWeight: 500 }}>
+          Como você está hoje, minha querida alma?
+        </p>
       </div>
 
-      {/* Plan */}
-      <div className="card" style={{ padding: "18px 20px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 12, color: "#9575cd", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Seu plano</div>
+      {/* Plano + restante juntos em cards grandes */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 22 }}>
+        <div className="card" style={{ padding: "18px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 13, color: "#c4b5fd", marginBottom: 8, fontWeight: 600 }}>SEU PLANO</div>
           <PlanBadge plan={plan} />
+          {plan !== "premium" && (
+            <Link href="/#planos" style={{ display: "block", marginTop: 12, color: "#e8b84b", fontWeight: 700, fontSize: 14, textDecoration: "underline" }}>
+              ⬆️ Fazer upgrade
+            </Link>
+          )}
         </div>
-        {plan !== "premium" && (
-          <Link href="/#planos" className="btn-gold" style={{ padding: "10px 20px", fontSize: 14 }}>Fazer Upgrade</Link>
-        )}
-      </div>
-
-      {/* Remaining */}
-      <div className="card-gold" style={{ padding: "20px 24px", marginBottom: 24 }}>
-        <div style={{ fontSize: 12, color: "#c4b5fd", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{periodLabel}</div>
-        <div className="serif" style={{ fontSize: "3rem", color: "#e8b84b", fontWeight: 700, lineHeight: 1 }}>{remaining}</div>
+        <div className="card-gold" style={{ padding: "18px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 12, color: "#c4b5fd", marginBottom: 6, fontWeight: 600, lineHeight: 1.3 }}>{periodLabel}</div>
+          <div className="serif" style={{ fontSize: "2.6rem", color: "#e8b84b", fontWeight: 700, lineHeight: 1 }}>{remaining}</div>
+          <div style={{ fontSize: 13, color: "#9575cd", marginTop: 4 }}>{remaining === 1 ? "mensagem restante" : "mensagens restantes"}</div>
+        </div>
       </div>
 
       {/* 🍀 Números da Sorte do Dia (engajamento diário) */}
@@ -83,16 +91,16 @@ export default async function DashboardHome() {
           overflow: "hidden",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
           <div>
-            <div style={{ fontSize: 12, color: "#f5c860", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-              🍀 Hoje • Números da Sorte
+            <div style={{ fontSize: 13, color: "#f5c860", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+              🍀 Hoje · Números da Sorte
             </div>
-            <div className="serif" style={{ fontSize: "1.3rem", color: "#fbf8ff" }}>
-              Veja seus 6 números do dia
+            <div className="serif" style={{ fontSize: "1.5rem", color: "#fbf8ff", fontWeight: 600 }}>
+              Seus 6 números de hoje
             </div>
           </div>
-          <span style={{ fontSize: 36 }}>{isPremium ? "🎰" : "🔒"}</span>
+          <span style={{ fontSize: 44 }}>{isPremium ? "🎰" : "🔒"}</span>
         </div>
 
         {/* Preview dos números (borrados se não for premium) */}
@@ -123,40 +131,69 @@ export default async function DashboardHome() {
         </div>
 
         {!isPremium && (
-          <div style={{ textAlign: "center", marginTop: 8, fontSize: 13, color: "#f5c860", fontWeight: 600 }}>
-            ✨ Disponível no plano Premium
+          <div style={{
+            textAlign: "center",
+            marginTop: 14,
+            padding: "12px 16px",
+            background: "rgba(232,184,75,0.12)",
+            borderRadius: 12,
+            border: "1px solid rgba(232,184,75,0.3)",
+          }}>
+            <div style={{ fontSize: 16, color: "#f5c860", fontWeight: 700, marginBottom: 2 }}>
+              🔓 Disponível no plano Premium
+            </div>
+            <div style={{ fontSize: 14, color: "#fbf8ff" }}>
+              Toque aqui para ver
+            </div>
           </div>
         )}
       </Link>
 
-      {/* Quick access */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+      {/* Quick access — cards grandes e claros */}
+      <h2 className="serif" style={{ fontSize: "1.4rem", color: "#fbf8ff", marginBottom: 14, marginTop: 8 }}>
+        ✨ O que você quer fazer agora?
+      </h2>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 28 }}>
         {quick.map((q) => (
-          <Link key={q.href} href={q.href} className="card" style={{ padding: "20px", textDecoration: "none", display: "block" }}>
-            <div style={{ fontSize: 30, marginBottom: 8 }}>{q.icon}</div>
-            <div className="serif" style={{ fontSize: "1.1rem", color: "#e8b84b", marginBottom: 4 }}>{q.title}</div>
-            <p style={{ fontSize: 14, color: "#c4b5fd", margin: 0 }}>{q.desc}</p>
+          <Link
+            key={q.href}
+            href={q.href}
+            className="card"
+            style={{
+              padding: "22px 20px",
+              textDecoration: "none",
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 150,
+              transition: "transform .15s, border-color .15s",
+              border: "1.5px solid rgba(232,184,75,0.25)",
+            }}
+          >
+            <div style={{ fontSize: 44, marginBottom: 12 }}>{q.icon}</div>
+            <div className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 6, fontWeight: 700, lineHeight: 1.2 }}>{q.title}</div>
+            <p style={{ fontSize: 15, color: "#fbf8ff", margin: 0, lineHeight: 1.5 }}>{q.desc}</p>
           </Link>
         ))}
       </div>
 
-      {/* 🕊️ Upsell: Limpeza Espiritual */}
+      {/* 🕊️ Upsell: Limpeza Espiritual — destaque grande */}
       <Link
         href="/dashboard/limpeza-espiritual"
         style={{
           display: "block",
           background: "linear-gradient(135deg, #1e0040 0%, #4a1a7a 50%, #1e0040 100%)",
-          border: "2px solid rgba(245,184,212,0.4)",
-          borderRadius: 18,
-          padding: "22px",
+          border: "3px solid rgba(232,184,75,0.5)",
+          borderRadius: 22,
+          padding: "28px 22px",
           textDecoration: "none",
           textAlign: "center",
           position: "relative",
           overflow: "hidden",
+          boxShadow: "0 12px 36px rgba(232,184,75,0.18)",
         }}
       >
-        <div style={{ fontSize: 48, marginBottom: 8 }}>🕊️</div>
-        <div className="serif" style={{ fontSize: "1.5rem", color: "#f5c860", marginBottom: 6 }}>
+        <div style={{ fontSize: 64, marginBottom: 10 }}>🕊️</div>
+        <div className="serif" style={{ fontSize: "1.8rem", color: "#f5c860", marginBottom: 8, fontWeight: 700 }}>
           Limpeza Espiritual
         </div>
         <p style={{ fontSize: "1rem", color: "#d9cdfc", lineHeight: 1.6, marginBottom: 14, maxWidth: 380, margin: "0 auto 14px" }}>
@@ -166,11 +203,11 @@ export default async function DashboardHome() {
           display: "inline-block",
           background: "linear-gradient(90deg, #f5c860, #e8b84b)",
           color: "#1e0040",
-          padding: "12px 28px",
+          padding: "18px 36px",
           borderRadius: 999,
           fontWeight: 800,
-          fontSize: 15,
-          boxShadow: "0 4px 16px rgba(232,184,75,0.4)",
+          fontSize: 17,
+          boxShadow: "0 6px 22px rgba(232,184,75,0.5)",
         }}>
           ✨ Quero fazer minha limpeza
         </div>

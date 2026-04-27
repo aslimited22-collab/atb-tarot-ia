@@ -45,26 +45,27 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
         </div>
       </div>
 
-      {/* Links */}
+      {/* Links — texto e ícones grandes para 60+ */}
       <nav style={{ flex:1, paddingTop:8 }}>
         {LINKS.map((l) => {
           const locked = ORDER[plan] < ORDER[l.min];
           const active = pathname === l.href;
           return (
             <Link key={l.href} href={l.href} onClick={() => setOpen(false)} style={{
-              display:"flex", alignItems:"center", gap:14,
-              padding:"16px 18px",
-              background: active ? "rgba(232,184,75,0.12)" : "transparent",
-              borderLeft: active ? "4px solid #e8b84b" : "4px solid transparent",
-              color: active ? "#f5f0ff" : "#c4b5fd",
-              fontWeight: active ? 700 : 400,
-              fontSize: 17,
+              display:"flex", alignItems:"center", gap:16,
+              padding:"18px 20px",
+              background: active ? "rgba(232,184,75,0.18)" : "transparent",
+              borderLeft: active ? "5px solid #e8b84b" : "5px solid transparent",
+              color: active ? "#fbf8ff" : "#d9cdfc",
+              fontWeight: active ? 700 : 600,
+              fontSize: 18,
               textDecoration:"none",
-              minHeight: 56,
+              minHeight: 64,
+              transition: "background .15s",
             }}>
-              <span style={{ fontSize:24 }}>{l.icon}</span>
+              <span style={{ fontSize:28 }}>{l.icon}</span>
               <span style={{ flex:1 }}>{l.label}</span>
-              {locked && <span style={{ fontSize:12, fontWeight:600, background:"rgba(232,184,75,0.15)", color:"#e8b84b", border:"1px solid rgba(232,184,75,0.4)", borderRadius:20, padding:"3px 10px" }}>{l.min==="premium"?"Premium":"Básico"}</span>}
+              {locked && <span style={{ fontSize:11, fontWeight:700, background:"rgba(232,184,75,0.2)", color:"#e8b84b", border:"1px solid rgba(232,184,75,0.5)", borderRadius:20, padding:"4px 10px", letterSpacing: "0.04em" }}>🔒 {l.min==="premium"?"PRO":"BASIC"}</span>}
             </Link>
           );
         })}
@@ -100,11 +101,31 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
         {nav}
       </aside>
 
-      {/* Mobile bar */}
+      {/* Mobile bar — texto e botão grandes */}
       <div className="md:hidden sticky top-0 z-30" style={{ background:SIDE_BG, borderBottom:`1px solid ${SEP}`, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 18px" }}>
-        <button onClick={() => setOpen(!open)} style={{ fontSize:30, background:"none", border:"none", cursor:"pointer", color:"#c4b5fd", padding:"4px 8px" }}>☰</button>
-        <span className="serif" style={{ fontSize:"1.3rem", color:"#e8b84b" }}>ATB Tarot ✨</span>
-        <div style={{ width:42, height:42, borderRadius:"50%", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:18 }}>{initial}</div>
+        <button
+          onClick={() => setOpen(!open)}
+          aria-label="Abrir menu"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 16,
+            background: "rgba(232,184,75,0.15)",
+            border: "1.5px solid rgba(232,184,75,0.4)",
+            cursor: "pointer",
+            color: "#e8b84b",
+            padding: "10px 16px",
+            borderRadius: 12,
+            fontWeight: 700,
+            minHeight: 48,
+          }}
+        >
+          <span style={{ fontSize: 24 }}>☰</span>
+          <span>Menu</span>
+        </button>
+        <span className="serif" style={{ fontSize: "1.4rem", color: "#e8b84b", fontWeight: 700 }}>ATB Tarot ✨</span>
+        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg,#e8b84b,#c9950a)", color: "#120025", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20 }}>{initial}</div>
       </div>
 
       {/* Mobile drawer */}

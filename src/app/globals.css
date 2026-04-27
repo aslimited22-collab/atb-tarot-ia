@@ -27,6 +27,13 @@ html, body {
   line-height: 1.65;
 }
 
+/* Foco visível para acessibilidade — contorno dourado em qualquer interativo */
+*:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
 h1, h2, h3, .serif {
   font-family: 'Cormorant Garamond', Georgia, serif;
   color: var(--text-primary);
@@ -58,53 +65,83 @@ h1, h2, h3, .serif {
 
 .border-gold { border: 1.5px solid var(--gold) !important; }
 
-/* Botão dourado sólido */
+/* Botão dourado sólido — tamanho amigável para 60+ */
 .btn-gold {
   background: linear-gradient(135deg, #e8b84b 0%, #c9950a 100%);
   color: #120025;
   font-weight: 700;
-  padding: 1rem 2rem;
+  padding: 1.1rem 2rem;
   border-radius: 16px;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   display: inline-block;
   text-align: center;
-  transition: opacity .15s;
+  transition: opacity .15s, transform .1s;
   letter-spacing: 0.01em;
-  min-height: 52px;
+  min-height: 60px;
+  cursor: pointer;
 }
-.btn-gold:hover { opacity: 0.88; }
+.btn-gold:hover { opacity: 0.92; }
+.btn-gold:active { transform: scale(0.98); }
 
 /* Botão contorno */
 .btn-outline {
-  border: 2px solid var(--gold);
+  border: 2.5px solid var(--gold);
   color: var(--gold);
   background: transparent;
-  padding: 0.85rem 1.75rem;
+  padding: 1rem 1.75rem;
   border-radius: 16px;
-  font-weight: 600;
-  font-size: 1.1rem;
-  min-height: 52px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  min-height: 60px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.btn-outline:hover { background: rgba(232,184,75,0.1); }
+
+/* Botão grande — para CTAs principais (compra, próximo passo) */
+.btn-big {
+  padding: 1.4rem 2.4rem !important;
+  font-size: 1.35rem !important;
+  min-height: 70px !important;
+  border-radius: 18px !important;
+  font-weight: 800 !important;
 }
 
 /* Input */
 .input {
   background: var(--surface2);
-  border: 1.5px solid rgba(196,181,253,0.25);
+  border: 2px solid rgba(196,181,253,0.3);
   border-radius: 14px;
-  padding: 1rem 1.2rem;
+  padding: 1.1rem 1.3rem;
   color: var(--text-primary);
   width: 100%;
-  font-size: 1.1rem;
-  transition: border-color .15s;
+  font-size: 1.15rem;
+  min-height: 60px;
+  transition: border-color .15s, background .15s;
 }
 .input:focus  { outline: none; border-color: var(--gold); background: var(--surface3); }
 .input::placeholder { color: var(--text-muted); }
+
+/* Input grande — quando precisa de muito destaque */
+.input-big {
+  padding: 1.3rem 1.4rem !important;
+  font-size: 1.25rem !important;
+  min-height: 70px !important;
+}
+
+/* Tooltip de ajuda discreto */
+.help-hint {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: 0.5rem;
+}
 
 /* Bolha do usuário — dourado */
 .bubble-user {
   background: linear-gradient(135deg, #e8b84b, #c9950a);
   color: #120025;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   line-height: 1.75;
   font-weight: 500;
 }
@@ -114,14 +151,14 @@ h1, h2, h3, .serif {
   background: var(--surface2);
   color: var(--text-primary);
   border: 1px solid rgba(196,181,253,0.2);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   line-height: 1.75;
 }
 
 /* Typing dots */
 .typing-dot {
   display: inline-block;
-  width: 8px; height: 8px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   background: var(--gold);
   animation: typingBounce 1.2s infinite ease-in-out;
@@ -131,5 +168,19 @@ h1, h2, h3, .serif {
 
 @keyframes typingBounce {
   0%,60%,100% { transform: translateY(0); opacity: 0.35; }
-  30%          { transform: translateY(-6px); opacity: 1; }
+  30%          { transform: translateY(-8px); opacity: 1; }
 }
+
+/* Animação de pulse pra elementos importantes */
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.pulse-attention { animation: gentlePulse 2.5s ease-in-out infinite; }
+
+/* Animação de fade-in suave */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fadeInUp 0.4s ease-out both; }

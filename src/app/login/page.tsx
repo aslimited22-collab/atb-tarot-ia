@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading]   = useState(false);
+  const [showPwd, setShowPwd]   = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,35 +22,128 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (error) {
-      // Mensagem genérica anti user-enumeration
-      return toast.error("Email ou senha incorretos.");
+      return toast.error("Email ou senha incorretos. Tente de novo.");
     }
-    toast.success("Bem-vindo(a) de volta.");
+    toast.success("Bem-vinda de volta!");
     router.push("/dashboard");
     router.refresh();
   }
 
   return (
-    <main style={{ background: "radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 70%)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
-      <div style={{ width: "100%", maxWidth: 420 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 60, marginBottom: 8 }}>🔮</div>
-          <h1 className="serif" style={{ fontSize: "2rem", color: "#f5f0ff" }}>ATB Tarot</h1>
-          <p style={{ color: "#c4b5fd", fontSize: 16, marginTop: 4 }}>Entre na sua conta</p>
-        </div>
-        <form onSubmit={handleSubmit} className="card" style={{ padding: "32px 28px" }}>
-          <label style={{ display: "block", color: "#c4b5fd", fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Email</label>
-          <input className="input" style={{ marginBottom: 20 }} type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <label style={{ display: "block", color: "#c4b5fd", fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Senha</label>
-          <input className="input" style={{ marginBottom: 28 }} type="password" placeholder="••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          <button disabled={loading} className="btn-gold w-full" style={{ padding: "16px", fontSize: "1.1rem" }}>
-            {loading ? "Entrando..." : "Entrar"}
-          </button>
-          <p style={{ textAlign: "center", fontSize: 16, color: "#9575cd", marginTop: 18 }}>
-            Não tem conta?{" "}
-            <Link href="/cadastro" style={{ color: "#e8b84b", fontWeight: 700 }}>Cadastre-se</Link>
+    <main style={{
+      background: "radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 70%)",
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "1.5rem",
+    }}>
+      <div style={{ width: "100%", maxWidth: 480 }}>
+        {/* Logo + título */}
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div style={{ fontSize: 80, marginBottom: 14 }}>🔮</div>
+          <h1 className="serif" style={{ fontSize: "2.8rem", color: "#f5f0ff", lineHeight: 1.1, marginBottom: 10 }}>
+            ATB Tarot
+          </h1>
+          <p style={{ color: "#fbf8ff", fontSize: 19, lineHeight: 1.5 }}>
+            Bem-vinda de volta, minha querida alma 💛
           </p>
+        </div>
+
+        {/* Formulário */}
+        <form onSubmit={handleSubmit} className="card" style={{ padding: "36px 32px" }}>
+          <h2 className="serif" style={{ fontSize: "1.7rem", color: "#e8b84b", marginBottom: 24, textAlign: "center" }}>
+            Entrar na sua conta
+          </h2>
+
+          {/* Email */}
+          <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
+            Seu email
+          </label>
+          <input
+            id="email"
+            className="input input-big"
+            type="email"
+            placeholder="exemplo@gmail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            inputMode="email"
+            style={{ marginBottom: 24 }}
+          />
+
+          {/* Senha */}
+          <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
+            Sua senha
+          </label>
+          <div style={{ position: "relative", marginBottom: 16 }}>
+            <input
+              id="password"
+              className="input input-big"
+              type={showPwd ? "text" : "password"}
+              placeholder="A senha que você cadastrou"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              style={{ paddingRight: 110 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPwd(!showPwd)}
+              style={{
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "rgba(232,184,75,0.15)",
+                border: "1px solid rgba(232,184,75,0.4)",
+                color: "#e8b84b",
+                fontSize: 14,
+                fontWeight: 700,
+                padding: "10px 14px",
+                borderRadius: 10,
+                cursor: "pointer",
+                minHeight: 0,
+              }}
+            >
+              {showPwd ? "🙈 Ocultar" : "👁️ Mostrar"}
+            </button>
+          </div>
+
+          <button
+            disabled={loading}
+            className="btn-gold btn-big"
+            style={{
+              width: "100%",
+              opacity: loading ? 0.6 : 1,
+              cursor: loading ? "not-allowed" : "pointer",
+              border: "none",
+              marginTop: 16,
+              marginBottom: 24,
+            }}
+          >
+            {loading ? "Entrando..." : "✨ Entrar"}
+          </button>
+
+          {/* Link cadastro */}
+          <div style={{ textAlign: "center", padding: "16px 0", borderTop: "1px solid rgba(196,181,253,0.18)" }}>
+            <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.6, margin: 0 }}>
+              Ainda não tem conta?<br />
+              <Link href="/cadastro" style={{ color: "#e8b84b", fontWeight: 700, fontSize: 19, textDecoration: "underline", display: "inline-block", marginTop: 8, padding: "8px 16px" }}>
+                ✨ Criar minha conta agora
+              </Link>
+            </p>
+          </div>
         </form>
+
+        {/* Voltar para landing */}
+        <div style={{ textAlign: "center", marginTop: 24 }}>
+          <Link href="/" style={{ color: "#c4b5fd", fontSize: 16, textDecoration: "none", padding: "8px 16px" }}>
+            ← Voltar para a página inicial
+          </Link>
+        </div>
       </div>
     </main>
   );
