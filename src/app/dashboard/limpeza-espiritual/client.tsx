@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import { BackButton } from "@/components/BackButton";
 
 type Msg = { id?: string; role: string; content: string };
 
@@ -157,10 +158,7 @@ export default function LimpezaClient({
         }
       `}</style>
 
-      {/* Voltar */}
-      <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#c4b5fd", fontSize: 15, textDecoration: "none", marginBottom: 16, padding: "8px 12px", borderRadius: 10, background: "rgba(196,181,253,0.08)" }}>
-        ← Voltar para o Painel
-      </Link>
+      <BackButton />
 
       {/* Header sagrado */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { UpgradeLock } from "@/components/UpgradeLock";
+import { BackButton } from "@/components/BackButton";
 import { JournalClient } from "./client";
 import type { Plan } from "@/lib/types";
 
@@ -11,8 +12,9 @@ export default async function JournalPage() {
 
   if (plan === "free") {
     return (
-      <div className="p-6 md:p-10">
-        <h1 className="serif text-3xl gold mb-6">Diário da Ansiedade</h1>
+      <div className="p-6 md:p-10 max-w-3xl mx-auto">
+        <BackButton />
+        <h1 className="serif text-3xl gold mb-6">📖 Meu Diário</h1>
         <UpgradeLock required="basic" />
       </div>
     );

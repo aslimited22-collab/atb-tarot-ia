@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Skeleton } from "@/components/Skeleton";
+import { BackButton } from "@/components/BackButton";
 
 type Entry = { id: string; user_input: string; ai_response: string; created_at: string };
 
@@ -47,6 +48,7 @@ export function JournalClient() {
 
   return (
     <div className="p-6 md:p-10 max-w-3xl mx-auto">
+      <BackButton />
       <h1 className="serif text-3xl md:text-4xl gold mb-2">Diário da Ansiedade</h1>
       <p className="text-white/70 mb-6">Registre como está se sentindo. ATB responderá com reflexão e acolhimento.</p>
 

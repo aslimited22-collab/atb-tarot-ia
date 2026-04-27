@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import toast from "react-hot-toast";
 import { Skeleton } from "@/components/Skeleton";
+import { BackButton } from "@/components/BackButton";
 
 type Reading = { card: string; interpretation: string; message: string };
 
@@ -27,10 +27,7 @@ export default function OraclePage() {
 
   return (
     <div style={{ padding: "24px 20px 80px", maxWidth: 720, margin: "0 auto" }}>
-      {/* Voltar */}
-      <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#c4b5fd", fontSize: 16, textDecoration: "none", marginBottom: 18, padding: "10px 14px", borderRadius: 12, background: "rgba(196,181,253,0.08)", fontWeight: 600 }}>
-        ← Voltar
-      </Link>
+      <BackButton />
 
       {/* Header com data */}
       <div style={{ textAlign: "center", marginBottom: 26 }}>

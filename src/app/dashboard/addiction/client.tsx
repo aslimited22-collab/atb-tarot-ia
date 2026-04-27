@@ -2,6 +2,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { Skeleton } from "@/components/Skeleton";
+import { BackButton } from "@/components/BackButton";
 
 const CATEGORIES = [
   { id: "Alimentação Emocional", icon: "🍰" },
@@ -81,7 +82,8 @@ export function AddictionClient() {
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto">
-      <h1 className="serif text-3xl md:text-4xl gold mb-2">Guia de Vícios</h1>
+      <BackButton />
+      <h1 className="serif text-3xl md:text-4xl gold mb-2">🕯️ Guia Espiritual</h1>
       <p className="text-white/70 mb-8">Escolha um padrão que deseja compreender e romper.</p>
 
       {/* Grade de categorias */}

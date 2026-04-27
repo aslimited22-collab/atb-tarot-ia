@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { UpgradeLock } from "@/components/UpgradeLock";
+import { BackButton } from "@/components/BackButton";
 import { dailyLuckyNumbers, nextRefreshHours } from "@/lib/numerology";
 import type { Plan } from "@/lib/types";
 
@@ -14,7 +15,12 @@ export default async function NumerologiaPage() {
   const plan: Plan = (profile?.plan as Plan) || "free";
 
   if (plan !== "premium") {
-    return <UpgradeLock required="premium" />;
+    return (
+      <div style={{ padding: "24px 20px", maxWidth: 720, margin: "0 auto" }}>
+        <BackButton />
+        <UpgradeLock required="premium" />
+      </div>
+    );
   }
 
   const numbers = dailyLuckyNumbers(user!.id);
@@ -23,7 +29,8 @@ export default async function NumerologiaPage() {
   const firstName = (profile?.name || profile?.email?.split("@")[0] || "querida").split(" ")[0];
 
   return (
-    <div style={{ padding: "32px 20px 80px", maxWidth: 720, margin: "0 auto", color: "#f5f0ff" }}>
+    <div style={{ padding: "24px 20px 80px", maxWidth: 720, margin: "0 auto", color: "#f5f0ff" }}>
+      <BackButton />
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 28 }}>

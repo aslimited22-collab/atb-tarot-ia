@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import { ChatBubble } from "@/components/ChatBubble";
 import { Skeleton } from "@/components/Skeleton";
@@ -132,11 +133,33 @@ export default function ChatPage() {
   return (
     <div style={{ display:"flex", flexDirection:"column", background:"#120025" }} className="h-[calc(100vh-57px)] md:h-screen">
 
-      <div style={{ padding: "16px 20px", background: "#1a0035", borderBottom: "1px solid rgba(196,181,253,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-        <h1 className="serif" style={{ fontSize: "1.7rem", color: "#f5f0ff", fontWeight: 700 }}>💬 Chat com ATB</h1>
-        <div style={{ fontSize: 16, color: "#fbf8ff", fontWeight: 600, background: "rgba(232,184,75,0.12)", padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(232,184,75,0.3)" }}>
-          {remaining < 0 ? "∞" : remaining} {remaining === 1 ? "restante" : "restantes"}
+      <div style={{ padding: "14px 16px 12px", background: "#1a0035", borderBottom: "1px solid rgba(196,181,253,0.15)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
+          <Link
+            href="/dashboard"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              color: "#fbf8ff",
+              fontSize: 15,
+              fontWeight: 700,
+              textDecoration: "none",
+              padding: "10px 14px",
+              borderRadius: 10,
+              background: "rgba(232,184,75,0.12)",
+              border: "1.5px solid rgba(232,184,75,0.4)",
+              minHeight: 44,
+            }}
+          >
+            <span style={{ fontSize: 18 }}>←</span>
+            <span>Painel</span>
+          </Link>
+          <div style={{ fontSize: 16, color: "#fbf8ff", fontWeight: 600, background: "rgba(232,184,75,0.12)", padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(232,184,75,0.3)" }}>
+            {remaining < 0 ? "∞" : remaining} {remaining === 1 ? "restante" : "restantes"}
+          </div>
         </div>
+        <h1 className="serif" style={{ fontSize: "1.7rem", color: "#f5f0ff", fontWeight: 700, margin: 0 }}>💬 Chat com ATB</h1>
       </div>
 
       <div ref={scrollRef} style={{ flex:1, overflowY:"auto", padding:"16px" }}>
