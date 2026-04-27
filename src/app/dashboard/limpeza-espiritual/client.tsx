@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import toast from "react-hot-toast";
 
 type Msg = { id?: string; role: string; content: string };
@@ -834,34 +835,45 @@ function ConfirmingPurchase({ firstName }: { firstName: string }) {
 }
 
 function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: string }) {
+  const CARD_IMGS = [
+    { img: "/img/carta-limpeza.png", title: "Limpeza" },
+    { img: "/img/carta-caminhos.png", title: "Caminhos" },
+    { img: "/img/carta-protecao.png", title: "Proteção" },
+  ];
+
   return (
     <div style={{ padding: "32px 20px 80px", maxWidth: 620, margin: "0 auto", color: "#f5f0ff" }}>
+      {/* Imagem real do altar */}
+      <div style={{ borderRadius: 22, overflow: "hidden", marginBottom: 22, boxShadow: "0 18px 50px rgba(232,184,75,0.25), 0 0 0 2px rgba(232,184,75,0.4)" }}>
+        <Image
+          src="/img/limpeza-altar.png"
+          alt="Altar sagrado da Limpeza Espiritual"
+          width={1536}
+          height={1024}
+          priority
+          style={{ width: "100%", height: "auto", display: "block" }}
+        />
+      </div>
+
       <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <div style={{ fontSize: 72, marginBottom: 12 }}>🕊️</div>
-        <h1 className="serif" style={{ fontSize: "2.4rem", color: "#e8b84b", lineHeight: 1.15, marginBottom: 10 }}>
+        <h1 className="serif" style={{ fontSize: "clamp(2rem, 5vw, 2.6rem)", color: "#e8b84b", lineHeight: 1.15, marginBottom: 12 }}>
           Limpeza Espiritual com ATB
         </h1>
-        <p style={{ fontSize: "1.15rem", color: "#c4b5fd", lineHeight: 1.65, maxWidth: 480, margin: "0 auto" }}>
-          {firstName}, esta é uma sessão sagrada e exclusiva. ATB vai te limpar de toda energia pesada, abrir seus caminhos e te proteger com a força dos santos.
+        <p style={{ fontSize: "1.2rem", color: "#fbf8ff", lineHeight: 1.65, maxWidth: 500, margin: "0 auto", fontWeight: 500 }}>
+          {firstName}, ATB vai te limpar de toda energia pesada, abrir seus caminhos e te proteger com a força dos santos.
         </p>
       </div>
 
-      {/* Mockup das 3 cartas */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 24, filter: "blur(2px) brightness(0.7)" }}>
-        {CARDS.map((c) => (
-          <div key={c.id} style={{
-            background: c.color,
+      {/* Preview das cartas reais (borradas) */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 24, filter: "blur(3px) brightness(0.65)" }}>
+        {CARD_IMGS.map((c) => (
+          <div key={c.title} style={{
             borderRadius: 14,
-            padding: "20px 8px",
-            textAlign: "center",
-            aspectRatio: "2 / 3",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            color: "#1e0040",
+            overflow: "hidden",
+            aspectRatio: "1 / 1",
+            border: "2px solid rgba(232,184,75,0.5)",
           }}>
-            <div style={{ fontSize: 36, marginBottom: 6 }}>{c.icon}</div>
-            <div className="serif" style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2 }}>{c.title}</div>
+            <Image src={c.img} alt={c.title} width={400} height={400} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
         ))}
       </div>
@@ -888,18 +900,23 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
         </ul>
       </div>
 
-      {/* Santos */}
-      <div className="card-gold" style={{ padding: "18px 16px", marginBottom: 24, textAlign: "center" }}>
-        <div style={{ fontSize: 12, color: "#c4b5fd", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-          Forças Sagradas que estarão com você
+      {/* Santos com imagem real */}
+      <div className="card-gold" style={{ padding: "16px", marginBottom: 24, textAlign: "center" }}>
+        <div style={{ fontSize: 13, color: "#c4b5fd", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 600 }}>
+          ✨ Os santos que vão estar com você ✨
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 14 }}>
-          {SAINTS.map((s) => (
-            <div key={s.name} style={{ textAlign: "center", width: 80 }}>
-              <div style={{ fontSize: 30, marginBottom: 4 }}>{s.icon}</div>
-              <div style={{ fontSize: 10, color: "#fbf8ff", lineHeight: 1.3 }}>{s.name}</div>
-            </div>
-          ))}
+        <div style={{ borderRadius: 14, overflow: "hidden", marginBottom: 12 }}>
+          <Image
+            src="/img/santos-grid.png"
+            alt="Santos católicos brasileiros"
+            width={1536}
+            height={1024}
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
+        <div style={{ fontSize: 11, color: "#fbf8ff", lineHeight: 1.5, opacity: 0.85 }}>
+          N. S. Aparecida • Sagrado Coração • S. Miguel<br />
+          Santo Antônio • S. Jorge • N. S. Desatadora
         </div>
       </div>
 

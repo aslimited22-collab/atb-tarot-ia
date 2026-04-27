@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { LangSwitcher } from "@/components/LangSwitcher";
-import { AltarSvg } from "@/components/AltarSvg";
 
 const S = {
   bg:      "#120025",
@@ -49,31 +49,59 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section style={{ textAlign: "center", padding: "80px 24px 72px", background: "radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 65%)" }}>
-        <div style={{ fontSize: 68, marginBottom: 18 }}>🔮</div>
-        <h1 className="serif" style={{ fontSize: "clamp(2.4rem,6vw,5rem)", color: S.text, lineHeight: 1.12, marginBottom: 18 }}>
-          {t("hero.title_1")}<br/>{t("hero.title_2")}
-        </h1>
-        <p style={{ fontSize: "1.2rem", color: S.text2, maxWidth: 520, margin: "0 auto 36px", lineHeight: 1.7 }}>
-          {t("hero.desc")}
-        </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link href="/cadastro" className="btn-gold" style={{ fontSize: "1.05rem", padding: "16px 32px", textDecoration: "none" }}>
-            {t("hero.cta")}
-          </Link>
-          <a href="#limpeza" className="btn-outline" style={{
-            fontSize: "1.05rem",
-            padding: "16px 32px",
-            textDecoration: "none",
-            color: S.gold,
-            border: `2px solid ${S.gold}`,
-            borderRadius: 999,
-            fontWeight: 700,
-            display: "inline-block",
-          }}>
-            🕊️ Limpeza Espiritual
-          </a>
+      {/* Hero com imagem real */}
+      <section style={{ padding: "60px 24px 72px", background: "radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 65%)", position: "relative", overflow: "hidden" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 40, alignItems: "center" }}>
+
+          {/* Texto à esquerda */}
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: 14, color: S.gold, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 12 }}>
+              ✨ TAROT • LIMPEZA ESPIRITUAL • PROTEÇÃO ✨
+            </div>
+            <h1 className="serif" style={{ fontSize: "clamp(2.4rem,5.5vw,4.4rem)", color: S.text, lineHeight: 1.1, marginBottom: 22 }}>
+              {t("hero.title_1")}<br/>
+              <span style={{ color: S.gold }}>{t("hero.title_2")}</span>
+            </h1>
+            <p style={{ fontSize: "1.25rem", color: S.text, maxWidth: 540, marginBottom: 32, lineHeight: 1.65, fontWeight: 500 }}>
+              {t("hero.desc")}
+            </p>
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+              <Link href="/cadastro" className="btn-gold" style={{ fontSize: "1.1rem", padding: "18px 32px", textDecoration: "none", fontWeight: 700 }}>
+                {t("hero.cta")}
+              </Link>
+              <a href="#limpeza" style={{
+                fontSize: "1.1rem",
+                padding: "18px 32px",
+                textDecoration: "none",
+                color: S.gold,
+                border: `2px solid ${S.gold}`,
+                borderRadius: 999,
+                fontWeight: 700,
+                display: "inline-block",
+              }}>
+                🕊️ Limpeza Espiritual
+              </a>
+            </div>
+          </div>
+
+          {/* Imagem à direita — mulher madura abençoada */}
+          <div style={{ position: "relative", borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 60px rgba(232,184,75,0.25), 0 0 0 3px rgba(232,184,75,0.4)" }}>
+            <Image
+              src="/img/landing-hero.png"
+              alt="Mulher abençoada recebendo a luz divina"
+              width={768}
+              height={512}
+              priority
+              style={{ width: "100%", height: "auto", display: "block" }}
+            />
+            {/* Gradiente sutil pra integrar com fundo */}
+            <div style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(180deg, transparent 60%, rgba(18,0,37,0.5) 100%)",
+              pointerEvents: "none",
+            }} />
+          </div>
         </div>
       </section>
 
@@ -118,9 +146,15 @@ export default function Home() {
         </svg>
         <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative", zIndex: 1 }}>
           <div style={{ textAlign: "center", marginBottom: 36 }}>
-            {/* Ilustração SVG do altar sagrado */}
-            <div style={{ marginBottom: 18 }}>
-              <AltarSvg size={280} />
+            {/* Imagem real do altar sagrado */}
+            <div style={{ marginBottom: 24, borderRadius: 24, overflow: "hidden", maxWidth: 720, margin: "0 auto 24px", boxShadow: "0 25px 70px rgba(232,184,75,0.3), 0 0 0 3px rgba(232,184,75,0.5)" }}>
+              <Image
+                src="/img/limpeza-altar.png"
+                alt="Altar sagrado com vela acesa, manto, rosa branca e Nossa Senhora"
+                width={1536}
+                height={1024}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
             </div>
 
             <div style={{ fontSize: 16, color: "#f5c860", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
@@ -134,31 +168,51 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Cartas de tarot — maiores para 60+ */}
+          {/* 3 Cartas de tarot com imagens reais */}
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
-            gap: 18,
-            marginBottom: 40,
+            gap: 22,
+            marginBottom: 44,
           }}>
             {[
-              { icon: "🕯️", title: "Limpeza Profunda", saint: "Nossa Senhora Aparecida", desc: "Tira energia pesada, mau-olhado e a dor da alma", color: "linear-gradient(135deg, #e8b84b 0%, #c89a2a 100%)" },
-              { icon: "🗝️", title: "Abrir Caminhos", saint: "Santo Antônio", desc: "Desata o que está travando sua vida e o seu dinheiro", color: "linear-gradient(135deg, #6a4a8a 0%, #4a2f6a 100%)" },
-              { icon: "⚔️", title: "Proteção", saint: "São Miguel e São Jorge", desc: "Corta feitiço, inveja e olho gordo com a espada divina", color: "linear-gradient(135deg, #d4344a 0%, #8a1f30 100%)" },
+              { img: "/img/carta-limpeza.png", title: "Limpeza Profunda", saint: "Nossa Senhora Aparecida", desc: "Tira energia pesada, mau-olhado e a dor da alma" },
+              { img: "/img/carta-caminhos.png", title: "Abrir Caminhos", saint: "Santo Antônio", desc: "Desata o que está travando sua vida e o seu dinheiro" },
+              { img: "/img/carta-protecao.png", title: "Proteção", saint: "São Miguel e São Jorge", desc: "Corta feitiço, inveja e olho gordo com a espada divina" },
             ].map((c) => (
               <div key={c.title} style={{
-                background: c.color,
+                background: "linear-gradient(135deg, #2a0055 0%, #1e0040 100%)",
                 borderRadius: 22,
-                padding: "30px 24px",
-                color: "#1e0040",
-                boxShadow: "0 12px 32px rgba(0,0,0,0.4)",
-                border: "3px solid rgba(255,255,255,0.2)",
+                overflow: "hidden",
+                color: "#fbf8ff",
+                boxShadow: "0 14px 36px rgba(0,0,0,0.5)",
+                border: "3px solid rgba(232,184,75,0.4)",
                 textAlign: "center",
+                transition: "transform 0.2s, box-shadow 0.2s",
               }}>
-                <div style={{ fontSize: 60, marginBottom: 14 }}>{c.icon}</div>
-                <h3 className="serif" style={{ fontSize: "1.55rem", fontWeight: 700, lineHeight: 1.15, marginBottom: 6 }}>{c.title}</h3>
-                <div style={{ fontSize: 14, opacity: 0.85, fontStyle: "italic", marginBottom: 14, fontWeight: 500 }}>✦ {c.saint}</div>
-                <p style={{ fontSize: 16, lineHeight: 1.55, margin: 0, fontWeight: 500 }}>{c.desc}</p>
+                {/* Imagem da carta */}
+                <div style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", overflow: "hidden" }}>
+                  <Image
+                    src={c.img}
+                    alt={c.title}
+                    width={1024}
+                    height={1024}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                  {/* Brilho sobre a imagem */}
+                  <div style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "linear-gradient(180deg, transparent 50%, rgba(30,0,64,0.7) 100%)",
+                    pointerEvents: "none",
+                  }} />
+                </div>
+                {/* Texto abaixo */}
+                <div style={{ padding: "22px 20px" }}>
+                  <h3 className="serif" style={{ fontSize: "1.6rem", fontWeight: 700, lineHeight: 1.15, marginBottom: 6, color: S.gold }}>{c.title}</h3>
+                  <div style={{ fontSize: 14, color: S.text2, fontStyle: "italic", marginBottom: 12, fontWeight: 500 }}>✦ {c.saint}</div>
+                  <p style={{ fontSize: 16, lineHeight: 1.55, margin: 0, fontWeight: 500, color: S.text }}>{c.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -185,30 +239,36 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Santos — maiores para 60+ */}
-          <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <div style={{ fontSize: 16, color: S.gold, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 20 }}>
+          {/* Santos — imagem real ilustrada */}
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={{ fontSize: 18, color: S.gold, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 20 }}>
               ✨ Os santos que vão estar com você ✨
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 28 }}>
+            <div style={{ borderRadius: 20, overflow: "hidden", maxWidth: 820, margin: "0 auto", boxShadow: "0 18px 48px rgba(0,0,0,0.45), 0 0 0 2px rgba(232,184,75,0.4)" }}>
+              <Image
+                src="/img/santos-grid.png"
+                alt="Nossa Senhora Aparecida, Sagrado Coração, São Miguel, Santo Antônio, São Jorge e Nossa Senhora Desatadora dos Nós"
+                width={1536}
+                height={1024}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            {/* Nomes legíveis embaixo */}
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 14, marginTop: 18 }}>
               {[
-                { icon: "👑", name: "N. S. Aparecida" },
-                { icon: "❤️‍🔥", name: "Sagrado Coração" },
-                { icon: "⚔️", name: "São Miguel" },
-                { icon: "🙏", name: "Santo Antônio" },
-                { icon: "🛡️", name: "São Jorge" },
-                { icon: "🪢", name: "N. S. Desatadora" },
-              ].map((s) => (
-                <div key={s.name} style={{
-                  textAlign: "center",
-                  width: 110,
-                  padding: "14px 8px",
-                  background: "rgba(232,184,75,0.06)",
-                  borderRadius: 14,
-                  border: "1px solid rgba(232,184,75,0.2)",
+                "N. S. Aparecida", "Sagrado Coração", "São Miguel",
+                "Santo Antônio", "São Jorge", "N. S. Desatadora",
+              ].map((name) => (
+                <div key={name} style={{
+                  fontSize: 14,
+                  color: S.text2,
+                  fontWeight: 600,
+                  padding: "8px 14px",
+                  background: "rgba(232,184,75,0.1)",
+                  borderRadius: 999,
+                  border: "1px solid rgba(232,184,75,0.3)",
                 }}>
-                  <div style={{ fontSize: 48, marginBottom: 8 }}>{s.icon}</div>
-                  <div style={{ fontSize: 13, color: S.text, lineHeight: 1.35, fontWeight: 600 }}>{s.name}</div>
+                  {name}
                 </div>
               ))}
             </div>
