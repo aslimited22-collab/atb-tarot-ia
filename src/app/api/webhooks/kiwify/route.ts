@@ -135,19 +135,85 @@ export async function POST(req: Request) {
       amount_cents: Math.round(valueBRL * 100),
       user_id: userRow?.id ?? null,
     });
-    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
-    if (adminEmail && process.env.RESEND_API_KEY) {
+
+    if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY);
+      const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+      const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
+      const accessLink = `https://atbtartot.com/obrigado-limpeza?email=${encodeURIComponent(email.toLowerCase())}`;
+
+      // Email AMOROSO para a CLIENTE com link de acesso
       await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
-        to: adminEmail,
-        subject: "Nova compra: Limpeza Espiritual",
-        html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
-               <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-               <p><strong>Produto:</strong> Limpeza Espiritual</p>
-               <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
-               <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>`,
+        from: fromEmail,
+        to: email.toLowerCase(),
+        subject: "🕊️ Sua Limpeza Espiritual está pronta",
+        html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
+  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
+    <div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.4);">
+      <div style="font-size:64px;margin-bottom:16px;">🕊️</div>
+      <h1 style="font-family:'Cormorant Garamond',Georgia,serif;color:#e8b84b;font-size:32px;margin:0 0 12px;line-height:1.15;">
+        Sua Limpeza foi recebida
+      </h1>
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
+        Olá, <strong style="color:#f5c860;">${escapeHtml(firstName)}</strong>!<br>
+        Sua compra foi confirmada e os santos já estão preparando sua limpeza sagrada.
+      </p>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 28px;">
+        Aperte no botão dourado abaixo para começar agora. É bem fácil:
+      </p>
+      <a href="${accessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+        ✨ Acessar minha Limpeza
+      </a>
+      <p style="color:#c4b5fd;font-size:14px;line-height:1.6;margin:28px 0 0;">
+        Ao clicar, você vai criar uma conta com este mesmo email (${escapeHtml(email.toLowerCase())}) ou entrar se já tiver. A sua limpeza estará liberada na hora.
+      </p>
+    </div>
+
+    <div style="background:rgba(232,184,75,0.08);border:1px solid rgba(232,184,75,0.3);border-radius:14px;padding:22px;margin-top:20px;">
+      <h2 style="color:#e8b84b;font-size:18px;margin:0 0 12px;font-family:Georgia,serif;">
+        ✦ O que vai acontecer agora
+      </h2>
+      <ol style="color:#fbf8ff;font-size:16px;line-height:1.75;padding-left:22px;margin:0;">
+        <li>Aperte o botão "Acessar minha Limpeza"</li>
+        <li>Crie sua conta (é só nome, email e uma senha)</li>
+        <li>Conte para ATB o que está sentindo</li>
+        <li>Receba sua leitura sagrada com a força dos santos</li>
+      </ol>
+    </div>
+
+    <div style="text-align:center;margin-top:28px;padding:20px;color:#9575cd;font-size:13px;line-height:1.6;font-style:italic;">
+      Que Nossa Senhora Aparecida te cubra com seu manto sagrado.<br>
+      Que São Miguel te proteja com sua espada divina.<br>
+      Estamos com você, minha querida alma. 💛
+    </div>
+
+    <div style="text-align:center;margin-top:20px;color:#9575cd;font-size:12px;">
+      Pedido: ${escapeHtml(orderId) || "N/A"} · ATB Tarot
+    </div>
+  </div>
+</body>
+</html>`,
       });
+
+      // Email para o admin (notificação interna)
+      const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
+      if (adminEmail) {
+        await resend.emails.send({
+          from: fromEmail,
+          to: adminEmail,
+          subject: "💰 Nova venda: Limpeza Espiritual",
+          html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
+                 <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+                 <p><strong>Produto:</strong> Limpeza Espiritual</p>
+                 <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
+                 <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>
+                 <p>Email automático com link já enviado para a cliente.</p>`,
+        });
+      }
     }
     return NextResponse.json({ ok: true, plan: "limpeza" });
   }

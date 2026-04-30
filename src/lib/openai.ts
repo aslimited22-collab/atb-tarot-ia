@@ -2,28 +2,35 @@
 // Os outros produtos (chat, oracle, journal, addiction) continuam em DeepSeek por custo.
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
 
 export async function openaiStream(messages: Msg[]): Promise<Response> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 60_000);
+  const timer = setTimeout(() => controller.abort(), 90_000);
   try {
+    // GPT-5 usa o param `max_completion_tokens` e não suporta `temperature` custom.
+    const isGpt5 = OPENAI_MODEL.startsWith("gpt-5");
+    const body: any = {
+      model: OPENAI_MODEL,
+      messages,
+      stream: true,
+    };
+    if (isGpt5) {
+      body.max_completion_tokens = 1200;
+    } else {
+      body.temperature = 0.85;
+      body.max_tokens = 700;
+    }
+
     const res = await fetch(OPENAI_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        messages,
-        stream: true,
-        temperature: 0.85,
-        // Limita custo e tempo: ~600 tokens é suficiente para uma resposta espiritual completa
-        max_tokens: 700,
-      }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     });
     if (!res.ok) {
