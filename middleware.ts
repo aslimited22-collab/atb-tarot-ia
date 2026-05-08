@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/journal") ||
     pathname.startsWith("/api/addiction") ||
     pathname.startsWith("/api/limpeza") ||
+    pathname.startsWith("/api/espirito-mentor") ||
     pathname.startsWith("/api/auth");
 
   if (isAiRoute) {
@@ -59,6 +60,35 @@ export async function middleware(request: NextRequest) {
         }
       }
     }
+  }
+
+  // ============================================================
+  // i18n: detecção de locale via Accept-Language + cookie
+  // Salva o locale detectado em cookie 'atb_locale' para o I18nProvider
+  // hidratar sem flicker. O I18nProvider continua sendo a fonte
+  // principal (localStorage) — middleware só ajuda no primeiro carregamento.
+  // ============================================================
+  const SUPPORTED = ["pt", "en", "es", "de", "it", "ja"] as const;
+  const existing = request.cookies.get("atb_locale")?.value;
+  if (!existing) {
+    const acceptLang = (request.headers.get("accept-language") || "").toLowerCase();
+    const country = (request.headers.get("x-vercel-ip-country") || "").toUpperCase();
+
+    let detected: typeof SUPPORTED[number] = "pt";
+    if (country === "BR" || acceptLang.startsWith("pt")) detected = "pt";
+    else if (acceptLang.startsWith("es") || ["ES", "AR", "MX", "CO", "CL", "PE"].includes(country)) detected = "es";
+    else if (acceptLang.startsWith("de") || ["DE", "AT", "CH"].includes(country)) detected = "de";
+    else if (acceptLang.startsWith("it") || country === "IT") detected = "it";
+    else if (acceptLang.startsWith("ja") || country === "JP") detected = "ja";
+    else if (acceptLang.startsWith("en") || ["US", "GB", "CA", "AU", "NZ", "IE"].includes(country)) detected = "en";
+
+    const response = await updateSession(request);
+    response.cookies.set("atb_locale", detected, {
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+      path: "/",
+    });
+    return response;
   }
 
   return updateSession(request);

@@ -345,9 +345,11 @@ export default function Home() {
             </div>
 
             <div className="card" style={{ padding: "32px 24px", display: "flex", flexDirection: "column", border: "1.5px solid rgba(232,184,75,0.5)" }}>
-              <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, marginBottom: 4 }}>{t("plans.basic.name")}</h3>
+              {/* CRO: título de plano com posicionamento de valor (não "Plano Mensal") */}
+              <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, marginBottom: 4 }}>{t("checkout.title.fullAccess")}</h3>
+              {/* Tipografia hierárquica: valor grande, /mês discreto */}
               <div style={{ fontSize: "2rem", fontWeight: 700, color: S.text, marginBottom: 20 }}>
-                R$29 <span style={{ fontSize: 14, fontWeight: 400, color: S.muted }}>{t("plans.basic.period")}</span>
+                R$29 <span style={{ fontSize: 14, fontWeight: 400, color: S.muted }}>{t("price.perMonth")}</span>
               </div>
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
                 <li style={{ color: S.text2, marginBottom: 8, fontSize: 15 }}>{t("plans.basic.f1")}</li>
@@ -355,14 +357,19 @@ export default function Home() {
                 <li style={{ color: S.text2, marginBottom: 8, fontSize: 15 }}>{t("plans.basic.f3")}</li>
                 <li style={{ color: S.muted, fontSize: 15 }}>{t("plans.basic.f4")}</li>
               </ul>
-              <a href={BASIC} className="btn-gold" style={{ textAlign: "center", display: "block" }}>{t("plans.basic.cta")}</a>
+              {/* CRO: CTA sem palavra "mensal" — promete acesso, não compromisso */}
+              <a href={BASIC} className="btn-gold" style={{ textAlign: "center", display: "block" }}>{t("checkout.cta.access")}</a>
+              {/* Compliance: recorrência visível antes do clique (Stripe + FTC + EU 2011/83) */}
+              <p style={{ fontSize: 12, color: S.muted, textAlign: "center", marginTop: 10, lineHeight: 1.5 }}>
+                {t("checkout.recurringDisclaimer")}
+              </p>
             </div>
 
             <div className="card-gold" style={{ padding: "32px 24px", display: "flex", flexDirection: "column" }}>
               <div style={{ fontSize: 11, fontWeight: 700, background: S.gold, color: "#120025", borderRadius: 20, padding: "3px 12px", display: "inline-block", marginBottom: 10, alignSelf: "flex-start" }}>{t("plans.premium.badge")}</div>
-              <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, marginBottom: 4 }}>{t("plans.premium.name")}</h3>
+              <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, marginBottom: 4 }}>{t("checkout.title.madameAriel")}</h3>
               <div style={{ fontSize: "2rem", fontWeight: 700, color: S.text, marginBottom: 20 }}>
-                R$59 <span style={{ fontSize: 14, fontWeight: 400, color: S.muted }}>{t("plans.basic.period")}</span>
+                R$59 <span style={{ fontSize: 14, fontWeight: 400, color: S.muted }}>{t("price.perMonth")}</span>
               </div>
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
                 <li style={{ color: S.text, marginBottom: 8, fontSize: 15 }}>{t("plans.premium.f1")}</li>
@@ -370,7 +377,10 @@ export default function Home() {
                 <li style={{ color: S.text, marginBottom: 8, fontSize: 15 }}>{t("plans.premium.f3")}</li>
                 <li style={{ color: S.text, fontSize: 15 }}>{t("plans.premium.f4")}</li>
               </ul>
-              <a href={PREMIUM} className="btn-gold" style={{ textAlign: "center", display: "block" }}>{t("plans.premium.cta")}</a>
+              <a href={PREMIUM} className="btn-gold" style={{ textAlign: "center", display: "block" }}>{t("checkout.cta.startReading")}</a>
+              <p style={{ fontSize: 12, color: S.muted, textAlign: "center", marginTop: 10, lineHeight: 1.5 }}>
+                {t("checkout.recurringDisclaimer")}
+              </p>
             </div>
           </div>
         </div>

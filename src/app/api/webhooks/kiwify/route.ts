@@ -120,6 +120,100 @@ export async function POST(req: Request) {
     payload.product?.product_id ||
     payload.product_id;
 
+  // ============================================================
+  // V2 LIMPEZA — detecta por external_reference (orderId UUID)
+  // Roda ANTES da V1 para que pedidos novos (criados via /limpeza)
+  // sejam processados pela tabela `orders`/`readings`.
+  // ============================================================
+  const externalRef: string | undefined =
+    order.external_reference ||
+    order.externalReference ||
+    payload.external_reference ||
+    payload.externalReference ||
+    new URL(req.url).searchParams.get("external_reference") ||
+    undefined;
+
+  const isUuid = (s: string | undefined) => !!s && /^[0-9a-f-]{36}$/i.test(s);
+
+  if ((event === "order.approved" || event === "order_approved") && isUuid(externalRef)) {
+    const { data: v2Order } = await admin
+      .from("orders")
+      .select("id, status, email, name, product_type")
+      .eq("id", externalRef as string)
+      .maybeSingle();
+
+    if (v2Order && v2Order.product_type === "limpeza_espiritual") {
+      // Idempotência: já está paid -> só re-dispara generate (ainda assim safe)
+      const wasAlreadyPaid = v2Order.status === "paid";
+
+      // Marca paid + payment_id
+      await admin
+        .from("orders")
+        .update({
+          status: "paid",
+          payment_id: orderId ?? null,
+        })
+        .eq("id", v2Order.id);
+
+      // Registra na tabela `purchases` (compatibilidade com painel admin antigo)
+      await admin.from("purchases").insert({
+        email: (v2Order.email || email).toLowerCase(),
+        name: v2Order.name ?? null,
+        kiwify_order_id: orderId ?? "unknown",
+        plan: "limpeza_v2",
+        event: "limpeza_v2_purchased",
+        amount_cents: Math.round(valueBRL * 100),
+        user_id: null,
+      });
+
+      // Dispara geração completa (server-to-server, sem auth)
+      try {
+        const proto = req.headers.get("x-forwarded-proto") || "https";
+        const host = req.headers.get("host") || "atbtartot.com";
+        const genUrl = `${proto}://${host}/api/limpeza/generate`;
+        await fetch(genUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Internal-Token": process.env.INTERNAL_GEN_TOKEN || "",
+          },
+          body: JSON.stringify({ orderId: v2Order.id }),
+        });
+      } catch {
+        // Falha de geração não deve causar retry do webhook (idempotente)
+      }
+
+      // Email para a cliente com link da entrega
+      if (process.env.RESEND_API_KEY && !wasAlreadyPaid) {
+        try {
+          const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+          const firstName = (v2Order.name || customerName || "querida alma").split(" ")[0];
+          const proto = req.headers.get("x-forwarded-proto") || "https";
+          const host = req.headers.get("host") || "atbtartot.com";
+          const deliveryLink = `${proto}://${host}/entrega/${v2Order.id}`;
+
+          await new Resend(process.env.RESEND_API_KEY).emails.send({
+            from: fromEmail,
+            to: (v2Order.email || email).toLowerCase(),
+            subject: "🕊️ Sua Limpeza Espiritual está pronta",
+            html: `<!DOCTYPE html><html lang="pt-BR"><body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
+<div style="max-width:560px;margin:0 auto;padding:30px 20px;">
+  <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.4);">
+    <div style="font-size:64px;margin-bottom:16px;">🕊️</div>
+    <h1 style="font-family:Georgia,serif;color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;">Sua Limpeza está pronta</h1>
+    <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">Olá, <strong style="color:#f5c860;">${escapeHtml(firstName)}</strong>!<br>A ATB preparou uma orientação espiritual para você.</p>
+    <a href="${deliveryLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px rgba(232,184,75,0.4);">✨ Ver minha Limpeza</a>
+    <p style="color:#c4b5fd;font-size:13px;margin:24px 0 0;">Guarde este email. Você pode acessar pelo botão acima quando quiser.</p>
+  </div>
+</div></body></html>`,
+          });
+        } catch {}
+      }
+
+      return NextResponse.json({ ok: true, plan: "limpeza_v2", orderId: v2Order.id });
+    }
+  }
+
   const limpezaProductId = process.env.KIWIFY_LIMPEZA_PRODUCT_ID;
   const isLimpezaByProduct = limpezaProductId && productId && productId === limpezaProductId;
   const isLimpezaByValue = !limpezaProductId && valueBRL >= 95 && valueBRL <= 110;
@@ -218,7 +312,110 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, plan: "limpeza" });
   }
 
-  if ((event === "order.approved" || event === "order_approved") && valueBRL >= 500) {
+  // ESPÍRITO MENTOR (R$ 437) — antes do Vídeo Chamada para precedência
+  const espiritoProductId = process.env.KIWIFY_ESPIRITO_PRODUCT_ID;
+  const isEspiritoByProduct = espiritoProductId && productId && productId === espiritoProductId;
+  const isEspiritoByValue = !espiritoProductId && valueBRL >= 420 && valueBRL <= 460;
+
+  if ((event === "order.approved" || event === "order_approved") && (isEspiritoByProduct || isEspiritoByValue)) {
+    const { data: userRow } = await admin.from("users").select("id").eq("email", email.toLowerCase()).maybeSingle();
+    await admin.from("purchases").insert({
+      email: email.toLowerCase(),
+      name: customerName ?? null,
+      kiwify_order_id: orderId ?? "unknown",
+      plan: "espirito",
+      event: "espirito_purchased",
+      amount_cents: Math.round(valueBRL * 100),
+      user_id: userRow?.id ?? null,
+    });
+
+    if (process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+      const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
+      const accessLink = `https://atbtartot.com/obrigado-espirito?email=${encodeURIComponent(email.toLowerCase())}`;
+
+      // Email para a CLIENTE com link
+      await resend.emails.send({
+        from: fromEmail,
+        to: email.toLowerCase(),
+        subject: "🕯️ Seu Espírito Mentor te aguarda",
+        html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
+  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
+    <div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+      <div style="font-size:64px;margin-bottom:16px;">🕯️</div>
+      <h1 style="font-family:'Cormorant Garamond',Georgia,serif;color:#e8b84b;font-size:32px;margin:0 0 12px;line-height:1.15;">
+        Seu Espírito Mentor te chama
+      </h1>
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
+        Olá, <strong style="color:#f5c860;">${escapeHtml(firstName)}</strong>!<br>
+        Sua sessão espírita está confirmada. Seu guia espiritual já está pronto para te falar.
+      </p>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 28px;">
+        Aperte o botão dourado abaixo para receber sua mensagem do outro lado:
+      </p>
+      <a href="${accessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+        ✨ Falar com meu Espírito Mentor
+      </a>
+      <p style="color:#c4b5fd;font-size:14px;line-height:1.6;margin:28px 0 0;">
+        Ao clicar você cria uma conta com este email (${escapeHtml(email.toLowerCase())}) ou entra se já tiver. Sua sessão fica liberada na hora.
+      </p>
+    </div>
+
+    <div style="background:rgba(232,184,75,0.08);border:1px solid rgba(232,184,75,0.3);border-radius:14px;padding:22px;margin-top:20px;">
+      <h2 style="color:#e8b84b;font-size:18px;margin:0 0 12px;font-family:Georgia,serif;">
+        ✦ Como vai ser sua sessão
+      </h2>
+      <ol style="color:#fbf8ff;font-size:16px;line-height:1.75;padding-left:22px;margin:0;">
+        <li>Aperte o botão dourado acima</li>
+        <li>Crie sua conta (nome, email e senha)</li>
+        <li>Conte para ATB quem você quer alcançar do outro lado</li>
+        <li>Receba mensagem do seu guia espiritual</li>
+      </ol>
+    </div>
+
+    <div style="text-align:center;margin-top:28px;padding:20px;color:#9575cd;font-size:13px;line-height:1.6;font-style:italic;">
+      Que a luz divina ilumine sua jornada.<br>
+      Seu anjo da guarda está com você.<br>
+      Estamos aqui, minha querida alma. 💛
+    </div>
+
+    <div style="text-align:center;margin-top:20px;color:#9575cd;font-size:12px;">
+      Pedido: ${escapeHtml(orderId) || "N/A"} · ATB Tarot
+    </div>
+  </div>
+</body>
+</html>`,
+      });
+
+      const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
+      if (adminEmail) {
+        await resend.emails.send({
+          from: fromEmail,
+          to: adminEmail,
+          subject: "💰 Nova venda: Sessão Espírita Espírito Mentor",
+          html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
+                 <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+                 <p><strong>Produto:</strong> Sessão Espírita com Espírito Mentor</p>
+                 <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
+                 <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>
+                 <p>Email automático com link já enviado para a cliente.</p>`,
+        });
+      }
+    }
+    return NextResponse.json({ ok: true, plan: "espirito" });
+  }
+
+  // VÍDEO CHAMADA (R$ 497) — substituiu o threshold simples >= 500
+  const videoProductId = process.env.KIWIFY_VIDEO_PRODUCT_ID;
+  const isVideoByProduct = videoProductId && productId && productId === videoProductId;
+  const isVideoByValue = !videoProductId && valueBRL >= 470 && valueBRL <= 520;
+
+  if ((event === "order.approved" || event === "order_approved") && (isVideoByProduct || isVideoByValue)) {
     await admin.from("purchases").insert({
       email: email.toLowerCase(),
       name: customerName ?? null,

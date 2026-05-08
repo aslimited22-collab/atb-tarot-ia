@@ -3,17 +3,18 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/I18nProvider";
 import type { Plan } from "@/lib/types";
 
-const LINKS = [
-  { href: "/dashboard",                    label: "Início",               icon: "🏠", min: "free"    as Plan },
-  { href: "/dashboard/chat",               label: "Conversar com ATB",    icon: "💬", min: "free"    as Plan },
-  { href: "/dashboard/oracle",             label: "Carta do Dia",         icon: "🔮", min: "free"    as Plan },
-  { href: "/dashboard/journal",            label: "Meu Diário",           icon: "📖", min: "basic"   as Plan },
-  { href: "/dashboard/addiction",          label: "Guia Espiritual",      icon: "🕯️", min: "premium" as Plan },
-  { href: "/dashboard/numerologia",        label: "Números da Sorte",     icon: "🍀", min: "premium" as Plan },
-  { href: "/dashboard/limpeza-espiritual", label: "Limpeza Espiritual",   icon: "🕊️", min: "free"    as Plan },
-];
+const LINK_DEFS = [
+  { href: "/dashboard",                    key: "side.home",         icon: "🏠", min: "free"    as Plan },
+  { href: "/dashboard/chat",               key: "side.chat",         icon: "💬", min: "free"    as Plan },
+  { href: "/dashboard/oracle",             key: "side.oracle",       icon: "🔮", min: "free"    as Plan },
+  { href: "/dashboard/journal",            key: "side.journal",      icon: "📖", min: "basic"   as Plan },
+  { href: "/dashboard/addiction",          key: "side.addiction",    icon: "🕯️", min: "premium" as Plan },
+  { href: "/dashboard/numerologia",        key: "side.numerology",   icon: "🍀", min: "premium" as Plan },
+  { href: "/dashboard/limpeza-espiritual", key: "side.limpeza",      icon: "🕊️", min: "free"    as Plan },
+] as const;
 const ORDER: Record<Plan,number> = { free:0, basic:1, premium:2 };
 const PLAN_LABEL: Record<Plan,string> = { free:"Grátis", basic:"Básico", premium:"Premium" };
 const SIDE_BG = "#1a0035";
@@ -23,6 +24,7 @@ const VIDEO_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
 export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
   const pathname = usePathname();
   const router   = useRouter();
+  const { t } = useT();
   const [open, setOpen] = useState(false);
 
   async function logout() {
@@ -31,6 +33,7 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
   }
 
   const initial = (email[0] || "?").toUpperCase();
+  const LINKS = LINK_DEFS.map((l) => ({ ...l, label: t(l.key as any) }));
 
   const nav = (
     <div style={{ display:"flex", flexDirection:"column", height:"100%" }}>
@@ -65,7 +68,7 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
             }}>
               <span style={{ fontSize:28 }}>{l.icon}</span>
               <span style={{ flex:1 }}>{l.label}</span>
-              {locked && <span style={{ fontSize:11, fontWeight:700, background:"rgba(232,184,75,0.2)", color:"#e8b84b", border:"1px solid rgba(232,184,75,0.5)", borderRadius:20, padding:"4px 10px", letterSpacing: "0.04em" }}>🔒 {l.min==="premium"?"PRO":"BASIC"}</span>}
+              {locked && <span style={{ fontSize:11, fontWeight:700, background:"rgba(232,184,75,0.2)", color:"#e8b84b", border:"1px solid rgba(232,184,75,0.5)", borderRadius:20, padding:"4px 10px", letterSpacing: "0.04em" }}>🔒 {l.min==="premium"?t("plan.premium").toUpperCase():t("plan.basic").toUpperCase()}</span>}
             </Link>
           );
         })}
@@ -78,7 +81,7 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
           <div style={{ fontSize:28, marginBottom:6 }}>📞</div>
           <div style={{ fontSize:15, fontWeight:700, color:"#e8b84b", marginBottom:4, lineHeight:1.4 }}>Vídeo Chamada com ATB</div>
           <div style={{ fontSize:13, color:"#c4b5fd", marginBottom:10, lineHeight:1.5 }}>Sessão ao vivo pelo WhatsApp, só para você</div>
-          <div style={{ background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:700, fontSize:14, padding:"10px", borderRadius:10 }}>Agendar minha sessão — R$877</div>
+          <div style={{ background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:700, fontSize:14, padding:"10px", borderRadius:10 }}>Agendar — R$497</div>
         </a>
       </div>
 

@@ -190,7 +190,7 @@ export default function ChatPage() {
                       <span style={{ fontSize:22 }}>📞</span>
                       <div>
                         <div style={{ fontSize:14, fontWeight:700, color:"#e8b84b", lineHeight:1.3 }}>Quer conversar ao vivo comigo?</div>
-                        <div style={{ fontSize:13, color:"#c4b5fd", marginTop:2 }}>Agende sua Vídeo Chamada — R$877</div>
+                        <div style={{ fontSize:13, color:"#c4b5fd", marginTop:2 }}>Vídeo Chamada — R$497</div>
                       </div>
                     </a>
                   </div>

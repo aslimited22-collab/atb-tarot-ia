@@ -26,7 +26,7 @@ module.exports = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https:",
-              "connect-src 'self' https://*.supabase.co https://api.deepseek.com",
+              "connect-src 'self' https://*.supabase.co https://api.deepseek.com https://api.openai.com https://api.stripe.com",
               "frame-ancestors 'none'",
             ].join("; "),
           },

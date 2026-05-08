@@ -76,7 +76,7 @@ export default function VideoChamadaPage() {
         {/* CTA principal */}
         <div style={{ background:"linear-gradient(135deg,#2a0055,#3b0764)", border:"2px solid rgba(232,184,75,0.6)", borderRadius:24, padding:"32px 24px", textAlign:"center", marginBottom:20 }}>
           <div style={{ fontSize:14, color:"#9575cd", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:8 }}>Vídeo Chamada Exclusiva</div>
-          <div style={{ fontFamily:"Georgia, serif", fontSize:"2.2rem", color:"#e8b84b", fontWeight:700, marginBottom:4 }}>R$ 877</div>
+          <div style={{ fontFamily:"Georgia, serif", fontSize:"2.2rem", color:"#e8b84b", fontWeight:700, marginBottom:4 }}>R$ 497</div>
           <div style={{ color:"#c4b5fd", fontSize:"0.95rem", marginBottom:24 }}>Sessão única · Via WhatsApp · Agendamento flexível</div>
           <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer"
             style={{ display:"block", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:700, fontSize:"1.2rem", padding:"18px 24px", borderRadius:16, textDecoration:"none", marginBottom:12, lineHeight:1.3 }}>
