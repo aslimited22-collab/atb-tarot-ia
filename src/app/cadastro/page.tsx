@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 export default function CadastroPage() {
   const router = useRouter();
+  const { t } = useT();
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -24,16 +26,16 @@ export default function CadastroPage() {
     });
 
     if (!res.ok) {
-      const { error } = await res.json().catch(() => ({ error: "Erro ao criar conta." }));
+      const { error } = await res.json().catch(() => ({ error: t("auth.signup_error") }));
       setLoading(false);
-      return toast.error(error || "Erro ao criar conta.");
+      return toast.error(error || t("auth.signup_error"));
     }
 
     const supabase = createClient();
     const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (loginError) return toast.error("Conta criada! Faça login.");
-    toast.success("Conta criada com sucesso. Bem-vinda!");
+    if (loginError) return toast.error(t("auth.signup_created"));
+    toast.success(t("auth.signup_success"));
     router.push("/dashboard");
     router.refresh();
   }
@@ -58,24 +60,24 @@ export default function CadastroPage() {
             ATB
           </h1>
           <p style={{ color: "#fbf8ff", fontSize: 19, lineHeight: 1.5 }}>
-            É grátis criar sua conta 💛
+            {t("auth.signup_welcome")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="card" style={{ padding: "36px 32px" }}>
           <h2 className="serif" style={{ fontSize: "1.7rem", color: "#e8b84b", marginBottom: 24, textAlign: "center" }}>
-            Criar minha conta
+            {t("nav.signup")}
           </h2>
 
           {/* Nome */}
           <label htmlFor="name" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
-            Como posso te chamar?
+            {t("auth.thanks_name_label")}
           </label>
           <input
             id="name"
             className="input input-big"
             type="text"
-            placeholder="Seu primeiro nome"
+            placeholder={t("auth.thanks_name_placeholder")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -85,19 +87,19 @@ export default function CadastroPage() {
           />
           {name && !nameValid && (
             <p style={{ color: "#f87171", fontSize: 15, marginBottom: 16, marginTop: 4 }}>
-              Por favor escreva seu nome completo
+              {t("auth.signup_name_invalid")}
             </p>
           )}
 
           {/* Email */}
           <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
-            Seu email
+            {t("auth.email_label")}
           </label>
           <input
             id="email"
             className="input input-big"
             type="email"
-            placeholder="exemplo@gmail.com"
+            placeholder={t("auth.thanks_email_placeholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -106,19 +108,19 @@ export default function CadastroPage() {
             style={{ marginBottom: 6 }}
           />
           <p className="help-hint" style={{ marginBottom: 24, fontSize: 14 }}>
-            💡 Use um email que você lembra a senha, tipo Gmail ou Hotmail
+            {t("auth.signup_email_hint")}
           </p>
 
           {/* Senha */}
           <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
-            Crie uma senha
+            {t("auth.thanks_password_label")}
           </label>
           <div style={{ position: "relative", marginBottom: 6 }}>
             <input
               id="password"
               className="input input-big"
               type={showPwd ? "text" : "password"}
-              placeholder="Mínimo 8 letras ou números"
+              placeholder={t("auth.password_placeholder_new")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -129,6 +131,7 @@ export default function CadastroPage() {
             <button
               type="button"
               onClick={() => setShowPwd(!showPwd)}
+              aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
               style={{
                 position: "absolute",
                 right: 8,
@@ -145,14 +148,16 @@ export default function CadastroPage() {
                 minHeight: 0,
               }}
             >
-              {showPwd ? "🙈 Ocultar" : "👁️ Mostrar"}
+              {showPwd ? t("auth.password_hide") : t("auth.password_show")}
             </button>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, marginTop: 8 }}>
             {passwordValid ? (
-              <span style={{ color: "#86efac", fontSize: 14, fontWeight: 600 }}>✓ Senha boa</span>
+              <span style={{ color: "#86efac", fontSize: 14, fontWeight: 600 }}>{t("auth.signup_password_good")}</span>
             ) : (
-              <span style={{ color: "#9575cd", fontSize: 14 }}>Faltam {Math.max(0, 8 - password.length)} letras/números</span>
+              <span style={{ color: "#9575cd", fontSize: 14 }}>
+                {t("auth.signup_password_missing").replace("{n}", String(Math.max(0, 8 - password.length)))}
+              </span>
             )}
           </div>
 
@@ -168,14 +173,14 @@ export default function CadastroPage() {
               marginBottom: 24,
             }}
           >
-            {loading ? "Criando..." : "✨ Criar minha conta grátis"}
+            {loading ? t("auth.signup_loading") : t("auth.signup_cta")}
           </button>
 
           <div style={{ textAlign: "center", padding: "16px 0", borderTop: "1px solid rgba(196,181,253,0.18)" }}>
             <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.6, margin: 0 }}>
-              Já tem conta?<br />
+              {t("auth.have_account")}<br />
               <Link href="/login" style={{ color: "#e8b84b", fontWeight: 700, fontSize: 19, textDecoration: "underline", display: "inline-block", marginTop: 8, padding: "8px 16px" }}>
-                Entrar na minha conta
+                {t("auth.login_link")}
               </Link>
             </p>
           </div>
@@ -183,7 +188,7 @@ export default function CadastroPage() {
 
         <div style={{ textAlign: "center", marginTop: 24 }}>
           <Link href="/" style={{ color: "#c4b5fd", fontSize: 16, textDecoration: "none", padding: "8px 16px" }}>
-            ← Voltar para a página inicial
+            ← {t("v2.back")}
           </Link>
         </div>
       </div>

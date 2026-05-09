@@ -16,7 +16,6 @@ const LINK_DEFS = [
   { href: "/dashboard/limpeza-espiritual", key: "side.limpeza",      icon: "🕊️", min: "free"    as Plan },
 ] as const;
 const ORDER: Record<Plan,number> = { free:0, basic:1, premium:2 };
-const PLAN_LABEL: Record<Plan,string> = { free:"Grátis", basic:"Básico", premium:"Premium" };
 const SIDE_BG = "#1a0035";
 const SEP = "rgba(196,181,253,0.15)";
 const VIDEO_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
@@ -43,7 +42,7 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
           <div style={{ width:52, height:52, borderRadius:"50%", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:22, flexShrink:0 }}>{initial}</div>
           <div style={{ overflow:"hidden" }}>
             <div style={{ fontSize:14, color:"#c4b5fd", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{email}</div>
-            <div style={{ fontSize:15, fontWeight:700, color:"#e8b84b", marginTop:3 }}>{PLAN_LABEL[plan]}</div>
+            <div style={{ fontSize:15, fontWeight:700, color:"#e8b84b", marginTop:3 }}>{t(`plan.${plan}` as any)}</div>
           </div>
         </div>
       </div>
@@ -79,16 +78,16 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
         <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer"
           style={{ display:"block", background:"linear-gradient(135deg,#3b0764,#2a0055)", border:"1.5px solid rgba(232,184,75,0.5)", borderRadius:16, padding:"16px", textDecoration:"none", textAlign:"center" }}>
           <div style={{ fontSize:28, marginBottom:6 }}>📞</div>
-          <div style={{ fontSize:15, fontWeight:700, color:"#e8b84b", marginBottom:4, lineHeight:1.4 }}>Vídeo Chamada com ATB</div>
-          <div style={{ fontSize:13, color:"#c4b5fd", marginBottom:10, lineHeight:1.5 }}>Sessão ao vivo pelo WhatsApp, só para você</div>
-          <div style={{ background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:700, fontSize:14, padding:"10px", borderRadius:10 }}>Agendar — R$497</div>
+          <div style={{ fontSize:15, fontWeight:700, color:"#e8b84b", marginBottom:4, lineHeight:1.4 }}>{t("nav.upsell_title")}</div>
+          <div style={{ fontSize:13, color:"#c4b5fd", marginBottom:10, lineHeight:1.5 }}>{t("nav.upsell_subtitle")}</div>
+          <div style={{ background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:700, fontSize:14, padding:"10px", borderRadius:10 }}>{t("nav.upsell_cta")}</div>
         </a>
       </div>
 
       {/* Logout */}
       <div style={{ padding:"12px 16px", borderTop:`1px solid ${SEP}` }}>
         <button onClick={logout} style={{ width:"100%", padding:"14px", borderRadius:14, border:`1.5px solid ${SEP}`, background:"transparent", color:"#c4b5fd", fontSize:17, fontWeight:500, cursor:"pointer", minHeight:52 }}>
-          Sair da conta
+          {t("nav.logout")}
         </button>
       </div>
     </div>

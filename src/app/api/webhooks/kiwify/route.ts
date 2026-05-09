@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyKiwifySignature, planFromValue } from "@/lib/kiwify";
 import { rateLimit, getClientIp } from "@/lib/security";
-import { Resend } from "resend";
-import { deliverLimpezaOrder } from "@/lib/delivery";
+import { deliverLimpezaOrder, sendCustomerEmailWithLog } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -243,18 +242,10 @@ export async function POST(req: Request) {
       user_id: userRow?.id ?? null,
     });
 
-    if (process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
-      const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
-      const accessLink = `https://atbtartot.com/obrigado-limpeza?email=${encodeURIComponent(email.toLowerCase())}`;
+    const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
+    const accessLink = `https://atbtartot.com/obrigado-limpeza?email=${encodeURIComponent(email.toLowerCase())}`;
 
-      // Email AMOROSO para a CLIENTE com link de acesso
-      await resend.emails.send({
-        from: fromEmail,
-        to: email.toLowerCase(),
-        subject: "🕊️ Sua Limpeza Espiritual está pronta",
-        html: `
+    const customerHtml = `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -303,24 +294,30 @@ export async function POST(req: Request) {
     </div>
   </div>
 </body>
-</html>`,
-      });
+</html>`;
 
-      // Email para o admin (notificação interna)
-      const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
-      if (adminEmail) {
-        await resend.emails.send({
-          from: fromEmail,
-          to: adminEmail,
-          subject: "💰 Nova venda: Limpeza Espiritual",
-          html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
-                 <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-                 <p><strong>Produto:</strong> Limpeza Espiritual</p>
-                 <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
-                 <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>
-                 <p>Email automático com link já enviado para a cliente.</p>`,
-        });
-      }
+    await sendCustomerEmailWithLog({
+      scope: "webhook.kiwify.v1.limpeza",
+      to: email.toLowerCase(),
+      subject: "🕊️ Sua Limpeza Espiritual está pronta",
+      html: customerHtml,
+      refId: orderId,
+    });
+
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
+    if (adminEmail) {
+      await sendCustomerEmailWithLog({
+        scope: "webhook.kiwify.v1.limpeza.admin",
+        to: adminEmail,
+        subject: "💰 Nova venda: Limpeza Espiritual",
+        html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
+               <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+               <p><strong>Produto:</strong> Limpeza Espiritual</p>
+               <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
+               <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>
+               <p>Email automático com link já enviado para a cliente.</p>`,
+        refId: orderId,
+      });
     }
     return NextResponse.json({ ok: true, plan: "limpeza" });
   }
@@ -342,18 +339,10 @@ export async function POST(req: Request) {
       user_id: userRow?.id ?? null,
     });
 
-    if (process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
-      const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
-      const accessLink = `https://atbtartot.com/obrigado-espirito?email=${encodeURIComponent(email.toLowerCase())}`;
+    const espFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
+    const espAccessLink = `https://atbtartot.com/obrigado-espirito?email=${encodeURIComponent(email.toLowerCase())}`;
 
-      // Email para a CLIENTE com link
-      await resend.emails.send({
-        from: fromEmail,
-        to: email.toLowerCase(),
-        subject: "🕯️ Seu Espírito Mentor te aguarda",
-        html: `
+    const espCustomerHtml = `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -365,13 +354,13 @@ export async function POST(req: Request) {
         Seu Espírito Mentor te chama
       </h1>
       <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
-        Olá, <strong style="color:#f5c860;">${escapeHtml(firstName)}</strong>!<br>
+        Olá, <strong style="color:#f5c860;">${escapeHtml(espFirstName)}</strong>!<br>
         Sua sessão espírita está confirmada. Seu guia espiritual já está pronto para te falar.
       </p>
       <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 28px;">
         Aperte o botão dourado abaixo para receber sua mensagem do outro lado:
       </p>
-      <a href="${accessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+      <a href="${espAccessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
         ✨ Falar com meu Espírito Mentor
       </a>
       <p style="color:#c4b5fd;font-size:14px;line-height:1.6;margin:28px 0 0;">
@@ -402,23 +391,30 @@ export async function POST(req: Request) {
     </div>
   </div>
 </body>
-</html>`,
-      });
+</html>`;
 
-      const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
-      if (adminEmail) {
-        await resend.emails.send({
-          from: fromEmail,
-          to: adminEmail,
-          subject: "💰 Nova venda: Sessão Espírita Espírito Mentor",
-          html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
-                 <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-                 <p><strong>Produto:</strong> Sessão Espírita com Espírito Mentor</p>
-                 <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
-                 <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>
-                 <p>Email automático com link já enviado para a cliente.</p>`,
-        });
-      }
+    await sendCustomerEmailWithLog({
+      scope: "webhook.kiwify.v1.espirito",
+      to: email.toLowerCase(),
+      subject: "🕯️ Seu Espírito Mentor te aguarda",
+      html: espCustomerHtml,
+      refId: orderId,
+    });
+
+    const espAdmin = process.env.ADMIN_NOTIFY_EMAIL;
+    if (espAdmin) {
+      await sendCustomerEmailWithLog({
+        scope: "webhook.kiwify.v1.espirito.admin",
+        to: espAdmin,
+        subject: "💰 Nova venda: Sessão Espírita Espírito Mentor",
+        html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
+               <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+               <p><strong>Produto:</strong> Sessão Espírita com Espírito Mentor</p>
+               <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
+               <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>
+               <p>Email automático com link já enviado para a cliente.</p>`,
+        refId: orderId,
+      });
     }
     return NextResponse.json({ ok: true, plan: "espirito" });
   }
@@ -438,18 +434,18 @@ export async function POST(req: Request) {
       amount_cents: Math.round(valueBRL * 100),
       user_id: null,
     });
-    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
-    if (adminEmail && process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
-        to: adminEmail,
+    const videoAdmin = process.env.ADMIN_NOTIFY_EMAIL;
+    if (videoAdmin) {
+      await sendCustomerEmailWithLog({
+        scope: "webhook.kiwify.v1.video.admin",
+        to: videoAdmin,
         subject: "Nova compra: Chamada de Vídeo com ATB",
         html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
                <p><strong>Email:</strong> ${escapeHtml(email)}</p>
                <p><strong>Produto:</strong> Chamada de Vídeo com ATB</p>
                <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
                <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>`,
+        refId: orderId,
       });
     }
     return NextResponse.json({ ok: true, plan: "video_call" });

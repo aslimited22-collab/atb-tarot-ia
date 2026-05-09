@@ -9,6 +9,8 @@ import { getServerT } from "@/lib/i18n/server";
 export const dynamic = "force-dynamic";
 
 export default function PreviewE2EFixture() {
+  // Guard duplo: bloqueia em produção mesmo se E2E_TEST=1 vazar por engano.
+  if (process.env.VERCEL_ENV === "production") notFound();
   if (process.env.E2E_TEST !== "1") notFound();
 
   const { t } = getServerT();

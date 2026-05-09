@@ -14,6 +14,50 @@ function escapeHtml(s: string | undefined | null): string {
     .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
+/**
+ * Envia email Resend com logging estruturado em todo passo. Não toca em
+ * tabela orders — usado pelos fluxos V1 (Kiwify limpeza/espirito) onde o
+ * registro fica em `purchases` e não há `delivery_status`.
+ *
+ * Retorna `{ ok, reason? }` — fail-soft.
+ */
+export type EmailLogResult = { ok: boolean; reason?: string };
+
+export async function sendCustomerEmailWithLog(opts: {
+  scope: string;          // ex: "webhook.kiwify.v1.limpeza"
+  to: string;
+  subject: string;
+  html: string;
+  refId?: string;         // ex: orderId Kiwify, para correlacionar logs
+}): Promise<EmailLogResult> {
+  const { scope, to, subject, html, refId } = opts;
+  if (!process.env.RESEND_API_KEY) {
+    logWarn(scope, "RESEND_API_KEY not set, skipping email", { refId });
+    return { ok: false, reason: "resend_not_configured" };
+  }
+  if (!to) {
+    return { ok: false, reason: "no_email" };
+  }
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+    const result = await resend.emails.send({ from: fromEmail, to, subject, html });
+    const resErr = (result as { error?: { name?: string; message?: string } | null })?.error;
+    if (resErr) {
+      const reason = `resend_error:${resErr.name || resErr.message || "unknown"}`;
+      logError(scope, "resend returned error", { refId, to, error: resErr });
+      return { ok: false, reason };
+    }
+    const id = (result as { data?: { id?: string } })?.data?.id;
+    logInfo(scope, "email sent", { refId, to, id });
+    return { ok: true };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    logError(scope, "email exception", { refId, to, error: e });
+    return { ok: false, reason: `email_exception:${msg}` };
+  }
+}
+
 export type DeliverInput = {
   orderId: string;
   email: string;

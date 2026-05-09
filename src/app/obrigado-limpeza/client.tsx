@@ -5,11 +5,13 @@ import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 type Mode = "logged-purchased" | "logged-waiting" | "account-exists" | "needs-signup";
 
 export default function ObrigadoLimpezaClient({ mode, email }: { mode: Mode; email: string }) {
   const router = useRouter();
+  const { t } = useT();
 
   // Caso já esteja logado E tenha compra: redirect imediato pra sessão
   useEffect(() => {
@@ -59,7 +61,7 @@ export default function ObrigadoLimpezaClient({ mode, email }: { mode: Mode; ema
         }}>
           <Image
             src="/img/limpeza-altar.png"
-            alt="Altar sagrado da Limpeza Espiritual"
+            alt={t("thanks.altar_alt")}
             width={1536}
             height={1024}
             priority
@@ -79,16 +81,17 @@ export default function ObrigadoLimpezaClient({ mode, email }: { mode: Mode; ema
 }
 
 function LoggedPurchased() {
+  const { t } = useT();
   return (
     <>
       <div style={{ fontSize: 80, marginBottom: 18, animation: "pulse 2s infinite" }}>✨</div>
       <h1 className="serif" style={{ fontSize: "clamp(2.2rem, 6vw, 3rem)", color: "#e8b84b", lineHeight: 1.1, marginBottom: 18, fontWeight: 700 }}>
-        Sua Limpeza está pronta
+        {t("thanks.purchased_h1")}
       </h1>
       <p style={{ fontSize: "1.3rem", color: "#fbf8ff", lineHeight: 1.65, marginBottom: 28, fontWeight: 500 }}>
-        Os santos já estão te esperando, minha querida alma. Em poucos segundos você vai entrar na sua sessão sagrada com ATB.
+        {t("thanks.purchased_desc")}
       </p>
-      <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 22 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 22 }} aria-hidden="true">
         {[0, 1, 2].map((i) => (
           <div key={i} style={{
             width: 16, height: 16, borderRadius: "50%", background: "#e8b84b",
@@ -97,25 +100,26 @@ function LoggedPurchased() {
         ))}
       </div>
       <p style={{ fontSize: 15, color: "#c4b5fd", fontStyle: "italic" }}>
-        🕊️ Que Nossa Senhora te cubra com seu manto sagrado
+        {t("thanks.purchased_blessing")}
       </p>
     </>
   );
 }
 
 function LoggedWaiting() {
+  const { t } = useT();
   return (
     <>
       <div style={{ fontSize: 80, marginBottom: 18, animation: "pulse 2s infinite" }}>🕊️</div>
       <h1 className="serif" style={{ fontSize: "clamp(2rem, 5.5vw, 2.6rem)", color: "#e8b84b", lineHeight: 1.15, marginBottom: 16, fontWeight: 700 }}>
-        Pagamento recebido!
+        {t("thanks.waiting_h1")}
       </h1>
       <p style={{ fontSize: "1.2rem", color: "#fbf8ff", lineHeight: 1.65, marginBottom: 24, fontWeight: 500 }}>
-        Estamos preparando sua <strong style={{ color: "#f5c860" }}>Limpeza Espiritual</strong>.
-        <br />
-        Aguarde um instantinho que ATB já vai te receber, minha querida alma.
+        {t("thanks.waiting_desc_part1")}{" "}
+        <strong style={{ color: "#f5c860" }}>{t("thanks.waiting_desc_part2")}</strong>{". "}
+        {t("thanks.waiting_desc_part3")}
       </p>
-      <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 20 }} aria-hidden="true">
         {[0, 1, 2].map((i) => (
           <div key={i} style={{
             width: 16, height: 16, borderRadius: "50%", background: "#e8b84b",
@@ -125,8 +129,7 @@ function LoggedWaiting() {
       </div>
       <div style={{ background: "rgba(232,184,75,0.1)", border: "1px solid rgba(232,184,75,0.3)", borderRadius: 14, padding: "16px 18px", marginTop: 8 }}>
         <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
-          Esta página vai abrir sozinha em alguns segundos.<br />
-          Por favor, não feche.
+          {t("thanks.waiting_autoreload")}
         </p>
       </div>
     </>
@@ -135,6 +138,7 @@ function LoggedWaiting() {
 
 function AccountExists({ email }: { email: string }) {
   const router = useRouter();
+  const { t } = useT();
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -148,8 +152,8 @@ function AccountExists({ email }: { email: string }) {
       password,
     });
     setLoading(false);
-    if (error) return toast.error("Email ou senha incorretos.");
-    toast.success("Bem-vinda de volta!");
+    if (error) return toast.error(t("auth.login_error"));
+    toast.success(t("auth.login_welcome_back"));
     router.push("/dashboard/limpeza-espiritual");
     router.refresh();
   }
@@ -158,23 +162,22 @@ function AccountExists({ email }: { email: string }) {
     <>
       <div style={{ fontSize: 64, marginBottom: 14 }}>🌟</div>
       <h1 className="serif" style={{ fontSize: "clamp(2rem, 5.5vw, 2.6rem)", color: "#e8b84b", lineHeight: 1.1, marginBottom: 14, fontWeight: 700 }}>
-        Sua compra foi confirmada
+        {t("thanks.exists_h1")}
       </h1>
       <p style={{ fontSize: "1.2rem", color: "#fbf8ff", lineHeight: 1.65, marginBottom: 26, fontWeight: 500 }}>
-        Você já tem uma conta com este email.<br />
-        Faça login para entrar na sua Limpeza Sagrada.
+        {t("thanks.exists_desc")}
       </p>
 
       <form onSubmit={handleLogin} className="card" style={{ padding: "32px 26px", textAlign: "left" }}>
-        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Seu email</label>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{t("auth.email_label")}</label>
         <input className="input input-big" style={{ marginBottom: 22, opacity: 0.85 }} type="email" value={email} disabled />
 
-        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Sua senha</label>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{t("auth.password_label")}</label>
         <div style={{ position: "relative", marginBottom: 24 }}>
           <input
             className="input input-big"
             type={showPwd ? "text" : "password"}
-            placeholder="A senha que você cadastrou"
+            placeholder={t("auth.password_placeholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -185,7 +188,7 @@ function AccountExists({ email }: { email: string }) {
           <button
             type="button"
             onClick={() => setShowPwd(!showPwd)}
-            aria-label={showPwd ? "Esconder senha" : "Mostrar senha"}
+            aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
             style={{
               position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
               background: "rgba(232,184,75,0.15)", border: "1px solid rgba(232,184,75,0.4)",
@@ -209,11 +212,11 @@ function AccountExists({ email }: { email: string }) {
             border: "none",
           }}
         >
-          {loading ? "Entrando..." : "✨ Entrar e ver minha Limpeza"}
+          {loading ? t("auth.login_loading") : t("auth.login_cta")}
         </button>
 
         <p style={{ textAlign: "center", fontSize: 20, color: "#fbf8ff", marginTop: 22, lineHeight: 1.6 }}>
-          Esqueceu a senha?
+          {t("auth.thanks_forgot")}
         </p>
         <Link
           href="/login"
@@ -230,7 +233,7 @@ function AccountExists({ email }: { email: string }) {
             background: "rgba(232,184,75,0.06)",
           }}
         >
-          Recuperar minha senha
+          {t("auth.thanks_recover")}
         </Link>
       </form>
     </>
@@ -239,6 +242,7 @@ function AccountExists({ email }: { email: string }) {
 
 function NeedsSignup({ initialEmail }: { initialEmail: string }) {
   const router = useRouter();
+  const { t } = useT();
   const [name, setName] = useState("");
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
@@ -247,7 +251,7 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) return toast.error("Senha deve ter no mínimo 8 letras ou números.");
+    if (password.length < 8) return toast.error(t("auth.signup_password_short"));
     setLoading(true);
 
     const res = await fetch("/api/auth/signup", {
@@ -259,7 +263,7 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setLoading(false);
-      return toast.error(data.error || "Erro ao criar conta.");
+      return toast.error(data.error || t("auth.signup_error"));
     }
 
     const supabase = createClient();
@@ -270,12 +274,12 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
     setLoading(false);
 
     if (loginError) {
-      toast.success("Conta criada! Faça login.");
+      toast.success(t("auth.signup_created"));
       router.push("/login");
       return;
     }
 
-    toast.success("Pronto! Sua limpeza está liberada.");
+    toast.success(t("auth.thanks_toast_ready"));
     router.push("/dashboard/limpeza-espiritual");
     router.refresh();
   }
@@ -284,26 +288,27 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
     <>
       <div style={{ fontSize: 64, marginBottom: 14 }}>🙏</div>
       <h1 className="serif" style={{ fontSize: "clamp(2.2rem, 6vw, 3rem)", color: "#e8b84b", lineHeight: 1.1, marginBottom: 14, fontWeight: 700 }}>
-        Pagamento recebido!
+        {t("thanks.signup_h1")}
       </h1>
       <p style={{ fontSize: "1.2rem", color: "#fbf8ff", lineHeight: 1.65, marginBottom: 22, fontWeight: 500 }}>
-        Os santos te esperam, minha querida alma.<br />
-        Crie sua conta agora para começar sua <strong style={{ color: "#f5c860" }}>Limpeza Sagrada</strong>.
+        {t("thanks.signup_desc_part1")}<br />
+        {t("thanks.signup_desc_part2")}{" "}
+        <strong style={{ color: "#f5c860" }}>{t("thanks.signup_desc_part3")}</strong>.
       </p>
 
       <div style={{ background: "rgba(232,184,75,0.08)", border: "1px solid rgba(232,184,75,0.3)", borderRadius: 14, padding: "16px 20px", marginBottom: 22, textAlign: "left" }}>
         <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}>
-          💡 Use o mesmo email que você usou na hora de pagar
+          {t("auth.use_same_email")}
         </p>
       </div>
 
       <form onSubmit={handleSignup} className="card" style={{ padding: "30px 26px", textAlign: "left" }}>
-        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Como posso te chamar?</label>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{t("auth.thanks_name_label")}</label>
         <input
           className="input input-big"
           style={{ marginBottom: 20 }}
           type="text"
-          placeholder="Seu primeiro nome"
+          placeholder={t("auth.thanks_name_placeholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -311,12 +316,12 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
           autoComplete="given-name"
         />
 
-        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Seu email da compra</label>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{t("auth.thanks_email_label")}</label>
         <input
           className="input input-big"
           style={{ marginBottom: 20 }}
           type="email"
-          placeholder="exemplo@gmail.com"
+          placeholder={t("auth.thanks_email_placeholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -324,12 +329,12 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
           inputMode="email"
         />
 
-        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Crie uma senha</label>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{t("auth.thanks_password_label")}</label>
         <div style={{ position: "relative", marginBottom: 24 }}>
           <input
             className="input input-big"
             type={showPwd ? "text" : "password"}
-            placeholder="Mínimo 8 letras ou números"
+            placeholder={t("auth.password_placeholder_new")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -340,7 +345,7 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
           <button
             type="button"
             onClick={() => setShowPwd(!showPwd)}
-            aria-label={showPwd ? "Esconder senha" : "Mostrar senha"}
+            aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
             style={{
               position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
               background: "rgba(232,184,75,0.15)", border: "1px solid rgba(232,184,75,0.4)",
@@ -364,11 +369,11 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
             border: "none",
           }}
         >
-          {loading ? "Criando..." : "✨ Começar minha Limpeza"}
+          {loading ? t("auth.signup_loading") : t("auth.thanks_cta")}
         </button>
 
         <p style={{ textAlign: "center", fontSize: 20, color: "#fbf8ff", marginTop: 22, lineHeight: 1.6 }}>
-          Já tem conta?
+          {t("auth.have_account")}
         </p>
         <Link
           href="/login"
@@ -385,7 +390,7 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
             background: "rgba(232,184,75,0.06)",
           }}
         >
-          Fazer login
+          {t("auth.login_link")}
         </Link>
       </form>
     </>

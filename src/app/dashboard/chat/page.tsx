@@ -4,33 +4,36 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { ChatBubble } from "@/components/ChatBubble";
 import { Skeleton } from "@/components/Skeleton";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 type Msg = { id?: string; role: "user" | "assistant"; content: string; typing?: boolean };
 const CHAR_DELAY = 38;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function UpgradeCard({ basicUrl, premiumUrl }: { basicUrl: string; premiumUrl: string }) {
+  const { t } = useT();
   return (
     <div className="card" style={{ margin:"16px auto", maxWidth:380, padding:28, textAlign:"center" }}>
-      <div style={{ fontSize:44, marginBottom:8 }}>🔮</div>
-      <p className="serif" style={{ fontSize:"1.35rem", color:"#e8b84b", marginBottom:8 }}>Sua leitura continua aqui</p>
+      <div style={{ fontSize:44, marginBottom:8 }} aria-hidden="true">🔮</div>
+      <p className="serif" style={{ fontSize:"1.35rem", color:"#e8b84b", marginBottom:8 }}>{t("chat.upgrade_h1")}</p>
       <p style={{ fontSize:15, color:"#c4b5fd", marginBottom:24, lineHeight:1.6 }}>
-        Escolha seu plano e ouça tudo o que as cartas têm a dizer pra você
+        {t("chat.upgrade_desc")}
       </p>
       <a href={premiumUrl} target="_blank" rel="noopener noreferrer"
         style={{ display:"block", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:700, fontSize:17, padding:"16px", borderRadius:14, marginBottom:12, textDecoration:"none" }}>
-        Quero a leitura completa — R$59/mês
+        {t("chat.upgrade_cta_premium")}
       </a>
       <a href={basicUrl} target="_blank" rel="noopener noreferrer"
         style={{ display:"block", border:"2px solid #e8b84b", color:"#e8b84b", fontWeight:600, fontSize:16, padding:"13px", borderRadius:14, textDecoration:"none" }}>
-        Plano básico — R$29/mês
+        {t("chat.upgrade_cta_basic")}
       </a>
-      <p style={{ fontSize:13, color:"#9575cd", marginTop:12 }}>Pagamento seguro via Pix ou cartão</p>
+      <p style={{ fontSize:13, color:"#9575cd", marginTop:12 }}>{t("chat.upgrade_security")}</p>
     </div>
   );
 }
 
 export default function ChatPage() {
+  const { t } = useT();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput]       = useState("");
   const [loading, setLoading]   = useState(true);
@@ -52,7 +55,7 @@ export default function ChatPage() {
       if (d.name) setName(d.name);
       if (d.plan) setPlan(d.plan);
       if (d.plan === "free" && (d.remaining === 0 || (d.messages?.length ?? 0) > 0)) setShowUpgrade(true);
-    }).catch(() => toast.error("Erro ao carregar histórico")).finally(() => setLoading(false));
+    }).catch(() => toast.error(t("chat.toast.history_error"))).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -96,14 +99,14 @@ export default function ChatPage() {
         signal: controller.signal,
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error:"Erro" }));
-        toast.error(err.error || "Erro ao enviar");
+        const err = await res.json().catch(() => ({ error: t("chat.toast.send_error") }));
+        toast.error(err.error || t("chat.toast.send_error"));
         setMessages((m) => m.slice(0,-3));
         return;
       }
       const reader = res.body?.getReader();
       if (!reader) {
-        toast.error("Resposta inválida do servidor");
+        toast.error(t("chat.toast.invalid_response"));
         setMessages((m) => m.slice(0,-3));
         return;
       }
@@ -119,7 +122,7 @@ export default function ChatPage() {
       setRemaining((r) => (r>0 ? r-1 : 0));
       if (plan==="free") setShowUpgrade(true);
     } catch (e: unknown) {
-      const msg = e instanceof Error && e.name === "AbortError" ? "Resposta demorada demais. Tente novamente." : "Erro de rede";
+      const msg = e instanceof Error && e.name === "AbortError" ? t("chat.toast.timeout") : t("chat.toast.network");
       toast.error(msg);
       setMessages((m) => m.slice(0,-3));
     } finally {
@@ -152,14 +155,14 @@ export default function ChatPage() {
               minHeight: 44,
             }}
           >
-            <span style={{ fontSize: 18 }}>←</span>
-            <span>Painel</span>
+            <span style={{ fontSize: 18 }} aria-hidden="true">←</span>
+            <span>{t("chat.back")}</span>
           </Link>
           <div style={{ fontSize: 16, color: "#fbf8ff", fontWeight: 600, background: "rgba(232,184,75,0.12)", padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(232,184,75,0.3)" }}>
-            {remaining < 0 ? "∞" : remaining} {remaining === 1 ? "restante" : "restantes"}
+            {remaining < 0 ? "∞" : remaining} {remaining === 1 ? t("dash.remaining_one") : t("dash.remaining_other")}
           </div>
         </div>
-        <h1 className="serif" style={{ fontSize: "1.7rem", color: "#f5f0ff", fontWeight: 700, margin: 0 }}>💬 Chat com ATB</h1>
+        <h1 className="serif" style={{ fontSize: "1.7rem", color: "#f5f0ff", fontWeight: 700, margin: 0 }}>{t("chat.header")}</h1>
       </div>
 
       <div ref={scrollRef} style={{ flex:1, overflowY:"auto", padding:"16px" }}>
@@ -167,15 +170,15 @@ export default function ChatPage() {
           <div className="space-y-3"><Skeleton className="h-12 w-2/3" /><Skeleton className="h-12 w-1/2 ml-auto" /><Skeleton className="h-12 w-2/3" /></div>
         ) : messages.length === 0 && !showUpgrade ? (
           <div style={{ textAlign: "center", color: "#fbf8ff", marginTop: 60, padding: "0 20px" }}>
-            <div style={{ fontSize: 80, marginBottom: 18 }}>🔮</div>
+            <div style={{ fontSize: 80, marginBottom: 18 }} aria-hidden="true">🔮</div>
             <h2 className="serif" style={{ fontSize: "1.6rem", color: "#e8b84b", marginBottom: 12, fontWeight: 700 }}>
-              Olá, querida alma 💛
+              {t("chat.empty_h1")}
             </h2>
             <p style={{ fontSize: 18, color: "#fbf8ff", lineHeight: 1.6, maxWidth: 420, margin: "0 auto", fontWeight: 500 }}>
-              Pode me contar tudo. Estou aqui para te ouvir e te ajudar com as cartas.
+              {t("chat.empty_desc")}
             </p>
             <p style={{ fontSize: 15, color: "#c4b5fd", lineHeight: 1.6, marginTop: 18, fontStyle: "italic" }}>
-              Escreva sua pergunta no campo abaixo e aperte <strong style={{ color: "#e8b84b" }}>Enviar</strong>
+              {t("chat.empty_hint")} <strong style={{ color: "#e8b84b" }}>{t("chat.empty_hint_btn")}</strong>
             </p>
           </div>
         ) : (
@@ -187,10 +190,10 @@ export default function ChatPage() {
                   <div style={{ margin:"12px 0 4px 0", display:"flex", justifyContent:"flex-start" }}>
                     <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer"
                       style={{ display:"inline-flex", alignItems:"center", gap:10, background:"linear-gradient(135deg,#3b0764,#2a0055)", border:"1.5px solid rgba(232,184,75,0.45)", borderRadius:16, padding:"12px 18px", textDecoration:"none", maxWidth:360 }}>
-                      <span style={{ fontSize:22 }}>📞</span>
+                      <span style={{ fontSize:22 }} aria-hidden="true">📞</span>
                       <div>
-                        <div style={{ fontSize:14, fontWeight:700, color:"#e8b84b", lineHeight:1.3 }}>Quer conversar ao vivo comigo?</div>
-                        <div style={{ fontSize:13, color:"#c4b5fd", marginTop:2 }}>Vídeo Chamada — R$497</div>
+                        <div style={{ fontSize:14, fontWeight:700, color:"#e8b84b", lineHeight:1.3 }}>{t("chat.live_title")}</div>
+                        <div style={{ fontSize:13, color:"#c4b5fd", marginTop:2 }}>{t("chat.live_subtitle")}</div>
                       </div>
                     </a>
                   </div>
@@ -208,11 +211,11 @@ export default function ChatPage() {
             <input
               className="input"
               style={{ flex: 1, fontSize: 17, padding: "16px 18px", minHeight: 60, borderWidth: 2 }}
-              placeholder="Escreva sua pergunta para ATB..."
+              placeholder={t("chat.input_placeholder")}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={sending}
-              aria-label="Sua mensagem"
+              aria-label={t("chat.input_aria")}
             />
             <button
               className="btn-gold"
@@ -227,7 +230,7 @@ export default function ChatPage() {
                 border: "none",
               }}
             >
-              {sending ? "..." : "✨ Enviar"}
+              {sending ? "..." : t("chat.send_cta")}
             </button>
           </form>
         ) : (
@@ -249,7 +252,7 @@ export default function ChatPage() {
               boxShadow: "0 8px 22px rgba(232,184,75,0.4)",
             }}
           >
-            ✨ Continuar minha leitura
+            {t("chat.continue_cta")}
           </a>
         )}
       </div>

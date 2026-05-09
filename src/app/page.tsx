@@ -56,7 +56,7 @@ export default function Home() {
           {/* Texto à esquerda */}
           <div style={{ textAlign: "left" }}>
             <div style={{ fontSize: 14, color: S.gold, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 12 }}>
-              ✨ SESSÃO ESPÍRITA • LIMPEZA ESPIRITUAL • PROTEÇÃO ✨
+              {t("landing.hero_badge")}
             </div>
             <h1 className="serif" style={{ fontSize: "clamp(2.4rem,5.5vw,4.4rem)", color: S.text, lineHeight: 1.1, marginBottom: 22 }}>
               {t("hero.title_1")}<br/>
@@ -79,7 +79,7 @@ export default function Home() {
                 fontWeight: 700,
                 display: "inline-block",
               }}>
-                🕊️ Limpeza Espiritual
+                {t("landing.hero_cta_limpeza")}
               </a>
             </div>
           </div>
@@ -88,7 +88,7 @@ export default function Home() {
           <div style={{ position: "relative", borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 60px rgba(232,184,75,0.25), 0 0 0 3px rgba(232,184,75,0.4)" }}>
             <Image
               src="/img/landing-hero.png"
-              alt="Mulher abençoada recebendo a luz divina"
+              alt={t("landing.hero_alt")}
               width={768}
               height={512}
               priority
@@ -150,7 +150,7 @@ export default function Home() {
             <div style={{ marginBottom: 24, borderRadius: 24, overflow: "hidden", maxWidth: 720, margin: "0 auto 24px", boxShadow: "0 25px 70px rgba(232,184,75,0.3), 0 0 0 3px rgba(232,184,75,0.5)" }}>
               <Image
                 src="/img/limpeza-altar.png"
-                alt="Altar sagrado com vela acesa, manto, rosa branca e Nossa Senhora"
+                alt={t("landing.altar_alt")}
                 width={1536}
                 height={1024}
                 style={{ width: "100%", height: "auto", display: "block" }}
@@ -158,13 +158,13 @@ export default function Home() {
             </div>
 
             <div style={{ fontSize: 16, color: "#f5c860", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
-              ✨ Sessão Sagrada Exclusiva ✨
+              {t("landing.limpeza_eyebrow")}
             </div>
             <h2 className="serif" style={{ fontSize: "clamp(2.4rem,6vw,3.8rem)", color: S.gold, lineHeight: 1.1, marginBottom: 18 }}>
-              Limpeza Espiritual<br />com ATB
+              {t("landing.limpeza_h2")}
             </h2>
             <p style={{ fontSize: "clamp(1.2rem, 2.5vw, 1.4rem)", color: S.text, maxWidth: 620, margin: "0 auto", lineHeight: 1.65, fontWeight: 500 }}>
-              Tire o peso da sua alma, abra os caminhos da sua vida e proteja-se de toda inveja com a força dos santos.
+              {t("landing.limpeza_desc")}
             </p>
           </div>
 
@@ -176,9 +176,9 @@ export default function Home() {
             marginBottom: 44,
           }}>
             {[
-              { img: "/img/carta-limpeza.png", title: "Limpeza Profunda", saint: "Nossa Senhora Aparecida", desc: "Tira energia pesada, mau-olhado e a dor da alma" },
-              { img: "/img/carta-caminhos.png", title: "Abrir Caminhos", saint: "Santo Antônio", desc: "Desata o que está travando sua vida e o seu dinheiro" },
-              { img: "/img/carta-protecao.png", title: "Proteção", saint: "São Miguel e São Jorge", desc: "Corta feitiço, inveja e olho gordo com a espada divina" },
+              { img: "/img/carta-limpeza.png",  title: t("landing.card1_title"), saint: t("landing.card1_saint"), desc: t("landing.card1_desc") },
+              { img: "/img/carta-caminhos.png", title: t("landing.card2_title"), saint: t("landing.card2_saint"), desc: t("landing.card2_desc") },
+              { img: "/img/carta-protecao.png", title: t("landing.card3_title"), saint: t("landing.card3_saint"), desc: t("landing.card3_desc") },
             ].map((c) => (
               <div key={c.title} style={{
                 background: "linear-gradient(135deg, #2a0055 0%, #1e0040 100%)",
@@ -220,16 +220,16 @@ export default function Home() {
           {/* Lista de benefícios — fonte grande para 60+ */}
           <div className="card-gold" style={{ padding: "32px 28px", marginBottom: 36 }}>
             <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, textAlign: "center", marginBottom: 24 }}>
-              O que você recebe
+              {t("landing.bullets_title")}
             </h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 18 }}>
               {[
-                { icon: "🕯️", text: "Conversa sagrada com ATB só sobre a sua limpeza" },
-                { icon: "🗝️", text: "ATB descobre o que está te pesando" },
-                { icon: "👑", text: "Os santos certos para o seu caso" },
-                { icon: "💧", text: "Banho de ervas e oração feita pra você" },
-                { icon: "⚔️", text: "Proteção contra inveja e olho gordo" },
-                { icon: "✨", text: "Abertura dos seus caminhos" },
+                { icon: "🕯️", text: t("landing.bullet1") },
+                { icon: "🗝️", text: t("landing.bullet2") },
+                { icon: "👑", text: t("landing.bullet3") },
+                { icon: "💧", text: t("landing.bullet4") },
+                { icon: "⚔️", text: t("landing.bullet5") },
+                { icon: "✨", text: t("landing.bullet6") },
               ].map((b, i) => (
                 <div key={i} style={{ display: "flex", gap: 16, alignItems: "center", padding: "8px 0" }}>
                   <span style={{ fontSize: 32, flexShrink: 0 }}>{b.icon}</span>
@@ -242,12 +242,12 @@ export default function Home() {
           {/* Santos — imagem real ilustrada */}
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <div style={{ fontSize: 18, color: S.gold, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 20 }}>
-              ✨ Os santos que vão estar com você ✨
+              {t("landing.saints_title")}
             </div>
             <div style={{ borderRadius: 20, overflow: "hidden", maxWidth: 820, margin: "0 auto", boxShadow: "0 18px 48px rgba(0,0,0,0.45), 0 0 0 2px rgba(232,184,75,0.4)" }}>
               <Image
                 src="/img/santos-grid.png"
-                alt="Nossa Senhora Aparecida, Sagrado Coração, São Miguel, Santo Antônio, São Jorge e Nossa Senhora Desatadora dos Nós"
+                alt={t("landing.saints_alt")}
                 width={1536}
                 height={1024}
                 style={{ width: "100%", height: "auto", display: "block" }}
@@ -286,13 +286,13 @@ export default function Home() {
             boxShadow: "0 16px 50px rgba(232,184,75,0.22)",
           }}>
             <div style={{ fontSize: 16, color: "#f5c860", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontWeight: 700 }}>
-              Pagamento único
+              {t("landing.payment_eyebrow")}
             </div>
             <div className="serif" style={{ fontSize: "clamp(3.4rem, 8vw, 4.5rem)", color: S.gold, fontWeight: 800, lineHeight: 1, marginBottom: 6 }}>
               R$ 100
             </div>
             <div style={{ fontSize: 16, color: "#fbf8ff", marginBottom: 28, fontWeight: 500 }}>
-              Você paga uma vez só
+              {t("landing.payment_once")}
             </div>
             <a
               href={LIMPEZA}
@@ -311,13 +311,13 @@ export default function Home() {
                 letterSpacing: "0.02em",
               }}
             >
-              ✨ Quero minha Limpeza
+              {t("landing.payment_cta")}
             </a>
             <div style={{ marginTop: 22, padding: "14px 18px", background: "rgba(232,184,75,0.08)", borderRadius: 12, border: "1px solid rgba(232,184,75,0.2)" }}>
               <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
-                🔒 <strong>Pagamento totalmente seguro</strong><br />
-                Você pode pagar com Cartão, Pix ou Boleto<br />
-                Logo depois de pagar, sua limpeza está pronta
+                🔒 <strong>{t("landing.trust_secure")}</strong><br />
+                {t("landing.trust_methods")}<br />
+                {t("landing.trust_delivery")}
               </p>
             </div>
           </div>

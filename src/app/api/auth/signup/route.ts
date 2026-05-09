@@ -83,8 +83,12 @@ export async function POST(req: Request) {
         .eq("email", normalizedEmail)
         .is("user_id", null);
 
-      // Se tem compra de plano basic/premium, atualiza o plano
-      const { data: existingPurchase } = await adminClient
+      // Se tem compra (subscriptions OU one-shots), liga ao user.
+      // Prioriza assinaturas (basic/premium) para definir users.plan.
+      // One-shots (limpeza, limpeza_v2, espirito) são linkadas via purchases.user_id
+      // mas não alteram users.plan — quem controla acesso a esses produtos
+      // é a presença de purchase, não plan.
+      const { data: subscription } = await adminClient
         .from("purchases")
         .select("plan, kiwify_order_id")
         .eq("email", normalizedEmail)
@@ -93,12 +97,12 @@ export async function POST(req: Request) {
         .limit(1)
         .maybeSingle();
 
-      if (existingPurchase?.plan) {
+      if (subscription?.plan) {
         await adminClient
           .from("users")
           .update({
-            plan: existingPurchase.plan,
-            kiwify_order_id: existingPurchase.kiwify_order_id,
+            plan: subscription.plan,
+            kiwify_order_id: subscription.kiwify_order_id,
           })
           .eq("id", data.user.id);
       }

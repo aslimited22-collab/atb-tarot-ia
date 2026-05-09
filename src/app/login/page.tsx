@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useT();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading]   = useState(false);
@@ -22,9 +24,9 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (error) {
-      return toast.error("Email ou senha incorretos. Tente de novo.");
+      return toast.error(t("auth.login_error"));
     }
-    toast.success("Bem-vinda de volta!");
+    toast.success(t("auth.login_welcome_back"));
     router.push("/dashboard");
     router.refresh();
   }
@@ -46,25 +48,25 @@ export default function LoginPage() {
             ATB
           </h1>
           <p style={{ color: "#fbf8ff", fontSize: 19, lineHeight: 1.5 }}>
-            Bem-vinda de volta, minha querida alma 💛
+            {t("auth.login_welcome")}
           </p>
         </div>
 
         {/* Formulário */}
         <form onSubmit={handleSubmit} className="card" style={{ padding: "36px 32px" }}>
           <h2 className="serif" style={{ fontSize: "1.7rem", color: "#e8b84b", marginBottom: 24, textAlign: "center" }}>
-            Entrar na sua conta
+            {t("nav.signin")}
           </h2>
 
           {/* Email */}
           <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
-            Seu email
+            {t("auth.email_label")}
           </label>
           <input
             id="email"
             className="input input-big"
             type="email"
-            placeholder="exemplo@gmail.com"
+            placeholder={t("auth.thanks_email_placeholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -75,14 +77,14 @@ export default function LoginPage() {
 
           {/* Senha */}
           <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
-            Sua senha
+            {t("auth.password_label")}
           </label>
           <div style={{ position: "relative", marginBottom: 16 }}>
             <input
               id="password"
               className="input input-big"
               type={showPwd ? "text" : "password"}
-              placeholder="A senha que você cadastrou"
+              placeholder={t("auth.password_placeholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -92,6 +94,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPwd(!showPwd)}
+              aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
               style={{
                 position: "absolute",
                 right: 8,
@@ -108,7 +111,7 @@ export default function LoginPage() {
                 minHeight: 0,
               }}
             >
-              {showPwd ? "🙈 Ocultar" : "👁️ Mostrar"}
+              {showPwd ? t("auth.password_hide") : t("auth.password_show")}
             </button>
           </div>
 
@@ -124,15 +127,15 @@ export default function LoginPage() {
               marginBottom: 24,
             }}
           >
-            {loading ? "Entrando..." : "✨ Entrar"}
+            {loading ? t("auth.login_loading") : `✨ ${t("nav.signin")}`}
           </button>
 
           {/* Link cadastro */}
           <div style={{ textAlign: "center", padding: "16px 0", borderTop: "1px solid rgba(196,181,253,0.18)" }}>
             <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.6, margin: 0 }}>
-              Ainda não tem conta?<br />
+              {t("auth.no_account")}<br />
               <Link href="/cadastro" style={{ color: "#e8b84b", fontWeight: 700, fontSize: 19, textDecoration: "underline", display: "inline-block", marginTop: 8, padding: "8px 16px" }}>
-                ✨ Criar minha conta agora
+                ✨ {t("auth.signup_link")}
               </Link>
             </p>
           </div>
@@ -141,7 +144,7 @@ export default function LoginPage() {
         {/* Voltar para landing */}
         <div style={{ textAlign: "center", marginTop: 24 }}>
           <Link href="/" style={{ color: "#c4b5fd", fontSize: 16, textDecoration: "none", padding: "8px 16px" }}>
-            ← Voltar para a página inicial
+            ← {t("v2.back")}
           </Link>
         </div>
       </div>

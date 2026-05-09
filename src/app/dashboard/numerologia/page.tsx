@@ -2,12 +2,19 @@ import { createClient } from "@/lib/supabase/server";
 import { UpgradeLock } from "@/components/UpgradeLock";
 import { BackButton } from "@/components/BackButton";
 import { dailyLuckyNumbers, nextRefreshHours } from "@/lib/numerology";
+import { getServerT, getServerLocale } from "@/lib/i18n/server";
 import type { Plan } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+const LOCALE_BY_KEY: Record<string, string> = {
+  pt: "pt-BR", en: "en-US", es: "es-ES", de: "de-DE", it: "it-IT", ja: "ja-JP",
+};
+
 export default async function NumerologiaPage() {
   const supabase = createClient();
+  const { t } = getServerT();
+  const locale = getServerLocale();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase
     .from("users").select("plan, name, email").eq("id", user!.id).maybeSingle();
@@ -25,7 +32,11 @@ export default async function NumerologiaPage() {
 
   const numbers = dailyLuckyNumbers(user!.id);
   const hours = nextRefreshHours();
-  const today = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  const today = new Date().toLocaleDateString(LOCALE_BY_KEY[locale] || "en-US", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
   const firstName = (profile?.name || profile?.email?.split("@")[0] || "querida").split(" ")[0];
 
   return (
@@ -34,12 +45,14 @@ export default async function NumerologiaPage() {
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 28 }}>
-        <div style={{ fontSize: 60, marginBottom: 12 }}>🍀</div>
+        <div style={{ fontSize: 60, marginBottom: 12 }} aria-hidden="true">🍀</div>
         <h1 className="serif" style={{ fontSize: "2.4rem", color: "#e8b84b", marginBottom: 8, lineHeight: 1.15 }}>
-          Seus Números da Sorte
+          {t("numerology.h1")}
         </h1>
         <p style={{ fontSize: "1.15rem", color: "#c4b5fd", lineHeight: 1.6, maxWidth: 480, margin: "0 auto" }}>
-          Olá, <strong style={{ color: "#f5c860" }}>{firstName}</strong>! Estes são os 6 números que o universo escolheu para você hoje.
+          {t("numerology.subtitle_part1")}{" "}
+          <strong style={{ color: "#f5c860" }}>{firstName}</strong>
+          {t("numerology.subtitle_part2")}
         </p>
         <p style={{ fontSize: "0.95rem", color: "#9575cd", marginTop: 6 }}>
           {today}
@@ -85,26 +98,28 @@ export default async function NumerologiaPage() {
 
       {/* Explanation */}
       <div className="card" style={{ padding: "24px 22px", marginBottom: 20, textAlign: "center" }}>
-        <div style={{ fontSize: 32, marginBottom: 10 }}>✨</div>
+        <div style={{ fontSize: 32, marginBottom: 10 }} aria-hidden="true">✨</div>
         <h2 className="serif" style={{ fontSize: "1.4rem", color: "#e8b84b", marginBottom: 10 }}>
-          Como usar seus números
+          {t("numerology.howto_h2")}
         </h2>
         <p style={{ fontSize: "1.05rem", color: "#d9cdfc", lineHeight: 1.75 }}>
-          Anote esses números em um papel e guarde com você durante o dia. Use na sua loteria, no jogo do bicho, ou onde sentir no coração. A energia deles está com você até a meia-noite.
+          {t("numerology.howto_desc")}
         </p>
       </div>
 
       {/* Refresh */}
       <div className="card-gold" style={{ padding: "20px 22px", textAlign: "center" }}>
-        <div style={{ fontSize: 36, marginBottom: 8 }}>🌙</div>
+        <div style={{ fontSize: 36, marginBottom: 8 }} aria-hidden="true">🌙</div>
         <p style={{ fontSize: "1.05rem", color: "#fbf8ff", lineHeight: 1.6, margin: 0 }}>
-          Volte amanhã! Em <strong style={{ color: "#f5c860", fontSize: "1.2rem" }}>{hours}h</strong> você terá novos números da sorte.
+          {t("numerology.come_back_part1")}{" "}
+          <strong style={{ color: "#f5c860", fontSize: "1.2rem" }}>{hours}</strong>
+          {t("numerology.come_back_part2")}
         </p>
       </div>
 
       {/* Decorative */}
       <p style={{ textAlign: "center", color: "#9575cd", fontSize: "0.9rem", marginTop: 28, lineHeight: 1.6 }}>
-        🌟 Que a sorte ilumine seu caminho 🌟
+        {t("numerology.footer")}
       </p>
     </div>
   );

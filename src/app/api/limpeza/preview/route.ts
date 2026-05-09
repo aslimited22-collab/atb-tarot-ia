@@ -96,7 +96,39 @@ export async function POST(req: Request) {
     const currency = isStripe ? moneyInfo.currency.toUpperCase() : "BRL";
     const locale = isStripe ? moneyInfo.locale : "pt-BR";
 
-    // Cria order pending
+    // Pré-condição: pelo menos UM provedor de checkout precisa estar configurado.
+    // Verificamos antes de gastar token de DeepSeek + criar order órfão.
+    const baseKiwify = process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL || "";
+    const stripeAvailable = !!process.env.STRIPE_SECRET_KEY;
+    if (!baseKiwify && !stripeAvailable) {
+      return NextResponse.json(
+        { error: "Pagamento indisponível no momento. Tente novamente mais tarde." },
+        { status: 503 }
+      );
+    }
+
+    // M-1: Gera preview com DeepSeek ANTES de criar a order. Se a IA falhar,
+    // não fica order pending órfã no banco.
+    let previewText: string;
+    try {
+      previewText = await generatePreview({
+        name,
+        theme: THEME_LABELS[theme as keyof typeof THEME_LABELS] || theme,
+        sign,
+        question,
+      });
+    } catch {
+      return NextResponse.json(
+        { error: "Não conseguimos preparar sua prévia agora. Tente em alguns minutos." },
+        { status: 502 }
+      );
+    }
+
+    // Cap defensivo de 80 palavras (caso a IA passe)
+    const words = previewText.split(/\s+/);
+    if (words.length > 90) previewText = words.slice(0, 80).join(" ") + "...";
+
+    // Cria order pending (preview já garantido)
     const { data: order, error: orderErr } = await admin
       .from("orders")
       .insert({
@@ -121,31 +153,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Erro ao registrar pedido." }, { status: 500 });
     }
 
-    // Gera preview com DeepSeek
-    let previewText: string;
-    try {
-      previewText = await generatePreview({
-        name,
-        theme: THEME_LABELS[theme as keyof typeof THEME_LABELS] || theme,
-        sign,
-        question,
-      });
-    } catch (e: any) {
-      // Marca reading com erro mas mantem order pending
-      await admin.from("readings").insert({
-        order_id: order.id,
-        generation_status: "error",
-        error_message: String(e?.message || e || "preview generation error").slice(0, 500),
-        model_used: "deepseek",
-      });
-      return NextResponse.json({ error: "Não conseguimos preparar sua prévia agora. Tente em alguns minutos." }, { status: 502 });
+    // M-5: Monta URL do checkout (Kiwify ou Stripe). Se ambos falharem,
+    // limpamos a order recém-criada e retornamos 503.
+    function buildKiwifyUrl(orderId: string): string | null {
+      if (!baseKiwify) return null;
+      const sep = baseKiwify.includes("?") ? "&" : "?";
+      return `${baseKiwify}${sep}external_reference=${orderId}&email=${encodeURIComponent(email)}`;
     }
 
-    // Cap defensivo de 80 palavras (caso a IA passe)
-    const words = previewText.split(/\s+/);
-    if (words.length > 90) previewText = words.slice(0, 80).join(" ") + "...";
-
-    // Monta URL do checkout (Kiwify ou Stripe)
     let checkoutUrl: string | null = null;
     if (isStripe) {
       try {
@@ -161,19 +176,22 @@ export async function POST(req: Request) {
           successUrl: `${proto}://${host}/entrega/${order.id}?provider=stripe`,
           cancelUrl: `${proto}://${host}/limpeza/preview/${order.id}`,
         });
-        checkoutUrl = session?.url || null;
-      } catch (e) {
-        // Fallback: se Stripe falhar, oferecer Kiwify mesmo
-        const baseCheckout = process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL || "";
-        checkoutUrl = baseCheckout
-          ? `${baseCheckout}${baseCheckout.includes("?") ? "&" : "?"}external_reference=${order.id}&email=${encodeURIComponent(email)}`
-          : null;
+        checkoutUrl = session?.url || buildKiwifyUrl(order.id);
+      } catch {
+        // Fallback: se Stripe falhar, tenta Kiwify
+        checkoutUrl = buildKiwifyUrl(order.id);
       }
     } else {
-      const baseCheckout = process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL || "";
-      checkoutUrl = baseCheckout
-        ? `${baseCheckout}${baseCheckout.includes("?") ? "&" : "?"}external_reference=${order.id}&email=${encodeURIComponent(email)}`
-        : null;
+      checkoutUrl = buildKiwifyUrl(order.id);
+    }
+
+    if (!checkoutUrl) {
+      // Ambos provedores falharam — limpa a order para não deixar órfã.
+      await admin.from("orders").delete().eq("id", order.id);
+      return NextResponse.json(
+        { error: "Pagamento indisponível no momento. Tente novamente em instantes." },
+        { status: 503 }
+      );
     }
 
     // Salva reading com preview
@@ -186,9 +204,7 @@ export async function POST(req: Request) {
     });
 
     // Atualiza order com checkout_url
-    if (checkoutUrl) {
-      await admin.from("orders").update({ checkout_url: checkoutUrl }).eq("id", order.id);
-    }
+    await admin.from("orders").update({ checkout_url: checkoutUrl }).eq("id", order.id);
 
     return NextResponse.json({
       ok: true,
