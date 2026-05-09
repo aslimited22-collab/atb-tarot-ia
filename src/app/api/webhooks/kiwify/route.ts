@@ -8,9 +8,20 @@ import { logInfo, logWarn, logError } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
-// Nonces usados nas últimas 10 minutos — anti replay attack
-const usedNonces = new Map<string, number>();
-const NONCE_TTL = 10 * 60 * 1000;
+// Anti-replay: nonces persistidos em Supabase (`webhook_nonces`).
+// Map em memoria nao funciona em serverless — cada Lambda tem mapa vazio.
+async function nonceAlreadyUsed(
+  admin: ReturnType<typeof createAdminClient>,
+  nonce: string
+): Promise<boolean> {
+  const { error } = await admin.from("webhook_nonces").insert({ nonce });
+  if (!error) return false; // inserido com sucesso → primeira vez
+  // Codigo "23505" = unique_violation no Postgres → replay detectado
+  if ((error as { code?: string }).code === "23505") return true;
+  // Outro erro de DB: nao bloqueia (failope) — mas registra
+  logWarn("webhook.kiwify", "nonce table error (failopen)", { error: error.message });
+  return false;
+}
 
 // Escapa HTML para evitar injection em emails de notificação
 function escapeHtml(s: string | undefined | null): string {
@@ -23,18 +34,11 @@ function escapeHtml(s: string | undefined | null): string {
     .replace(/'/g, "&#39;");
 }
 
-function cleanNonces() {
-  const now = Date.now();
-  for (const [k, t] of usedNonces) {
-    if (now - t > NONCE_TTL) usedNonces.delete(k);
-  }
-}
-
 export async function POST(req: Request) {
   const ip = getClientIp(req);
 
   // Rate limit: 30 webhooks por IP por minuto
-  const rl = rateLimit(`webhook:${ip}`, 30, 60_000);
+  const rl = await rateLimit(`webhook:${ip}`, 30, 60_000);
   if (!rl.ok) {
     return NextResponse.json({ error: "rate limited" }, { status: 429 });
   }
@@ -67,14 +71,14 @@ export async function POST(req: Request) {
   const event: string = order.webhook_event_type || payload.webhook_event_type || payload.event || payload.type || "";
   const orderId: string | undefined = order.order_id || order.order_ref || payload.order_id;
 
-  if (orderId) {
-    cleanNonces();
-    const nonceKey = `${orderId}:${event}`;
-    if (usedNonces.has(nonceKey)) {
-      // Replay detectado — retorna 200 para não reenviar mas ignora
+  // Anti-replay persistido (Supabase). Cria admin client mais cedo para isso.
+  const admin = createAdminClient();
+  if (orderId && event) {
+    const nonce = `kiwify:${orderId}:${event}`;
+    if (await nonceAlreadyUsed(admin, nonce)) {
+      logInfo("webhook.kiwify", "replay ignored", { orderId, event });
       return NextResponse.json({ ok: true, ignored: "replay" });
     }
-    usedNonces.set(nonceKey, Date.now());
   }
 
   const email: string | undefined =
@@ -112,8 +116,6 @@ export async function POST(req: Request) {
   if (!emailOk) {
     return NextResponse.json({ error: "invalid email" }, { status: 400 });
   }
-
-  const admin = createAdminClient();
 
   const productId: string | undefined =
     order.Product?.product_id ||

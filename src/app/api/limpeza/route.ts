@@ -23,7 +23,7 @@ async function hasPurchased(supabase: any, email: string): Promise<boolean> {
 export async function POST(req: Request) {
   try {
     const ip = getClientIp(req);
-    const rl = rateLimit(`limpeza:${ip}`, 20, 60_000);
+    const rl = await rateLimit(`limpeza:${ip}`, 20, 60_000);
     if (!rl.ok) {
       return NextResponse.json(
         { error: "Muitas requisições. Aguarde um momento." },
@@ -229,7 +229,7 @@ Use essas informações para chamá-la pelo nome, levar em conta a fase da vida 
 
 export async function GET(req: Request) {
   const ip = getClientIp(req);
-  const rl = rateLimit(`limpeza-get:${ip}`, 60, 60_000);
+  const rl = await rateLimit(`limpeza-get:${ip}`, 60, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Muitas requisições." },

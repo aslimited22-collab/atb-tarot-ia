@@ -23,7 +23,7 @@ async function hasPurchased(supabase: any, email: string): Promise<boolean> {
 export async function POST(req: Request) {
   try {
     const ip = getClientIp(req);
-    const rl = rateLimit(`espirito:${ip}`, 20, 60_000);
+    const rl = await rateLimit(`espirito:${ip}`, 20, 60_000);
     if (!rl.ok) {
       return NextResponse.json(
         { error: "Muitas requisições. Aguarde um momento." },
@@ -214,7 +214,7 @@ Use o nome dela e o nome da pessoa do outro lado (${profile.who_to_talk || "guia
 
 export async function GET(req: Request) {
   const ip = getClientIp(req);
-  const rl = rateLimit(`espirito-get:${ip}`, 60, 60_000);
+  const rl = await rateLimit(`espirito-get:${ip}`, 60, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Muitas requisições." },

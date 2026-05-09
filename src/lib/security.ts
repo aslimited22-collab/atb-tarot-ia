@@ -72,33 +72,89 @@ export function validateEmail(email: string): { ok: boolean; reason?: string } {
   return { ok: true };
 }
 
-// Rate limiter em memória (Edge-safe, reinicia entre deployments — OK para MVP)
+// Rate limiter — em serverless o mapa em memória NÃO funciona (cada Lambda
+// começa com mapa vazio). Por isso primeiro tentamos persistir no Postgres
+// via RPC `check_rate_limit` (atomico), e só caímos no mapa em memória
+// quando rodando localmente sem Supabase configurado (dev/test).
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 const ipMap = new Map<string, { count: number; reset: number }>();
 
-export function rateLimit(ip: string, limit: number, windowMs: number): { ok: boolean; retryAfter?: number } {
+function inMemoryRateLimit(
+  key: string,
+  limit: number,
+  windowMs: number
+): { ok: boolean; retryAfter?: number } {
   const now = Date.now();
 
-  // Limpeza preventiva: evita map crescer sem limite em instâncias long-lived
   if (ipMap.size > 5000) {
     for (const [k, v] of ipMap.entries()) {
       if (now > v.reset) ipMap.delete(k);
     }
   }
 
-  const entry = ipMap.get(ip);
+  const entry = ipMap.get(key);
 
   if (!entry || now > entry.reset) {
-    ipMap.set(ip, { count: 1, reset: now + windowMs });
+    ipMap.set(key, { count: 1, reset: now + windowMs });
     return { ok: true };
   }
 
   if (entry.count >= limit) {
-    const retryAfter = Math.ceil((entry.reset - now) / 1000);
-    return { ok: false, retryAfter };
+    return { ok: false, retryAfter: Math.ceil((entry.reset - now) / 1000) };
   }
 
   entry.count += 1;
   return { ok: true };
+}
+
+let _adminCache: SupabaseClient | null = null;
+function adminOrNull(): SupabaseClient | null {
+  if (_adminCache) return _adminCache;
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return null;
+  }
+  try {
+    _adminCache = createAdminClient();
+    return _adminCache;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Rate-limit por chave (geralmente "rota:ip"). Atomic via RPC no Postgres,
+ * que funciona em serverless. Fall back para memoria apenas em dev sem DB.
+ */
+export async function rateLimit(
+  key: string,
+  limit: number,
+  windowMs: number
+): Promise<{ ok: boolean; retryAfter?: number }> {
+  const admin = adminOrNull();
+  if (admin) {
+    try {
+      const { data, error } = await admin.rpc("check_rate_limit", {
+        p_key: key,
+        p_limit: limit,
+        p_window_ms: windowMs,
+      });
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const row = data[0] as { allowed: boolean; retry_after: number };
+        return row.allowed
+          ? { ok: true }
+          : { ok: false, retryAfter: Math.max(1, row.retry_after) };
+      }
+      // Erro/Resposta vazia: degrada para memoria (melhor permitir do que negar)
+    } catch {
+      // fall through
+    }
+  }
+  return inMemoryRateLimit(key, limit, windowMs);
 }
 
 // Sanitiza input para evitar prompt injection

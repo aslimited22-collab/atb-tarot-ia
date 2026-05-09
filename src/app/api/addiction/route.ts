@@ -11,7 +11,7 @@ export const maxDuration = 50;
 export async function POST(req: Request) {
   try {
     const ip = getClientIp(req);
-    const rl = rateLimit(`addiction:${ip}`, 20, 60_000);
+    const rl = await rateLimit(`addiction:${ip}`, 20, 60_000);
     if (!rl.ok) {
       return NextResponse.json(
         { error: "Muitas requisições. Aguarde." },

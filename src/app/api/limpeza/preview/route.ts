@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const ip = getClientIp(req);
 
     // Rate limit anti-spam (publico, sem auth)
-    const rl = rateLimit(`limpeza-v2-preview:${ip}`, 6, 60_000);
+    const rl = await rateLimit(`limpeza-v2-preview:${ip}`, 6, 60_000);
     if (!rl.ok) {
       return NextResponse.json(
         { error: "Muitas tentativas. Aguarde um momento." },

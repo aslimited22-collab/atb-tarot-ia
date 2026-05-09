@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const ip = getClientIp(req);
 
     // Rate limit por IP: 60 req/min (contra bots)
-    const rl = rateLimit(`chat:${ip}`, 60, 60_000);
+    const rl = await rateLimit(`chat:${ip}`, 60, 60_000);
     if (!rl.ok) {
       return NextResponse.json(
         { error: "Muitas requisições. Aguarde um momento." },
@@ -96,18 +96,9 @@ export async function POST(req: Request) {
       }
     }
 
-    usedToday += 1;
-    usedMonth += 1;
+    // NÃO incrementamos cota agora — só cobramos se a IA realmente responder.
+    // Isso evita "queimar" mensagem do usuário em caso de 502 da DeepSeek.
     const admin = createAdminClient();
-    await admin
-      .from("users")
-      .update({
-        messages_today: usedToday,
-        last_message_date: today,
-        messages_month: usedMonth,
-        last_message_month: monthKey,
-      })
-      .eq("id", user.id);
 
     const { data: history } = await supabase
       .from("chat_messages")
@@ -123,13 +114,32 @@ export async function POST(req: Request) {
     const isFree = plan === "free";
     const systemPrompt = isFree ? ATB_FREE_SYSTEM_PROMPT : ATB_SYSTEM_PROMPT;
 
-    const upstream = await deepseekStream([
-      { role: "system", content: systemPrompt },
-      ...prior,
-      { role: "user", content: message },
-    ]);
+    let upstream: Response;
+    try {
+      upstream = await deepseekStream([
+        { role: "system", content: systemPrompt },
+        ...prior,
+        { role: "user", content: message },
+      ]);
+    } catch {
+      // Falha de rede / DeepSeek antes de qualquer chunk — rollback da
+      // mensagem do usuário e nenhum incremento de cota.
+      await supabase
+        .from("chat_messages")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("role", "user")
+        .eq("content", message);
+      return NextResponse.json({ error: "Erro na consulta" }, { status: 502 });
+    }
 
     if (!upstream.ok || !upstream.body) {
+      await supabase
+        .from("chat_messages")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("role", "user")
+        .eq("content", message);
       return NextResponse.json({ error: "Erro na consulta" }, { status: 502 });
     }
 
@@ -169,7 +179,27 @@ export async function POST(req: Request) {
           return;
         } finally {
           if (full) {
-            await supabase.from("chat_messages").insert({ user_id: user.id, role: "assistant", content: full });
+            // Sucesso: persiste resposta + incrementa cota (com guard)
+            await supabase.from("chat_messages").insert({
+              user_id: user.id, role: "assistant", content: full,
+            });
+            await admin
+              .from("users")
+              .update({
+                messages_today: usedToday + 1,
+                last_message_date: today,
+                messages_month: usedMonth + 1,
+                last_message_month: monthKey,
+              })
+              .eq("id", user.id);
+          } else {
+            // Stream abriu mas não veio conteúdo — rollback
+            await supabase
+              .from("chat_messages")
+              .delete()
+              .eq("user_id", user.id)
+              .eq("role", "user")
+              .eq("content", message);
           }
           controller.close();
         }

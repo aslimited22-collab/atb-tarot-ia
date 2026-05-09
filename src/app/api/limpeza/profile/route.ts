@@ -21,7 +21,7 @@ const VALID_FEELINGS = new Set([
 export async function POST(req: Request) {
   try {
     const ip = getClientIp(req);
-    const rl = rateLimit(`limpeza-profile:${ip}`, 10, 60_000);
+    const rl = await rateLimit(`limpeza-profile:${ip}`, 10, 60_000);
     if (!rl.ok) {
       return NextResponse.json(
         { error: "Muitas requisições." },

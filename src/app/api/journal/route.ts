@@ -31,7 +31,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const ip = getClientIp(req);
-    const rl = rateLimit(`journal:${ip}`, 20, 60_000);
+    const rl = await rateLimit(`journal:${ip}`, 20, 60_000);
     if (!rl.ok) {
       return NextResponse.json({ error: "Muitas requisições. Aguarde." }, { status: 429, headers: { "Retry-After": String(rl.retryAfter) } });
     }

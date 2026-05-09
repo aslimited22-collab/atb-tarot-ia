@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const ip = getClientIp(req);
 
   // Máximo 5 cadastros por IP por hora
-  const rl = rateLimit(`signup:${ip}`, 5, 60 * 60 * 1000);
+  const rl = await rateLimit(`signup:${ip}`, 5, 60 * 60 * 1000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Muitas tentativas. Tente novamente mais tarde." },
