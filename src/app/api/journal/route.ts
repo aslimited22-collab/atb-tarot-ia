@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
     const response = await deepseekComplete([
       { role: "system", content: ATB_SYSTEM_PROMPT },
-      { role: "user", content: `Este é um relato do meu diário sobre como estou me sentindo hoje. Responda com uma reflexão espiritual baseada em tarot e um conselho prático, acolhedor e direto. Relato:\n\n${sanity.value}` },
+      { role: "user", content: `Este é um relato do meu diário sobre como estou me sentindo hoje. Responda com uma reflexão espírita acolhedora e um conselho prático e direto. Relato:\n\n${sanity.value}` },
     ]);
 
     const { data } = await supabase

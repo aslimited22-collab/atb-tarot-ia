@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyKiwifySignature, planFromValue } from "@/lib/kiwify";
 import { rateLimit, getClientIp } from "@/lib/security";
 import { Resend } from "resend";
+import { deliverLimpezaOrder } from "@/lib/delivery";
+import { logInfo, logWarn, logError } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -136,27 +138,53 @@ export async function POST(req: Request) {
   const isUuid = (s: string | undefined) => !!s && /^[0-9a-f-]{36}$/i.test(s);
 
   if ((event === "order.approved" || event === "order_approved") && isUuid(externalRef)) {
-    const { data: v2Order } = await admin
+    const { data: v2Order, error: v2Err } = await admin
       .from("orders")
-      .select("id, status, email, name, product_type")
+      .select("id, status, email, name, phone, locale, product_type")
       .eq("id", externalRef as string)
       .maybeSingle();
 
+    if (v2Err) {
+      logError("webhook.kiwify", "v2 order lookup error", { externalRef, error: v2Err.message });
+    }
+
     if (v2Order && v2Order.product_type === "limpeza_espiritual") {
-      // Idempotência: já está paid -> só re-dispara generate (ainda assim safe)
+      logInfo("webhook.kiwify", "v2 order matched", {
+        orderId: v2Order.id,
+        kiwifyOrderId: orderId,
+        wasAlreadyPaid: v2Order.status === "paid",
+      });
+
       const wasAlreadyPaid = v2Order.status === "paid";
 
-      // Marca paid + payment_id
-      await admin
-        .from("orders")
-        .update({
-          status: "paid",
-          payment_id: orderId ?? null,
-        })
-        .eq("id", v2Order.id);
+      // Tenta capturar phone do payload Kiwify (Customer.mobile/phone)
+      const kiwifyPhone =
+        order.Customer?.mobile ||
+        order.Customer?.phone ||
+        order.customer?.mobile ||
+        order.customer?.phone ||
+        payload.Customer?.mobile ||
+        payload.customer?.mobile ||
+        payload.phone ||
+        undefined;
 
-      // Registra na tabela `purchases` (compatibilidade com painel admin antigo)
-      await admin.from("purchases").insert({
+      // Marca paid + payment_id (idempotente)
+      const paidPatch: Record<string, any> = {
+        status: "paid",
+        payment_id: orderId ?? null,
+      };
+      if (kiwifyPhone && !v2Order.phone) paidPatch.phone = kiwifyPhone;
+
+      const { error: upErr } = await admin
+        .from("orders")
+        .update(paidPatch)
+        .eq("id", v2Order.id);
+      if (upErr) {
+        logError("webhook.kiwify", "could not mark v2 paid", { orderId: v2Order.id, error: upErr.message });
+      }
+
+      // Espelho em purchases
+      const { error: purErr } = await admin.from("purchases").insert({
         email: (v2Order.email || email).toLowerCase(),
         name: v2Order.name ?? null,
         kiwify_order_id: orderId ?? "unknown",
@@ -165,49 +193,32 @@ export async function POST(req: Request) {
         amount_cents: Math.round(valueBRL * 100),
         user_id: null,
       });
-
-      // Dispara geração completa (server-to-server, sem auth)
-      try {
-        const proto = req.headers.get("x-forwarded-proto") || "https";
-        const host = req.headers.get("host") || "atbtartot.com";
-        const genUrl = `${proto}://${host}/api/limpeza/generate`;
-        await fetch(genUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Internal-Token": process.env.INTERNAL_GEN_TOKEN || "",
-          },
-          body: JSON.stringify({ orderId: v2Order.id }),
-        });
-      } catch {
-        // Falha de geração não deve causar retry do webhook (idempotente)
+      if (purErr) {
+        logWarn("webhook.kiwify", "purchases insert failed", { orderId: v2Order.id, error: purErr.message });
       }
 
-      // Email para a cliente com link da entrega
-      if (process.env.RESEND_API_KEY && !wasAlreadyPaid) {
-        try {
-          const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
-          const firstName = (v2Order.name || customerName || "querida alma").split(" ")[0];
-          const proto = req.headers.get("x-forwarded-proto") || "https";
-          const host = req.headers.get("host") || "atbtartot.com";
-          const deliveryLink = `${proto}://${host}/entrega/${v2Order.id}`;
+      if (!wasAlreadyPaid) {
+        const proto = req.headers.get("x-forwarded-proto") || "https";
+        const host = req.headers.get("host") || "atbtartot.com";
 
-          await new Resend(process.env.RESEND_API_KEY).emails.send({
-            from: fromEmail,
-            to: (v2Order.email || email).toLowerCase(),
-            subject: "🕊️ Sua Limpeza Espiritual está pronta",
-            html: `<!DOCTYPE html><html lang="pt-BR"><body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
-<div style="max-width:560px;margin:0 auto;padding:30px 20px;">
-  <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.4);">
-    <div style="font-size:64px;margin-bottom:16px;">🕊️</div>
-    <h1 style="font-family:Georgia,serif;color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;">Sua Limpeza está pronta</h1>
-    <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">Olá, <strong style="color:#f5c860;">${escapeHtml(firstName)}</strong>!<br>A ATB preparou uma orientação espiritual para você.</p>
-    <a href="${deliveryLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px rgba(232,184,75,0.4);">✨ Ver minha Limpeza</a>
-    <p style="color:#c4b5fd;font-size:13px;margin:24px 0 0;">Guarde este email. Você pode acessar pelo botão acima quando quiser.</p>
-  </div>
-</div></body></html>`,
-          });
-        } catch {}
+        const result = await deliverLimpezaOrder({
+          orderId: v2Order.id,
+          email: (v2Order.email || email).toLowerCase(),
+          name: v2Order.name ?? customerName,
+          phone: v2Order.phone || kiwifyPhone || null,
+          locale: v2Order.locale,
+          deliveryLink: `${proto}://${host}/entrega/${v2Order.id}`,
+          internalGenUrl: `${proto}://${host}/api/limpeza/generate`,
+          triggerGeneration: true,
+        });
+
+        logInfo("webhook.kiwify", "v2 delivery pipeline done", {
+          orderId: v2Order.id,
+          finalDeliveryStatus: result.finalDeliveryStatus,
+          gen: result.generation.ok,
+          email: result.email.ok,
+          wa: result.whatsapp.ok,
+        });
       }
 
       return NextResponse.json({ ok: true, plan: "limpeza_v2", orderId: v2Order.id });
@@ -286,7 +297,7 @@ export async function POST(req: Request) {
     </div>
 
     <div style="text-align:center;margin-top:20px;color:#9575cd;font-size:12px;">
-      Pedido: ${escapeHtml(orderId) || "N/A"} · ATB Tarot
+      Pedido: ${escapeHtml(orderId) || "N/A"} · ATB
     </div>
   </div>
 </body>
@@ -385,7 +396,7 @@ export async function POST(req: Request) {
     </div>
 
     <div style="text-align:center;margin-top:20px;color:#9575cd;font-size:12px;">
-      Pedido: ${escapeHtml(orderId) || "N/A"} · ATB Tarot
+      Pedido: ${escapeHtml(orderId) || "N/A"} · ATB
     </div>
   </div>
 </body>

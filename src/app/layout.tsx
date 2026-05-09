@@ -4,8 +4,8 @@ import { Toaster } from "react-hot-toast";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 
 export const metadata: Metadata = {
-  title: "ATB Tarot",
-  description: "Consulte ATB, sua Tarologa",
+  title: "ATB — Sessão Espírita Transformadora",
+  description: "Converse com seu Espírito Mentor. Acolhimento, clareza e direção espiritual.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

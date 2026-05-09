@@ -98,6 +98,10 @@ export function EntregaClient({
           .no-print { display: none !important; }
           .card, .card-gold { border: 1px solid #ccc !important; background: white !important; color: black !important; }
         }
+        @media (prefers-reduced-motion: reduce) {
+          .typing-dot { animation: none !important; }
+        }
+        :focus-visible { outline: 4px solid #f5c860 !important; outline-offset: 2px; }
       `}</style>
 
       <div style={{ maxWidth: 720, margin: "0 auto" }}>
@@ -143,11 +147,14 @@ export function EntregaClient({
               <span className="typing-dot" />
               <span className="typing-dot" />
             </div>
-            <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.65, fontWeight: 500 }}>
+            <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.65, fontWeight: 600 }}>
               {t("v2.delivery.preparing")}
             </p>
-            <p style={{ fontSize: 14, color: "#9575cd", marginTop: 12, lineHeight: 1.55 }}>
+            <p style={{ fontSize: 17, color: "#c4b5fd", marginTop: 12, lineHeight: 1.6 }}>
               {t("v2.delivery.preparing_hint")}
+            </p>
+            <p style={{ fontSize: 16, color: "#9575cd", marginTop: 16, lineHeight: 1.6 }}>
+              Vai chegar em até 5 minutos. Pode aguardar com calma.
             </p>
           </div>
         )}
@@ -224,7 +231,7 @@ export function EntregaClient({
                     fontSize: 18, fontWeight: 800,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>{i + 1}</span>
-                  <span style={{ fontSize: 16, color: "#fbf8ff", lineHeight: 1.65, fontWeight: 500, paddingTop: 4 }}>
+                  <span style={{ fontSize: 18, color: "#fbf8ff", lineHeight: 1.65, fontWeight: 500, paddingTop: 4 }}>
                     {step}
                   </span>
                 </li>

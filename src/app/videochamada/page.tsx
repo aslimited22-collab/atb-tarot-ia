@@ -9,7 +9,7 @@ export default function VideoChamadaPage() {
       {/* Header */}
       <div style={{ textAlign:"center", padding:"40px 20px 0" }}>
         <Link href="/" style={{ textDecoration:"none" }}>
-          <span style={{ fontFamily:"Georgia, serif", fontSize:"1.5rem", color:"#e8b84b" }}>ATB Tarot ✨</span>
+          <span style={{ fontFamily:"Georgia, serif", fontSize:"1.5rem", color:"#e8b84b" }}>ATB ✨</span>
         </Link>
       </div>
 
@@ -51,7 +51,7 @@ export default function VideoChamadaPage() {
         <div style={{ background:"linear-gradient(135deg,#2a0055,#1e0040)", border:"1.5px solid rgba(232,184,75,0.3)", borderRadius:20, padding:"24px", marginBottom:24, textAlign:"center" }}>
           <div style={{ fontSize:36, marginBottom:12 }}>💛</div>
           <p style={{ fontFamily:"Georgia, serif", fontSize:"1.2rem", color:"#f5f0ff", lineHeight:1.7, fontStyle:"italic", marginBottom:16 }}>
-            "Eu nunca tinha feito uma leitura de tarot antes. Tinha medo de ouvir coisas ruins. Mas a ATB me recebeu com tanta delicadeza... Chorei, mas foi um choro de alívio. Finalmente alguém que entendeu o que eu estava sentindo."
+            "Eu nunca tinha feito uma sessão espírita antes. Tinha medo de ouvir coisas ruins. Mas a ATB me recebeu com tanta delicadeza... Chorei, mas foi um choro de alívio. Finalmente alguém que entendeu o que eu estava sentindo."
           </p>
           <div style={{ color:"#e8b84b", fontWeight:700, fontSize:"0.95rem" }}>— Maria, 58 anos, São Paulo</div>
         </div>
@@ -98,7 +98,7 @@ export default function VideoChamadaPage() {
           <h2 style={{ fontFamily:"Georgia, serif", fontSize:"1.3rem", color:"#e8b84b", marginBottom:16 }}>Perguntas frequentes</h2>
           {[
             ["Como funciona?", "Após o pagamento, você recebe um link para escolher o dia e horário. A sessão acontece por vídeo chamada no WhatsApp, dura aproximadamente 1 hora."],
-            ["Nunca usei tarot. Posso fazer?", "Pode sim! Na verdade, muitas clientes que mais aproveitam são aquelas que chegam pela primeira vez. Eu cuido de tudo com cuidado e sem pressa."],
+            ["Nunca fiz sessão espírita. Posso fazer?", "Pode sim! Na verdade, muitas clientes que mais aproveitam são aquelas que chegam pela primeira vez. Eu cuido de tudo com cuidado e sem pressa."],
             ["E se eu precisar cancelar?", "Sem problema. Você pode remarcar a sessão com até 24h de antecedência."],
           ].map(([q, a]) => (
             <div key={q} style={{ marginBottom:20, borderBottom:"1px solid rgba(196,181,253,0.12)", paddingBottom:20 }}>

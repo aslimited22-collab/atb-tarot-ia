@@ -99,7 +99,7 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
       {/* Desktop */}
       <aside style={{ width:280, minHeight:"100vh", background:SIDE_BG, borderRight:`1px solid ${SEP}`, position:"sticky", top:0, display:"none" }} className="md:block">
         <div style={{ padding:"20px 18px", borderBottom:`1px solid ${SEP}` }}>
-          <span className="serif" style={{ fontSize:"1.6rem", color:"#e8b84b" }}>ATB Tarot ✨</span>
+          <span className="serif" style={{ fontSize:"1.6rem", color:"#e8b84b" }}>ATB ✨</span>
         </div>
         {nav}
       </aside>
@@ -127,7 +127,7 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
           <span style={{ fontSize: 24 }}>☰</span>
           <span>Menu</span>
         </button>
-        <span className="serif" style={{ fontSize: "1.4rem", color: "#e8b84b", fontWeight: 700 }}>ATB Tarot ✨</span>
+        <span className="serif" style={{ fontSize: "1.4rem", color: "#e8b84b", fontWeight: 700 }}>ATB ✨</span>
         <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg,#e8b84b,#c9950a)", color: "#120025", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20 }}>{initial}</div>
       </div>
 
@@ -136,7 +136,7 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
         <div className="md:hidden fixed inset-0 z-40" style={{ background:"rgba(0,0,0,0.65)" }} onClick={() => setOpen(false)}>
           <div style={{ width:300, height:"100%", background:SIDE_BG, display:"flex", flexDirection:"column" }} onClick={(e) => e.stopPropagation()}>
             <div style={{ padding:"18px", borderBottom:`1px solid ${SEP}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <span className="serif" style={{ fontSize:"1.3rem", color:"#e8b84b" }}>ATB Tarot ✨</span>
+              <span className="serif" style={{ fontSize:"1.3rem", color:"#e8b84b" }}>ATB ✨</span>
               <button onClick={() => setOpen(false)} style={{ fontSize:26, background:"none", border:"none", cursor:"pointer", color:"#c4b5fd", padding:"4px 8px" }}>✕</button>
             </div>
             {nav}

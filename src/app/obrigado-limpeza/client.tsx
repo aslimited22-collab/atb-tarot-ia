@@ -166,10 +166,10 @@ function AccountExists({ email }: { email: string }) {
       </p>
 
       <form onSubmit={handleLogin} className="card" style={{ padding: "32px 26px", textAlign: "left" }}>
-        <label style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Seu email</label>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Seu email</label>
         <input className="input input-big" style={{ marginBottom: 22, opacity: 0.85 }} type="email" value={email} disabled />
 
-        <label style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Sua senha</label>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Sua senha</label>
         <div style={{ position: "relative", marginBottom: 24 }}>
           <input
             className="input input-big"
@@ -281,7 +281,7 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
       </div>
 
       <form onSubmit={handleSignup} className="card" style={{ padding: "30px 26px", textAlign: "left" }}>
-        <label style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Como posso te chamar?</label>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Como posso te chamar?</label>
         <input
           className="input input-big"
           style={{ marginBottom: 20 }}
@@ -294,7 +294,7 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
           autoComplete="given-name"
         />
 
-        <label style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Seu email da compra</label>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Seu email da compra</label>
         <input
           className="input input-big"
           style={{ marginBottom: 20 }}
@@ -307,7 +307,7 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
           inputMode="email"
         />
 
-        <label style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Crie uma senha</label>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Crie uma senha</label>
         <div style={{ position: "relative", marginBottom: 24 }}>
           <input
             className="input input-big"

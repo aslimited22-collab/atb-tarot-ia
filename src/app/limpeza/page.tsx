@@ -262,7 +262,7 @@ export default function LimpezaV2Page() {
         fontSize: 13,
         lineHeight: 1.6,
       }}>
-        © {new Date().getFullYear()} ATB Tarot · {t("v2.footer.disclaimer")}
+        © {new Date().getFullYear()} ATB · {t("v2.footer.disclaimer")}
       </footer>
     </main>
   );

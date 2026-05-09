@@ -38,7 +38,7 @@ export async function GET() {
       {
         role: "user",
         content:
-          'Sorteie uma carta do tarot para meu dia de hoje e me dê uma leitura personalizada. Responda apenas em JSON válido com este formato exato, sem markdown: {"card":"Nome da Carta","interpretation":"interpretação completa da carta no contexto do meu dia (3-5 frases)","message":"mensagem curta e inspiradora do dia (1-2 frases)"}',
+          'Traga uma mensagem espírita simbólica para meu dia de hoje e me dê uma reflexão personalizada. Responda apenas em JSON válido com este formato exato, sem markdown: {"card":"Nome simbólico da mensagem","interpretation":"reflexão completa no contexto do meu dia (3-5 frases)","message":"mensagem curta e inspiradora do dia (1-2 frases)"}',
       },
     ]);
 

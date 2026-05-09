@@ -49,12 +49,12 @@ export function PreviewClient({
     <>
       {/* Prévia */}
       <div className="card-gold" style={{ padding: "26px 22px", marginBottom: 22 }}>
-        <div style={{ fontSize: 12, color: "#c4b5fd", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10, fontWeight: 700 }}>
+        <div style={{ fontSize: 14, color: "#c4b5fd", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 700 }}>
           {previewHeader}
         </div>
         {text ? (
           <p style={{
-            fontSize: 17,
+            fontSize: 19,
             color: "#fbf8ff",
             lineHeight: 1.75,
             margin: 0,
@@ -65,12 +65,12 @@ export function PreviewClient({
           </p>
         ) : (
           <div style={{ padding: "16px 0", textAlign: "center" }}>
-            <div style={{ display: "inline-flex", gap: 6, marginBottom: 10 }}>
+            <div style={{ display: "inline-flex", gap: 6, marginBottom: 10 }} aria-hidden="true">
               <span className="typing-dot" />
               <span className="typing-dot" />
               <span className="typing-dot" />
             </div>
-            <p style={{ color: "#c4b5fd", fontSize: 15, margin: 0 }}>
+            <p style={{ color: "#c4b5fd", fontSize: 17, margin: 0, fontWeight: 500 }}>
               {loadingLabel}
             </p>
           </div>

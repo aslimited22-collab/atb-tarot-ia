@@ -43,7 +43,7 @@ export default function LoginPage() {
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ fontSize: 80, marginBottom: 14 }}>🔮</div>
           <h1 className="serif" style={{ fontSize: "2.8rem", color: "#f5f0ff", lineHeight: 1.1, marginBottom: 10 }}>
-            ATB Tarot
+            ATB
           </h1>
           <p style={{ color: "#fbf8ff", fontSize: 19, lineHeight: 1.5 }}>
             Bem-vinda de volta, minha querida alma 💛

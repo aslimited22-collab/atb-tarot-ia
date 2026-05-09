@@ -205,7 +205,7 @@ export default function LimpezaClient({
         </div>
       </div>
 
-      {/* Cartas de Tarot */}
+      {/* Cartas espirituais */}
       {messages.length === 0 && (
         <>
           <div style={{ textAlign: "center", marginBottom: 14 }}>

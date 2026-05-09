@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { formatPhoneBR, toE164BR } from "@/lib/phone";
 
 const THEME_VALUES = [
   { v: "energia_pesada", icon: "🌑" },
@@ -96,7 +97,7 @@ export function LimpezaForm() {
   return (
     <form onSubmit={submit} className="card" style={{ padding: "30px 24px" }}>
       {/* Nome */}
-      <label htmlFor="name" style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
+      <label htmlFor="name" style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
         {t("v2.form.name")} <span style={{ color: "#f5c860" }}>*</span>
       </label>
       <input
@@ -113,7 +114,7 @@ export function LimpezaForm() {
       />
 
       {/* Email */}
-      <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
+      <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
         {t("v2.form.email")} <span style={{ color: "#f5c860" }}>*</span>
       </label>
       <input
@@ -128,26 +129,37 @@ export function LimpezaForm() {
         inputMode="email"
         style={{ marginBottom: 6 }}
       />
-      <p style={{ fontSize: 13, color: "#9575cd", marginBottom: 18, lineHeight: 1.5 }}>
+      <p style={{ fontSize: 15, color: "#c4b5fd", marginBottom: 18, lineHeight: 1.55 }}>
         {t("v2.form.email_hint")}
       </p>
 
-      {/* WhatsApp opcional */}
-      <label htmlFor="phone" style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
-        {t("v2.form.phone")} <span style={{ color: "#9575cd", fontWeight: 400, fontSize: 14 }}>{t("v2.form.phone_optional")}</span>
+      {/* WhatsApp opcional — com máscara BR e validação visual */}
+      <label htmlFor="phone" style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+        {t("v2.form.phone")} <span style={{ color: "#9575cd", fontWeight: 400, fontSize: 15 }}>{t("v2.form.phone_optional")}</span>
       </label>
       <input
         id="phone"
         type="tel"
         className="input input-big"
-        placeholder={t("v2.form.phone_ph")}
+        placeholder="(47) 99999-1234"
         value={phone}
-        onChange={(e) => setPhone(e.target.value)}
+        onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
         autoComplete="tel"
         inputMode="tel"
-        maxLength={20}
-        style={{ marginBottom: 18 }}
+        maxLength={16}
+        aria-describedby="phone-hint phone-err"
+        style={{ marginBottom: 6 }}
       />
+      <p id="phone-hint" style={{ fontSize: 15, color: "#c4b5fd", marginBottom: 6, lineHeight: 1.55 }}>
+        Coloque seu WhatsApp com DDD, exemplo: (47) 99999-1234
+      </p>
+      {phone && !toE164BR(phone).e164 && (
+        <p id="phone-err" role="alert" style={{ fontSize: 16, color: "#ff8a8a", fontWeight: 600, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+          <span aria-hidden="true">⚠️</span>
+          Confira o número — algo parece faltando.
+        </p>
+      )}
+      <div style={{ marginBottom: 18 }} />
 
       {/* Data nascimento + Signo opcionais lado a lado */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
@@ -183,40 +195,42 @@ export function LimpezaForm() {
         </div>
       </div>
 
-      {/* Tema (chips) */}
-      <label style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
+      {/* Tema (chips) — botões grandes 64px+ p/ 60+ */}
+      <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 10 }}>
         {t("v2.form.theme")} <span style={{ color: "#f5c860" }}>*</span>
       </label>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8, marginBottom: 22 }}>
+      <div role="radiogroup" aria-label={t("v2.form.theme")} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 22 }}>
         {THEMES.map((th) => (
           <button
             key={th.v}
             type="button"
+            role="radio"
+            aria-checked={theme === th.v}
             onClick={() => setTheme(th.v)}
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 10,
-              padding: "12px 14px",
-              background: theme === th.v ? "rgba(232,184,75,0.18)" : "rgba(196,181,253,0.05)",
-              border: theme === th.v ? "2px solid #e8b84b" : "1px solid rgba(196,181,253,0.2)",
-              borderRadius: 12,
-              color: theme === th.v ? "#fbf8ff" : "#c4b5fd",
-              fontSize: 15,
-              fontWeight: theme === th.v ? 700 : 500,
+              gap: 12,
+              padding: "16px 16px",
+              background: theme === th.v ? "rgba(232,184,75,0.22)" : "rgba(196,181,253,0.06)",
+              border: theme === th.v ? "2.5px solid #e8b84b" : "1.5px solid rgba(196,181,253,0.25)",
+              borderRadius: 14,
+              color: theme === th.v ? "#fbf8ff" : "#e2d9f3",
+              fontSize: 17,
+              fontWeight: theme === th.v ? 700 : 600,
               cursor: "pointer",
               textAlign: "left",
-              minHeight: 50,
+              minHeight: 64,
             }}
           >
-            <span style={{ fontSize: 22 }}>{th.icon}</span>
+            <span style={{ fontSize: 26 }} aria-hidden="true">{th.icon}</span>
             <span>{th.l}</span>
           </button>
         ))}
       </div>
 
       {/* Pergunta */}
-      <label htmlFor="question" style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
+      <label htmlFor="question" style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
         {t("v2.form.question")} <span style={{ color: "#f5c860" }}>*</span>
       </label>
       <textarea
@@ -230,7 +244,7 @@ export function LimpezaForm() {
         required
         style={{ minHeight: 130, fontSize: 16, lineHeight: 1.55, fontFamily: "inherit", resize: "vertical" }}
       />
-      <div style={{ fontSize: 12, color: "#9575cd", textAlign: "right", marginTop: 4, marginBottom: 24 }}>
+      <div style={{ fontSize: 14, color: "#c4b5fd", textAlign: "right", marginTop: 4, marginBottom: 24 }}>
         {question.length}/800
       </div>
 
@@ -299,7 +313,16 @@ export function LimpezaForm() {
         {loading ? t("v2.form.submitting") : t("v2.form.submit")}
       </button>
 
-      <p style={{ fontSize: 13, color: "#9575cd", lineHeight: 1.55, textAlign: "center", marginTop: 16 }}>
+      {/* Selo de confiança + privacidade */}
+      <div style={{ marginTop: 18, padding: "14px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(196,181,253,0.18)", borderRadius: 12, textAlign: "center" }}>
+        <div style={{ fontSize: 15, color: "#fbf8ff", fontWeight: 700, marginBottom: 4 }}>
+          🔒 Pagamento 100% Seguro
+        </div>
+        <div style={{ fontSize: 13, color: "#c4b5fd" }}>
+          Cartão · Pix · Apple Pay · Google Pay
+        </div>
+      </div>
+      <p style={{ fontSize: 15, color: "#c4b5fd", lineHeight: 1.6, textAlign: "center", marginTop: 14 }}>
         {t("v2.form.privacy")}<br />
         {t("v2.form.privacy2")}
       </p>

@@ -56,7 +56,7 @@ export async function POST(req: Request) {
           { role: "system", content: ATB_SYSTEM_PROMPT },
           {
             role: "user",
-            content: `Mapeie o padrão de "${category}" para um arquétipo do tarot e gere orientação espiritual personalizada. Responda APENAS em JSON válido sem markdown: {"card":"Nome da Carta","cardMeaning":"significado (3-4 frases)","forces":["força 1","força 2"],"insight":"camada emocional (2-3 frases)","rituals":[{"name":"Nome","steps":["passo 1","passo 2","passo 3"]}],"routine":[{"period":"Manhã","steps":["ação 1","ação 2"]},{"period":"Noite","steps":["ação 1","ação 2"]}],"truth":"frase final"}`,
+            content: `Mapeie o padrão de "${category}" para um arquétipo espiritual e gere orientação personalizada. Responda APENAS em JSON válido sem markdown: {"card":"Nome do Arquétipo","cardMeaning":"significado (3-4 frases)","forces":["força 1","força 2"],"insight":"camada emocional (2-3 frases)","rituals":[{"name":"Nome","steps":["passo 1","passo 2","passo 3"]}],"routine":[{"period":"Manhã","steps":["ação 1","ação 2"]},{"period":"Noite","steps":["ação 1","ação 2"]}],"truth":"frase final"}`,
           },
         ]);
         const cleaned = raw.replace(/```json|```/g, "").trim();

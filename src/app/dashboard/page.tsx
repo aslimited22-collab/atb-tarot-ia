@@ -6,8 +6,8 @@ import { dailyLuckyNumbers } from "@/lib/numerology";
 import type { Plan } from "@/lib/types";
 
 const quick = [
-  { href: "/dashboard/chat",       icon: "💬", title: "Conversar com ATB",     desc: "Faça sua pergunta para a tarologa" },
-  { href: "/dashboard/oracle",     icon: "🔮", title: "Carta do Dia",          desc: "Veja o que o tarot diz hoje" },
+  { href: "/dashboard/chat",       icon: "💬", title: "Conversar com ATB",     desc: "Fale com seu Espírito Mentor" },
+  { href: "/dashboard/oracle",     icon: "🔮", title: "Mensagem do Dia",       desc: "Sua mensagem espiritual de hoje" },
   { href: "/dashboard/journal",    icon: "📖", title: "Meu Diário",            desc: "Conte como está se sentindo" },
   { href: "/dashboard/addiction",  icon: "🕯️", title: "Guia Espiritual",       desc: "Rompa padrões antigos" },
 ];

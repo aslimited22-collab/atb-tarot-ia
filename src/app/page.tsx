@@ -56,7 +56,7 @@ export default function Home() {
           {/* Texto à esquerda */}
           <div style={{ textAlign: "left" }}>
             <div style={{ fontSize: 14, color: S.gold, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 12 }}>
-              ✨ TAROT • LIMPEZA ESPIRITUAL • PROTEÇÃO ✨
+              ✨ SESSÃO ESPÍRITA • LIMPEZA ESPIRITUAL • PROTEÇÃO ✨
             </div>
             <h1 className="serif" style={{ fontSize: "clamp(2.4rem,5.5vw,4.4rem)", color: S.text, lineHeight: 1.1, marginBottom: 22 }}>
               {t("hero.title_1")}<br/>
@@ -168,7 +168,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* 3 Cartas de tarot com imagens reais */}
+          {/* 3 cartas espirituais com imagens reais */}
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
@@ -402,7 +402,7 @@ export default function Home() {
       </section>
 
       <footer style={{ textAlign: "center", padding: "24px", borderTop: `1px solid ${S.sep}`, color: S.muted, fontSize: 14 }}>
-        © {new Date().getFullYear()} ATB Tarot — {t("footer.rights")}
+        © {new Date().getFullYear()} ATB — {t("footer.rights")}
       </footer>
     </main>
   );
