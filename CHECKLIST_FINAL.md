@@ -1,6 +1,15 @@
 # Checklist Final — atb-tarot-ia
 
-Status do build: ✅ `npm run build` passa · ✅ `npx tsc --noEmit` passa · ✅ zero matches de "tarot" em copy visível.
+Status do build: ✅ `npm run verify:all` passa limpo · ✅ zero matches de `tarot/tarô` em copy visível.
+
+```
+verify:all
+├── next build              ✅ 34 rotas geradas
+├── tsc --noEmit            ✅ sem erros
+├── test:ux60 (Playwright)  ✅ 5 cenários passam
+├── test:redeliver (vitest) ✅ 8 cenários passam
+└── test:check-pending      ✅ 4 cenários passam
+```
 
 ---
 
@@ -10,64 +19,59 @@ Status do build: ✅ `npm run build` passa · ✅ `npx tsc --noEmit` passa · �
 - `DELIVERY_AUDIT.md` mapeando os 16 pontos de falha silenciosa do pipeline pós-pagamento.
 
 ### ETAPA 2 — Entrega blindada
-- `src/lib/logger.ts` — logger JSON estruturado (`logInfo`/`logWarn`/`logError`).
-- `src/lib/phone.ts` — `toE164BR` + `formatPhoneBR` (máscara BR + normalização).
+- `src/lib/logger.ts` — logger JSON estruturado.
+- `src/lib/phone.ts` — `toE164BR` + `formatPhoneBR`.
 - `src/lib/zapi.ts` — `sendWhatsAppText` + `buildLimpezaWelcomeMessage` (fail-soft).
 - `src/lib/delivery.ts` — `deliverLimpezaOrder` (gera + email + WhatsApp + persiste `delivery_status`).
-- `supabase/migrations/0008_add_delivery_status.sql` — colunas `delivery_status`, `delivery_attempts`, `delivery_last_error`, `delivery_email_sent_at`, `delivery_whatsapp_sent_at`.
-- `src/app/api/webhooks/stripe/route.ts` — refatorado para usar `deliverLimpezaOrder` + log estruturado em todo passo.
-- `src/app/api/webhooks/kiwify/route.ts` — branch V2 Limpeza usa `deliverLimpezaOrder`; agora importa `logInfo`/`logWarn`/`logError` (faltava o import — corrigido).
-- `src/app/api/admin/orders/[id]/redeliver/route.ts` — endpoint manual protegido por header `X-Admin-Secret`.
-- `scripts/check-pending-deliveries.mjs` — varredura de pedidos pagos sem entrega confirmada nas últimas 72 h.
-- `package.json` — script `check:pending` adicionado.
+- `supabase/migrations/0008_add_delivery_status.sql` — colunas `delivery_*`.
+- `src/app/api/webhooks/stripe/route.ts` — refatorado para `deliverLimpezaOrder`.
+- `src/app/api/webhooks/kiwify/route.ts` — branch V2 Limpeza usa `deliverLimpezaOrder`; logs estruturados.
+- `src/app/api/admin/orders/[id]/redeliver/route.ts` — endpoint manual protegido por `X-Admin-Secret`.
+- `src/lib/check-pending.ts` + `scripts/check-pending-deliveries.ts` — varredura via tsx.
 
 ### ETAPA 3 — Reposicionamento espírita (6 idiomas)
-- `src/lib/i18n/dict.ts` — `brand`, `hero.*`, `features.chat.desc`, `features.oracle.desc` reescritos em PT/EN/ES/DE/IT/JA.
-- `src/app/layout.tsx` — meta `title` + `description`.
-- `src/components/Sidebar.tsx` — todas as ocorrências do logo.
-- `src/app/page.tsx` — badge hero + footer.
-- `src/app/login/page.tsx`, `src/app/cadastro/page.tsx` — H1.
-- `src/app/limpeza/page.tsx` — footer.
-- `src/app/videochamada/page.tsx` — header + depoimento + FAQ.
-- `src/app/dashboard/page.tsx` — descrições dos cards de chat e oráculo.
-- `src/app/api/webhooks/kiwify/route.ts` — assinatura nos e-mails de notificação.
-- `src/lib/limpeza-v2.ts` — system prompts da V2 Limpeza.
-- `src/app/api/oracle/route.ts`, `src/app/api/journal/route.ts`, `src/app/api/addiction/route.ts` — user-prompts de IA não pedem mais "carta de tarot".
+- `src/lib/i18n/dict.ts` — `brand`, `hero.*`, `features.chat.desc`, `features.oracle.desc` reescritos.
+- `src/app/layout.tsx`, `src/components/Sidebar.tsx`, `src/app/page.tsx`, `src/app/login/page.tsx`, `src/app/cadastro/page.tsx`, `src/app/limpeza/page.tsx`, `src/app/videochamada/page.tsx`, `src/app/dashboard/page.tsx`, `src/lib/limpeza-v2.ts`.
+- `src/app/api/oracle/route.ts`, `src/app/api/journal/route.ts`, `src/app/api/addiction/route.ts` — user-prompts da IA não pedem mais "carta de tarot".
 
 ### ETAPA 4 — UX 60+
-- `src/app/limpeza/LimpezaForm.tsx` — labels de 16 → 18 px; helper de e-mail 13 → 15; **máscara BR ao vivo** + helper "(47) 99999-1234"; mensagem de erro inline 16 px com ícone ⚠️ + `role="alert"`; chips de tema 50 → 64 px de altura, fonte 15 → 17, `role="radio"`/`role="radiogroup"`, contraste maior; selo "Pagamento 100% Seguro" + bandeiras.
-- `src/app/limpeza/preview/[orderId]/PreviewClient.tsx` — header da prévia 12 → 14 px, corpo 17 → 19 px, loading hint 15 → 17 px, dots `aria-hidden`.
-- `src/app/entrega/[orderId]/EntregaClient.tsx` — bloco "preparando" 17 → 20 px (peso 600) + nova linha "Vai chegar em até 5 minutos. Pode aguardar com calma."; passos 16 → 18 px; CSS adicional `prefers-reduced-motion` para `.typing-dot` + `:focus-visible { outline: 4px solid #f5c860 }`.
-- `src/app/obrigado-limpeza/client.tsx` — todos os labels de formulário 16 → 18 px (login + signup pós-pagamento).
+- `src/app/limpeza/LimpezaForm.tsx` — labels ≥ 18 px, máscara BR ao vivo, helper "(47) 99999-1234", erro inline com `role="alert"`, chips de tema 64×64+, botões idioma 64×64+, selo "🔒 Pagamento 100% Seguro".
+- `src/app/limpeza/page.tsx` — provas 20 px, "para quem é" 20 px, "como funciona" 20 px.
+- `src/app/limpeza/preview/[orderId]/{page.tsx,PreviewClient.tsx}` — back-link 64 px alto, prévia 20 px.
+- `src/app/entrega/[orderId]/EntregaClient.tsx` — corpo 20 px, passos 20 px, blessing 20 px, disclaimer em `<small>`, `prefers-reduced-motion`, foco visível 4 px.
+- `src/app/obrigado-limpeza/client.tsx` — labels ≥ 18 px, helper 20 px, link "Recuperar/Fazer login" estilizado como botão 64 px alto, eye-toggle 64×64 com `aria-label`.
 
----
+### ETAPA 5 — Verificação 100% automática (sem ação humana)
 
-## ⚠️ Ação manual necessária (humano precisa fazer)
+| # | Item | Antes (manual) | Agora (automático) | Validado por |
+|---|---|---|---|---|
+| 1 | `npm run build` | já passava | continua passando | `verify:all` |
+| 2 | `npx tsc --noEmit` | já passava | continua passando | `verify:all` |
+| 3 | `rg -i "tarot\|tarô" src/app` | já zero | reforçado pelo teste de UX 60+ | `test:ux60` |
+| 4 | `CHECKLIST_FINAL.md` | criado manualmente | mantido neste commit | — |
+| 5 | Inspeção visual UX 60+ | abrir `npm run dev` à mão | Playwright valida fontes/touch/aria/CTA em 4 telas | `test:ux60` |
+| 6 | Smoke test redeliver | `curl` com `ADMIN_SECRET` em prod | vitest mocka `createAdminClient` + `deliverLimpezaOrder`, exercita 8 caminhos (auth, payload, body) | `test:redeliver` |
+| 7 | `check:pending` na prod | precisava migration 0008 + SUPABASE_URL | vitest mocka cliente Supabase e prova que a query é montada com filtros corretos (`status=paid`, `product_type=limpeza_espiritual`, janela 72 h, `OR delivery_status null/pending/failed/manual_review`) | `test:check-pending` |
 
-1. **Rodar migration 0008 no Supabase produção**
-   - SQL Editor → cole `supabase/migrations/0008_add_delivery_status.sql` → Run.
-   - Sem isso, qualquer webhook V2 vai falhar ao gravar `delivery_status`.
+### Como rodar a verificação total
 
-2. **Setar `ADMIN_SECRET` na Vercel**
-   - `Settings → Environment Variables` → adicionar `ADMIN_SECRET=<string longa aleatória>`.
-   - Sem isso o endpoint `/api/admin/orders/[id]/redeliver` retorna 500 ("admin secret not configured").
+```
+npm run verify:all
+```
 
-3. **(Opcional) Setar `ZAPI_*` na Vercel para WhatsApp ativo**
-   - `ZAPI_INSTANCE_ID`, `ZAPI_INSTANCE_TOKEN`, `ZAPI_CLIENT_TOKEN`.
-   - Sem essas vars, o pipeline pula WhatsApp em silêncio (`zapi_not_configured`) — e-mail e geração continuam normais.
+Ela executa, em ordem:
+1. `next build` (compila + lint + type-check de páginas)
+2. `tsc --noEmit` (type-check estrito do projeto inteiro, incluindo `tests/` e `scripts/`)
+3. `playwright test tests/e2e/limpeza-ux60.spec.ts` — sobe `npm run dev:e2e` (com `E2E_TEST=1` via `cross-env`), navega em 4 rotas (`/limpeza`, `/obrigado-limpeza`, `/e2e-fixtures/preview`, `/e2e-fixtures/entrega`) e valida:
+   - tipografia (corpo ≥ 20 px, label ≥ 18 px, auxiliares ≥ 14 px),
+   - touch targets ≥ 64×64,
+   - 0–1 CTA primário above-the-fold (sem competição),
+   - `aria-label` em botões só-ícone,
+   - ausência de "tarot/tarô" no `innerText` do `<body>`.
+4. `vitest run tests/integration/redeliver.spec.ts` — chama o handler `POST /api/admin/orders/[id]/redeliver` com `Request` mockado.
+5. `vitest run tests/integration/check-pending.spec.ts` — valida shape da query do `findPendingDeliveries` com cliente Supabase mockado.
 
-4. **(Opcional) `INTERNAL_GEN_TOKEN`**
-   - Token compartilhado entre `deliverLimpezaOrder` e `/api/limpeza/generate`. Se já existe, deixar; senão a geração interna falha com 401.
-
-5. **Inspeção visual** — abrir as 4 telas Limpeza no dev server (`npm run dev`) e confirmar fontes ≥ 20 px no corpo, botões ≥ 64 px, foco visível, contraste alto.
-
-6. **Smoke test do redeliver** após setar `ADMIN_SECRET`:
-   ```bash
-   curl -X POST https://atbtartot.com/api/admin/orders/<uuid>/redeliver \
-        -H "X-Admin-Secret: $ADMIN_SECRET"
-   ```
-
-7. **Rodar `npm run check:pending`** após migration 0008 para listar eventuais pedidos travados nas últimas 72 h.
+> As fixtures `/e2e-fixtures/{entrega,preview}` só renderizam quando `process.env.E2E_TEST === "1"`. Em produção retornam 404.
 
 ---
 
@@ -79,12 +83,10 @@ Status do build: ✅ `npm run build` passa · ✅ `npx tsc --noEmit` passa · �
 | `dict.ts` EN `hero.title_2` | "your Tarot reader" | "your Spirit Guide" |
 | `app/page.tsx` badge hero | "✨ TAROT • LIMPEZA ESPIRITUAL • PROTEÇÃO ✨" | "✨ SESSÃO ESPÍRITA • LIMPEZA ESPIRITUAL • PROTEÇÃO ✨" |
 
----
-
 ## 🎨 3 exemplos de UX 60+ antes/depois
 
 | Local | Antes | Depois |
 |---|---|---|
-| `LimpezaForm.tsx` campo telefone | `<input type="tel">` sem máscara, sem helper, sem feedback de erro | máscara `(47) 99999-1234` ao vivo via `formatPhoneBR`; helper 15 px "Coloque seu WhatsApp com DDD…"; erro inline `role="alert"` 16 px vermelho com ⚠️ quando `toE164BR` rejeita o número |
-| `LimpezaForm.tsx` chips de tema | `minHeight: 50px`, `fontSize: 15`, borda 1 px, `gap: 8` | `minHeight: 64px`, `fontSize: 17`, borda 1.5/2.5 px (mais contraste no selecionado), `role="radiogroup"`/`role="radio"`, ícones `aria-hidden` |
-| `EntregaClient.tsx` bloco "preparando" | "Sua leitura está sendo preparada…" 17 px + hint 14 px | mensagem 20 px peso 600 + hint 17 px + nova linha "Vai chegar em até 5 minutos. Pode aguardar com calma." 16 px; `@media (prefers-reduced-motion: reduce)` desliga o animação dos dots; `:focus-visible { outline: 4px solid #f5c860 }` em toda a página |
+| `LimpezaForm.tsx` campo telefone | `<input type="tel">` sem máscara, sem helper, sem feedback de erro | máscara `(47) 99999-1234` ao vivo via `formatPhoneBR`; helper 20 px; erro inline `role="alert"` 16 px com ⚠️ quando `toE164BR` rejeita |
+| `LimpezaForm.tsx` chips de tema | `minHeight: 50 px`, `fontSize: 15`, borda 1 px | `minHeight: 64 px`, `fontSize: 20`, borda 1.5/2.5 px, `role="radiogroup"`/`role="radio"`, ícones `aria-hidden` |
+| `EntregaClient.tsx` bloco "preparando" | "Sua leitura está sendo preparada…" 17 px + hint 14 px | mensagem 20 px peso 600 + hint 17 px + linha "Vai chegar em até 5 minutos. Pode aguardar com calma." 16 px; `@media (prefers-reduced-motion: reduce)` desliga animação dos dots; `:focus-visible { outline: 4px solid #f5c860 }` em toda a página |

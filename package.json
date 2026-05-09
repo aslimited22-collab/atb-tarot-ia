@@ -4,10 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:e2e": "cross-env E2E_TEST=1 next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "check:pending": "node scripts/check-pending-deliveries.mjs"
+    "check:pending": "tsx scripts/check-pending-deliveries.ts",
+    "test:ux60": "playwright test tests/e2e/limpeza-ux60.spec.ts",
+    "test:redeliver": "vitest run tests/integration/redeliver.spec.ts",
+    "test:check-pending": "vitest run tests/integration/check-pending.spec.ts",
+    "verify:all": "npm run build && npx tsc --noEmit && npm run test:ux60 && npm run test:redeliver && npm run test:check-pending"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.1",
@@ -20,12 +25,16 @@
     "stripe": "^22.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
-    "typescript": "^5.6.2"
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.9"
   }
 }

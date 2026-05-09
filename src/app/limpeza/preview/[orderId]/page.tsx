@@ -49,9 +49,9 @@ export default async function PreviewPage({ params }: { params: { orderId: strin
     <main style={{ background: "#120025", color: "#fbf8ff", minHeight: "100vh", padding: "32px 20px 80px" }}>
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         <Link href="/limpeza" style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          color: "#c4b5fd", fontSize: 15, textDecoration: "none",
-          marginBottom: 20, padding: "10px 14px", borderRadius: 12,
+          display: "inline-flex", alignItems: "center", gap: 8,
+          color: "#c4b5fd", fontSize: 20, textDecoration: "none",
+          marginBottom: 20, padding: "18px 22px", minHeight: 64, borderRadius: 12,
           background: "rgba(196,181,253,0.08)", fontWeight: 600,
         }}>{t("v2.back")}</Link>
 
@@ -66,7 +66,7 @@ export default async function PreviewPage({ params }: { params: { orderId: strin
           }}>
             {t("v2.preview.title", { name: firstName })}
           </h1>
-          <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.55, fontWeight: 500 }}>
+          <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.55, fontWeight: 500 }}>
             {t("v2.preview.subtitle")}
           </p>
         </div>
@@ -87,7 +87,7 @@ export default async function PreviewPage({ params }: { params: { orderId: strin
           border: "1px solid rgba(232,184,75,0.25)",
           borderRadius: 14,
         }}>
-          <p style={{ fontSize: 14, color: "#fbf8ff", lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: 14, color: "#fbf8ff", lineHeight: 1.6, margin: 0, fontWeight: 500, fontStyle: "italic" }}>
             {t("v2.preview.security")}<br />
             {t("v2.preview.security2")}
           </p>

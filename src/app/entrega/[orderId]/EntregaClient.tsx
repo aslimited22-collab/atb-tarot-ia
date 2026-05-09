@@ -134,7 +134,7 @@ export function EntregaClient({
           }}>
             {t("v2.delivery.title").replace("{name}", firstName)}
           </h1>
-          <p style={{ fontSize: 17, color: "#c4b5fd", lineHeight: 1.55, fontStyle: "italic" }}>
+          <p style={{ fontSize: 20, color: "#c4b5fd", lineHeight: 1.55, fontStyle: "italic" }}>
             {t("v2.delivery.blessing")}
           </p>
         </div>
@@ -179,7 +179,7 @@ export function EntregaClient({
             </h2>
 
             {/* Abertura */}
-            <p style={{ fontSize: 18, color: "#fbf8ff", lineHeight: 1.75, marginBottom: 26, fontWeight: 500 }}>
+            <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.75, marginBottom: 26, fontWeight: 500 }}>
               {json.opening}
             </p>
 
@@ -187,7 +187,7 @@ export function EntregaClient({
             <h3 className="serif" style={{ fontSize: "1.4rem", color: "#e8b84b", marginBottom: 12, fontWeight: 700 }}>
               {t("v2.delivery.reading")}
             </h3>
-            <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.75, marginBottom: 28, fontWeight: 500 }}>
+            <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.75, marginBottom: 28, fontWeight: 500 }}>
               {json.spiritual_reading}
             </p>
 
@@ -195,7 +195,7 @@ export function EntregaClient({
             <h3 className="serif" style={{ fontSize: "1.4rem", color: "#e8b84b", marginBottom: 12, fontWeight: 700 }}>
               {t("v2.delivery.cleansing")}
             </h3>
-            <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.75, marginBottom: 28, fontWeight: 500 }}>
+            <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.75, marginBottom: 28, fontWeight: 500 }}>
               {json.cleansing_message}
             </p>
 
@@ -203,7 +203,7 @@ export function EntregaClient({
             <h3 className="serif" style={{ fontSize: "1.4rem", color: "#e8b84b", marginBottom: 12, fontWeight: 700 }}>
               {t("v2.delivery.protection")}
             </h3>
-            <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.75, marginBottom: 28, fontWeight: 500 }}>
+            <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.75, marginBottom: 28, fontWeight: 500 }}>
               {json.protection_message}
             </p>
 
@@ -231,7 +231,7 @@ export function EntregaClient({
                     fontSize: 18, fontWeight: 800,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>{i + 1}</span>
-                  <span style={{ fontSize: 18, color: "#fbf8ff", lineHeight: 1.65, fontWeight: 500, paddingTop: 4 }}>
+                  <span style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.65, fontWeight: 500, paddingTop: 4 }}>
                     {step}
                   </span>
                 </li>
@@ -246,15 +246,15 @@ export function EntregaClient({
               borderRadius: 14,
               marginBottom: 22,
             }}>
-              <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.75, fontWeight: 500, fontStyle: "italic", margin: 0 }}>
+              <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.75, fontWeight: 500, fontStyle: "italic", margin: 0 }}>
                 {json.closing}
               </p>
             </div>
 
             {/* Aviso */}
-            <p style={{ fontSize: 13, color: "#9575cd", lineHeight: 1.55, fontStyle: "italic", textAlign: "center" }}>
+            <small style={{ display: "block", fontSize: 14, color: "#9575cd", lineHeight: 1.55, fontStyle: "italic", textAlign: "center" }}>
               {json.disclaimer}
-            </p>
+            </small>
           </article>
         )}
 

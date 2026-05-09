@@ -185,11 +185,14 @@ function AccountExists({ email }: { email: string }) {
           <button
             type="button"
             onClick={() => setShowPwd(!showPwd)}
+            aria-label={showPwd ? "Esconder senha" : "Mostrar senha"}
             style={{
-              position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+              position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
               background: "rgba(232,184,75,0.15)", border: "1px solid rgba(232,184,75,0.4)",
-              color: "#e8b84b", fontSize: 13, fontWeight: 700, padding: "10px 14px",
-              borderRadius: 10, cursor: "pointer", minHeight: 0,
+              color: "#e8b84b", fontSize: 22, fontWeight: 700,
+              width: 64, height: 64, padding: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              borderRadius: 12, cursor: "pointer",
             }}
           >
             {showPwd ? "🙈" : "👁️"}
@@ -209,12 +212,26 @@ function AccountExists({ email }: { email: string }) {
           {loading ? "Entrando..." : "✨ Entrar e ver minha Limpeza"}
         </button>
 
-        <p style={{ textAlign: "center", fontSize: 15, color: "#fbf8ff", marginTop: 22, lineHeight: 1.6 }}>
-          Esqueceu a senha?{" "}
-          <Link href="/login" style={{ color: "#e8b84b", fontWeight: 700, textDecoration: "underline" }}>
-            Recuperar
-          </Link>
+        <p style={{ textAlign: "center", fontSize: 20, color: "#fbf8ff", marginTop: 22, lineHeight: 1.6 }}>
+          Esqueceu a senha?
         </p>
+        <Link
+          href="/login"
+          style={{
+            display: "block",
+            textAlign: "center",
+            color: "#e8b84b",
+            fontWeight: 700,
+            fontSize: 20,
+            textDecoration: "underline",
+            padding: "20px 16px",
+            minHeight: 64,
+            borderRadius: 12,
+            background: "rgba(232,184,75,0.06)",
+          }}
+        >
+          Recuperar minha senha
+        </Link>
       </form>
     </>
   );
@@ -274,8 +291,8 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
         Crie sua conta agora para começar sua <strong style={{ color: "#f5c860" }}>Limpeza Sagrada</strong>.
       </p>
 
-      <div style={{ background: "rgba(232,184,75,0.08)", border: "1px solid rgba(232,184,75,0.3)", borderRadius: 14, padding: "14px 18px", marginBottom: 22, textAlign: "left" }}>
-        <p style={{ fontSize: 14, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}>
+      <div style={{ background: "rgba(232,184,75,0.08)", border: "1px solid rgba(232,184,75,0.3)", borderRadius: 14, padding: "16px 20px", marginBottom: 22, textAlign: "left" }}>
+        <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}>
           💡 Use o mesmo email que você usou na hora de pagar
         </p>
       </div>
@@ -323,11 +340,14 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
           <button
             type="button"
             onClick={() => setShowPwd(!showPwd)}
+            aria-label={showPwd ? "Esconder senha" : "Mostrar senha"}
             style={{
-              position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+              position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
               background: "rgba(232,184,75,0.15)", border: "1px solid rgba(232,184,75,0.4)",
-              color: "#e8b84b", fontSize: 13, fontWeight: 700, padding: "10px 14px",
-              borderRadius: 10, cursor: "pointer", minHeight: 0,
+              color: "#e8b84b", fontSize: 22, fontWeight: 700,
+              width: 64, height: 64, padding: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              borderRadius: 12, cursor: "pointer",
             }}
           >
             {showPwd ? "🙈" : "👁️"}
@@ -347,12 +367,26 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
           {loading ? "Criando..." : "✨ Começar minha Limpeza"}
         </button>
 
-        <p style={{ textAlign: "center", fontSize: 15, color: "#fbf8ff", marginTop: 22, lineHeight: 1.6 }}>
-          Já tem conta?{" "}
-          <Link href="/login" style={{ color: "#e8b84b", fontWeight: 700, textDecoration: "underline" }}>
-            Fazer login
-          </Link>
+        <p style={{ textAlign: "center", fontSize: 20, color: "#fbf8ff", marginTop: 22, lineHeight: 1.6 }}>
+          Já tem conta?
         </p>
+        <Link
+          href="/login"
+          style={{
+            display: "block",
+            textAlign: "center",
+            color: "#e8b84b",
+            fontWeight: 700,
+            fontSize: 20,
+            textDecoration: "underline",
+            padding: "20px 16px",
+            minHeight: 64,
+            borderRadius: 12,
+            background: "rgba(232,184,75,0.06)",
+          }}
+        >
+          Fazer login
+        </Link>
       </form>
     </>
   );

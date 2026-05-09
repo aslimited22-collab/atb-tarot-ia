@@ -64,7 +64,7 @@ export default function LimpezaV2Page() {
           </div>
 
           <div style={{
-            fontSize: 13,
+            fontSize: 14,
             color: "#f5c860",
             fontWeight: 700,
             letterSpacing: "0.12em",
@@ -131,8 +131,8 @@ export default function LimpezaV2Page() {
                 border: "1px solid rgba(232,184,75,0.25)",
                 borderRadius: 12,
               }}>
-                <span style={{ fontSize: 26, flexShrink: 0 }}>{p.icon}</span>
-                <span style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.45, fontWeight: 500 }}>
+                <span style={{ fontSize: 28, flexShrink: 0 }} aria-hidden="true">{p.icon}</span>
+                <span style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.5, fontWeight: 500 }}>
                   {p.text}
                 </span>
               </div>
@@ -158,16 +158,16 @@ export default function LimpezaV2Page() {
               display: "flex",
               gap: 14,
               alignItems: "center",
-              padding: "14px 18px",
+              padding: "16px 20px",
               background: "rgba(232,184,75,0.06)",
               border: "1px solid rgba(232,184,75,0.2)",
               borderRadius: 14,
-              fontSize: 17,
+              fontSize: 20,
               color: "#fbf8ff",
               fontWeight: 500,
               lineHeight: 1.5,
             }}>
-              <span style={{ fontSize: 22, flexShrink: 0 }}>✦</span>
+              <span style={{ fontSize: 24, flexShrink: 0 }} aria-hidden="true">✦</span>
               <span>{text}</span>
             </li>
           ))}
@@ -221,7 +221,7 @@ export default function LimpezaV2Page() {
                 }}>
                   {i + 1}
                 </div>
-                <p style={{ fontSize: 16, color: "#fbf8ff", lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
+                <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}>
                   {text}
                 </p>
               </li>
@@ -242,7 +242,7 @@ export default function LimpezaV2Page() {
           {t("v2.form.title")}
         </h2>
         <p style={{
-          fontSize: 16,
+          fontSize: 20,
           color: "#c4b5fd",
           textAlign: "center",
           marginBottom: 28,
@@ -259,7 +259,7 @@ export default function LimpezaV2Page() {
         borderTop: "1px solid rgba(196,181,253,0.18)",
         textAlign: "center",
         color: "#9575cd",
-        fontSize: 13,
+        fontSize: 14,
         lineHeight: 1.6,
       }}>
         © {new Date().getFullYear()} ATB · {t("v2.footer.disclaimer")}

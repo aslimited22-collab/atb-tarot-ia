@@ -129,13 +129,16 @@ export function LimpezaForm() {
         inputMode="email"
         style={{ marginBottom: 6 }}
       />
-      <p style={{ fontSize: 15, color: "#c4b5fd", marginBottom: 18, lineHeight: 1.55 }}>
+      <p style={{ fontSize: 20, color: "#c4b5fd", marginBottom: 18, lineHeight: 1.55 }}>
         {t("v2.form.email_hint")}
       </p>
 
       {/* WhatsApp opcional — com máscara BR e validação visual */}
       <label htmlFor="phone" style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
-        {t("v2.form.phone")} <span style={{ color: "#9575cd", fontWeight: 400, fontSize: 15 }}>{t("v2.form.phone_optional")}</span>
+        {t("v2.form.phone")}{" "}
+        <span style={{ color: "#9575cd", fontWeight: 400, fontSize: 14, fontStyle: "italic" }}>
+          ({t("v2.form.phone_optional").replace(/[()]/g, "")})
+        </span>
       </label>
       <input
         id="phone"
@@ -150,7 +153,7 @@ export function LimpezaForm() {
         aria-describedby="phone-hint phone-err"
         style={{ marginBottom: 6 }}
       />
-      <p id="phone-hint" style={{ fontSize: 15, color: "#c4b5fd", marginBottom: 6, lineHeight: 1.55 }}>
+      <p id="phone-hint" style={{ fontSize: 20, color: "#c4b5fd", marginBottom: 6, lineHeight: 1.55 }}>
         Coloque seu WhatsApp com DDD, exemplo: (47) 99999-1234
       </p>
       {phone && !toE164BR(phone).e164 && (
@@ -164,8 +167,11 @@ export function LimpezaForm() {
       {/* Data nascimento + Signo opcionais lado a lado */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
         <div>
-          <label htmlFor="birth" style={{ display: "block", color: "#fbf8ff", fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
-            {t("v2.form.birth")} <span style={{ color: "#9575cd", fontWeight: 400, fontSize: 12 }}>{t("v2.form.phone_optional")}</span>
+          <label htmlFor="birth" style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+            {t("v2.form.birth")}{" "}
+            <span style={{ color: "#9575cd", fontWeight: 400, fontSize: 14, fontStyle: "italic" }}>
+              ({t("v2.form.phone_optional").replace(/[()]/g, "")})
+            </span>
           </label>
           <input
             id="birth"
@@ -177,8 +183,11 @@ export function LimpezaForm() {
           />
         </div>
         <div>
-          <label htmlFor="sign" style={{ display: "block", color: "#fbf8ff", fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
-            {t("v2.form.sign")} <span style={{ color: "#9575cd", fontWeight: 400, fontSize: 12 }}>{t("v2.form.phone_optional")}</span>
+          <label htmlFor="sign" style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+            {t("v2.form.sign")}{" "}
+            <span style={{ color: "#9575cd", fontWeight: 400, fontSize: 14, fontStyle: "italic" }}>
+              ({t("v2.form.phone_optional").replace(/[()]/g, "")})
+            </span>
           </label>
           <select
             id="sign"
@@ -216,7 +225,7 @@ export function LimpezaForm() {
               border: theme === th.v ? "2.5px solid #e8b84b" : "1.5px solid rgba(196,181,253,0.25)",
               borderRadius: 14,
               color: theme === th.v ? "#fbf8ff" : "#e2d9f3",
-              fontSize: 17,
+              fontSize: 20,
               fontWeight: theme === th.v ? 700 : 600,
               cursor: "pointer",
               textAlign: "left",
@@ -244,8 +253,8 @@ export function LimpezaForm() {
         required
         style={{ minHeight: 130, fontSize: 16, lineHeight: 1.55, fontFamily: "inherit", resize: "vertical" }}
       />
-      <div style={{ fontSize: 14, color: "#c4b5fd", textAlign: "right", marginTop: 4, marginBottom: 24 }}>
-        {question.length}/800
+      <div style={{ fontSize: 14, color: "#c4b5fd", textAlign: "right", marginTop: 4, marginBottom: 24, fontStyle: "italic" }}>
+        {`${question.length}/800`}
       </div>
 
       {/* Toggle país (idioma do checkout) */}
@@ -256,7 +265,7 @@ export function LimpezaForm() {
         padding: "14px 16px",
         marginBottom: 18,
       }}>
-        <p style={{ fontSize: 14, color: "#fbf8ff", fontWeight: 700, marginBottom: 10 }}>
+        <p style={{ fontSize: 20, color: "#fbf8ff", fontWeight: 700, marginBottom: 10 }}>
           {t("v2.form.where")}
         </p>
         <div style={{ display: "flex", gap: 8 }}>
@@ -264,12 +273,12 @@ export function LimpezaForm() {
             type="button"
             onClick={() => setForceProvider("kiwify")}
             style={{
-              flex: 1, padding: "12px 8px", fontSize: 14,
+              flex: 1, padding: "16px 12px", fontSize: 20, minHeight: 64,
               background: forceProvider === "kiwify" ? "rgba(232,184,75,0.18)" : "rgba(196,181,253,0.05)",
-              border: forceProvider === "kiwify" ? "2px solid #e8b84b" : "1px solid rgba(196,181,253,0.2)",
-              borderRadius: 10,
-              color: forceProvider === "kiwify" ? "#fbf8ff" : "#c4b5fd",
-              fontWeight: forceProvider === "kiwify" ? 700 : 500,
+              border: forceProvider === "kiwify" ? "2.5px solid #e8b84b" : "1.5px solid rgba(196,181,253,0.25)",
+              borderRadius: 12,
+              color: forceProvider === "kiwify" ? "#fbf8ff" : "#e2d9f3",
+              fontWeight: forceProvider === "kiwify" ? 700 : 600,
               cursor: "pointer",
             }}
           >
@@ -279,12 +288,12 @@ export function LimpezaForm() {
             type="button"
             onClick={() => setForceProvider("stripe")}
             style={{
-              flex: 1, padding: "12px 8px", fontSize: 14,
+              flex: 1, padding: "16px 12px", fontSize: 20, minHeight: 64,
               background: forceProvider === "stripe" ? "rgba(232,184,75,0.18)" : "rgba(196,181,253,0.05)",
-              border: forceProvider === "stripe" ? "2px solid #e8b84b" : "1px solid rgba(196,181,253,0.2)",
-              borderRadius: 10,
-              color: forceProvider === "stripe" ? "#fbf8ff" : "#c4b5fd",
-              fontWeight: forceProvider === "stripe" ? 700 : 500,
+              border: forceProvider === "stripe" ? "2.5px solid #e8b84b" : "1.5px solid rgba(196,181,253,0.25)",
+              borderRadius: 12,
+              color: forceProvider === "stripe" ? "#fbf8ff" : "#e2d9f3",
+              fontWeight: forceProvider === "stripe" ? 700 : 600,
               cursor: "pointer",
             }}
           >
@@ -292,7 +301,7 @@ export function LimpezaForm() {
           </button>
         </div>
         {!forceProvider && (
-          <p style={{ fontSize: 12, color: "#9575cd", marginTop: 8, lineHeight: 1.45 }}>
+          <p style={{ fontSize: 14, color: "#9575cd", marginTop: 8, lineHeight: 1.5, fontStyle: "italic" }}>
             {t("v2.form.where_hint")}
           </p>
         )}
@@ -314,15 +323,15 @@ export function LimpezaForm() {
       </button>
 
       {/* Selo de confiança + privacidade */}
-      <div style={{ marginTop: 18, padding: "14px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(196,181,253,0.18)", borderRadius: 12, textAlign: "center" }}>
-        <div style={{ fontSize: 15, color: "#fbf8ff", fontWeight: 700, marginBottom: 4 }}>
+      <div style={{ marginTop: 18, padding: "16px 18px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(196,181,253,0.18)", borderRadius: 12, textAlign: "center" }}>
+        <div style={{ fontSize: 20, color: "#fbf8ff", fontWeight: 700, marginBottom: 6 }}>
           🔒 Pagamento 100% Seguro
         </div>
-        <div style={{ fontSize: 13, color: "#c4b5fd" }}>
+        <div style={{ fontSize: 14, color: "#c4b5fd", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600 }}>
           Cartão · Pix · Apple Pay · Google Pay
         </div>
       </div>
-      <p style={{ fontSize: 15, color: "#c4b5fd", lineHeight: 1.6, textAlign: "center", marginTop: 14 }}>
+      <p style={{ fontSize: 14, color: "#c4b5fd", lineHeight: 1.6, textAlign: "center", marginTop: 14, fontStyle: "italic" }}>
         {t("v2.form.privacy")}<br />
         {t("v2.form.privacy2")}
       </p>

@@ -54,7 +54,7 @@ export function PreviewClient({
         </div>
         {text ? (
           <p style={{
-            fontSize: 19,
+            fontSize: 20,
             color: "#fbf8ff",
             lineHeight: 1.75,
             margin: 0,
@@ -94,7 +94,7 @@ export function PreviewClient({
         {ctaLabel}
       </a>
 
-      <p style={{ fontSize: 14, color: "#c4b5fd", textAlign: "center", marginTop: 12, lineHeight: 1.55 }}>
+      <p style={{ fontSize: 14, color: "#c4b5fd", textAlign: "center", marginTop: 12, lineHeight: 1.55, fontStyle: "italic" }}>
         {securityLabel}
       </p>
     </>
