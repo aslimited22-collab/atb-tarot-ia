@@ -367,7 +367,7 @@ export default function Home() {
               <div style={{ fontSize: 13, fontWeight: 700, background: S.gold, color: "#120025", borderRadius: 999, padding: "5px 16px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em" }}>{t("plans.premium.badge")}</div>
               <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.madameAriel")}</h3>
               <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 24, lineHeight: 1 }}>
-                R$59 <span style={{ fontSize: 18, fontWeight: 400, color: S.text2 }}>{t("price.perMonth")}</span>
+                R$250 <span style={{ fontSize: 18, fontWeight: 400, color: S.text2 }}>{t("price.perMonth")}</span>
               </div>
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", flex: 1 }}>
                 <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f1")}</li>

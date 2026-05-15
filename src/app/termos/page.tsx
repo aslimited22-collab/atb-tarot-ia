@@ -68,7 +68,7 @@ export default function TermosPage() {
         </p>
         <ul style={{ paddingLeft: 24 }}>
           <li style={liStyle}><strong>Basic — R$ 29/mês</strong>: 30 mensagens no chat por mês, oráculo diário, diário da ansiedade.</li>
-          <li style={liStyle}><strong>Premium — R$ 59/mês</strong>: 100 mensagens no chat por mês, todas as ferramentas incluindo guia de vícios e numerologia.</li>
+          <li style={liStyle}><strong>Premium — R$ 250/mês</strong>: 100 mensagens no chat por mês, todas as ferramentas incluindo guia de vícios e numerologia.</li>
         </ul>
         <p style={baseTextStyle}>
           A cobrança é <strong>recorrente</strong> (renovação automática mensal) processada pela{" "}
