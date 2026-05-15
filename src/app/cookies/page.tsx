@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 const COMPANY = {
-  dpoEmail: "[PREENCHER: privacidade@atbtartot.com]",
+  dpoEmail: "aslimited22@gmail.com",
 };
 
 const baseTextStyle = { fontSize: 19, lineHeight: 1.75, color: "#fbf8ff", fontWeight: 500 } as const;

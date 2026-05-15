@@ -7,12 +7,12 @@ export const metadata = {
 };
 
 const COMPANY = {
-  name: "[PREENCHER: Razão Social]",
+  name: "AS LIMITED",
   cnpj: "41.943.844/0001-53",
-  address: "[PREENCHER: Endereço completo]",
-  contact: "[PREENCHER: contato@atbtartot.com]",
-  city: "[PREENCHER: Cidade]",
-  uf: "[PREENCHER: UF]",
+  address: "Rua Curitiba, 179E — Centro, Chapecó/SC",
+  contact: "aslimited22@gmail.com",
+  city: "Chapecó",
+  uf: "SC",
 };
 
 const baseTextStyle = { fontSize: 19, lineHeight: 1.75, color: "#fbf8ff", fontWeight: 500 } as const;
