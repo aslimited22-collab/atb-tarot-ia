@@ -58,6 +58,15 @@ export const dict = {
     "testi.3.name": "Juliana C.",
 
     "footer.rights": "Todos os direitos reservados.",
+    "footer.privacy": "Privacidade",
+    "footer.terms": "Termos",
+    "footer.cookies": "Cookies",
+    "auth.forgot_password": "Esqueci minha senha",
+    "cookie.title": "Usamos cookies",
+    "cookie.desc": "Usamos cookies essenciais para você logar e usar o site. Sem rastreamento entre sites. Veja nossa política.",
+    "cookie.accept_all": "Aceitar todos",
+    "cookie.essential_only": "Apenas essenciais",
+    "cookie.learn_more": "Política de Cookies →",
 
     // Login
     "login.title": "Entrar",
@@ -743,6 +752,15 @@ export const dict = {
     "testi.3.name": "Juliana C.",
 
     "footer.rights": "All rights reserved.",
+    "footer.privacy": "Privacy",
+    "footer.terms": "Terms",
+    "footer.cookies": "Cookies",
+    "auth.forgot_password": "I forgot my password",
+    "cookie.title": "We use cookies",
+    "cookie.desc": "We use essential cookies so you can log in and use the site. No cross-site tracking. See our policy.",
+    "cookie.accept_all": "Accept all",
+    "cookie.essential_only": "Essential only",
+    "cookie.learn_more": "Cookie Policy →",
 
     "login.title": "Sign in",
     "login.subtitle": "Continue your journey with ATB",
@@ -1416,6 +1434,15 @@ export const dict = {
     "testi.3.name": "Juliana C.",
 
     "footer.rights": "Todos los derechos reservados.",
+    "footer.privacy": "Privacidad",
+    "footer.terms": "Términos",
+    "footer.cookies": "Cookies",
+    "auth.forgot_password": "Olvidé mi contraseña",
+    "cookie.title": "Usamos cookies",
+    "cookie.desc": "Usamos cookies esenciales para que puedas iniciar sesión y usar el sitio. Sin rastreo entre sitios. Lee nuestra política.",
+    "cookie.accept_all": "Aceptar todos",
+    "cookie.essential_only": "Solo esenciales",
+    "cookie.learn_more": "Política de Cookies →",
 
     "login.title": "Entrar",
     "login.subtitle": "Continúa tu viaje con ATB",
@@ -2089,6 +2116,15 @@ export const dict = {
     "testi.3.name": "Juliana C.",
 
     "footer.rights": "Alle Rechte vorbehalten.",
+    "footer.privacy": "Datenschutz",
+    "footer.terms": "Nutzungsbedingungen",
+    "footer.cookies": "Cookies",
+    "auth.forgot_password": "Ich habe mein Passwort vergessen",
+    "cookie.title": "Wir verwenden Cookies",
+    "cookie.desc": "Wir verwenden essentielle Cookies, damit du dich anmelden und die Seite nutzen kannst. Kein websiteübergreifendes Tracking. Siehe unsere Richtlinie.",
+    "cookie.accept_all": "Alle akzeptieren",
+    "cookie.essential_only": "Nur essentielle",
+    "cookie.learn_more": "Cookie-Richtlinie →",
 
     "login.title": "Anmelden",
     "login.subtitle": "Setze deine Reise mit ATB fort",
@@ -2762,6 +2798,15 @@ export const dict = {
     "testi.3.name": "Juliana C.",
 
     "footer.rights": "Tutti i diritti riservati.",
+    "footer.privacy": "Privacy",
+    "footer.terms": "Termini",
+    "footer.cookies": "Cookie",
+    "auth.forgot_password": "Ho dimenticato la password",
+    "cookie.title": "Usiamo i cookie",
+    "cookie.desc": "Usiamo cookie essenziali per permetterti di accedere e usare il sito. Nessun tracciamento tra siti. Leggi la nostra policy.",
+    "cookie.accept_all": "Accetta tutti",
+    "cookie.essential_only": "Solo essenziali",
+    "cookie.learn_more": "Politica sui Cookie →",
 
     "login.title": "Accedi",
     "login.subtitle": "Continua il tuo viaggio con ATB",
@@ -3435,6 +3480,15 @@ export const dict = {
     "testi.3.name": "Juliana C.",
 
     "footer.rights": "無断転載を禁じます。",
+    "footer.privacy": "プライバシー",
+    "footer.terms": "利用規約",
+    "footer.cookies": "クッキー",
+    "auth.forgot_password": "パスワードを忘れた",
+    "cookie.title": "クッキーを使用しています",
+    "cookie.desc": "ログインとサイト利用に必要な、必須クッキーのみを使用します。他サイトでのトラッキングはありません。詳細はポリシーをご覧ください。",
+    "cookie.accept_all": "すべて許可",
+    "cookie.essential_only": "必須のみ",
+    "cookie.learn_more": "クッキーポリシー →",
 
     "login.title": "ログイン",
     "login.subtitle": "ATBとの旅を続けましょう",

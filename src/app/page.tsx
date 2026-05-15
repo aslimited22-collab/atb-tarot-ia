@@ -396,8 +396,19 @@ export default function Home() {
         </div>
       </section>
 
-      <footer style={{ textAlign: "center", padding: "28px 24px", borderTop: `1px solid ${S.sep}`, color: S.text2, fontSize: 16, fontWeight: 500 }}>
-        © {new Date().getFullYear()} ATB — {t("footer.rights")}
+      <footer style={{ textAlign: "center", padding: "32px 24px 40px", borderTop: `1px solid ${S.sep}`, color: S.text2, fontSize: 16, fontWeight: 500 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24, marginBottom: 18 }}>
+          <Link href="/privacidade" style={{ color: S.text2, textDecoration: "underline", fontSize: 17, fontWeight: 600, padding: "8px 4px", minHeight: 44 }}>
+            {t("footer.privacy")}
+          </Link>
+          <Link href="/termos" style={{ color: S.text2, textDecoration: "underline", fontSize: 17, fontWeight: 600, padding: "8px 4px", minHeight: 44 }}>
+            {t("footer.terms")}
+          </Link>
+          <Link href="/cookies" style={{ color: S.text2, textDecoration: "underline", fontSize: 17, fontWeight: 600, padding: "8px 4px", minHeight: 44 }}>
+            {t("footer.cookies")}
+          </Link>
+        </div>
+        <div>© {new Date().getFullYear()} ATB — {t("footer.rights")}</div>
       </footer>
     </main>
   );

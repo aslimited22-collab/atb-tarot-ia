@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
+import { CookieBanner } from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: "ATB — Sessão Espírita Transformadora",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <I18nProvider>
           {children}
+          <CookieBanner />
           <Toaster
             position="top-center"
             toastOptions={{

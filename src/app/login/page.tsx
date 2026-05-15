@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/I18nProvider";
 
 export default function LoginPage() {
@@ -17,18 +16,28 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.toLowerCase().trim(),
-      password,
-    });
-    setLoading(false);
-    if (error) {
-      return toast.error(t("auth.login_error"));
+    try {
+      // Login via endpoint server-side (rate limited + brute-force protection)
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.toLowerCase().trim(), password }),
+      });
+      setLoading(false);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: t("auth.login_error") }));
+        if (res.status === 429) {
+          return toast.error(data.error || "Muitas tentativas. Aguarde 1 hora.");
+        }
+        return toast.error(data.error || t("auth.login_error"));
+      }
+      toast.success(t("auth.login_welcome_back"));
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err) {
+      setLoading(false);
+      toast.error(t("auth.login_error"));
     }
-    toast.success(t("auth.login_welcome_back"));
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (
@@ -128,11 +137,29 @@ export default function LoginPage() {
               cursor: loading ? "not-allowed" : "pointer",
               border: "none",
               marginTop: 16,
-              marginBottom: 24,
+              marginBottom: 20,
             }}
           >
             {loading ? t("auth.login_loading") : `✨ ${t("nav.signin")}`}
           </button>
+
+          {/* Esqueci a senha */}
+          <div style={{ textAlign: "center", marginBottom: 8 }}>
+            <Link
+              href="/esqueci-senha"
+              style={{
+                display: "inline-block",
+                color: "#c4b5fd",
+                fontSize: 18,
+                fontWeight: 600,
+                textDecoration: "underline",
+                padding: "12px 18px",
+                minHeight: 48,
+              }}
+            >
+              {t("auth.forgot_password")}
+            </Link>
+          </div>
 
           {/* Link cadastro — botão grande estilo botão pra 45+ */}
           <div style={{ textAlign: "center", padding: "20px 0 0", borderTop: "1px solid rgba(196,181,253,0.18)", marginTop: 4 }}>

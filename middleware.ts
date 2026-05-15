@@ -87,6 +87,8 @@ export async function middleware(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 365,
       sameSite: "lax",
       path: "/",
+      secure: process.env.NODE_ENV === "production",
+      // httpOnly: false intencional — LangSwitcher client-side precisa ler
     });
     return response;
   }

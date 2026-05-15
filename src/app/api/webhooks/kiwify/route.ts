@@ -243,6 +243,8 @@ export async function POST(req: Request) {
     });
 
     const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
+    // Fluxo legado V1 (sem order UUID) — usa email no link. Os clientes novos
+    // (V2) já usam orderId via /api/limpeza/preview que cria o order primeiro.
     const accessLink = `${getSiteUrl(req)}/obrigado-limpeza?email=${encodeURIComponent(email.toLowerCase())}`;
 
     const customerHtml = `
@@ -340,7 +342,10 @@ export async function POST(req: Request) {
     });
 
     const espFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
-    const espAccessLink = `${getSiteUrl(req)}/obrigado-espirito?email=${encodeURIComponent(email.toLowerCase())}`;
+    // orderId em vez de email (LGPD: não vaza e-mail no navegador / referer)
+    const espAccessLink = orderId
+      ? `${getSiteUrl(req)}/obrigado-espirito?order=${encodeURIComponent(orderId)}`
+      : `${getSiteUrl(req)}/obrigado-espirito?email=${encodeURIComponent(email.toLowerCase())}`;
 
     const espCustomerHtml = `
 <!DOCTYPE html>

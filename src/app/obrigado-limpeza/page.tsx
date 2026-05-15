@@ -7,13 +7,30 @@ export const dynamic = "force-dynamic";
 export default async function ObrigadoLimpezaPage({
   searchParams,
 }: {
-  searchParams?: { email?: string; order_id?: string };
+  searchParams?: { email?: string; order_id?: string; order?: string };
 }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Email do cliente que comprou (vem do Kiwify via ?email=)
-  const customerEmail = (searchParams?.email || "").toLowerCase().trim();
+  // Preferimos `order_id` (UUID, não-PII) — evita expor email em browser history/referer.
+  // `?email=` mantido como fallback pra links legados.
+  const orderIdRaw = (searchParams?.order || searchParams?.order_id || "").trim();
+  const orderIdValid = /^[0-9a-f-]{36}$/i.test(orderIdRaw) ? orderIdRaw : "";
+
+  let customerEmail = (searchParams?.email || "").toLowerCase().trim();
+
+  // Se veio order_id, resolve email server-side (não expõe na URL)
+  if (orderIdValid && !customerEmail) {
+    const adminLookup = createAdminClient();
+    const { data: order } = await adminLookup
+      .from("orders")
+      .select("email")
+      .eq("id", orderIdValid)
+      .maybeSingle();
+    if (order?.email) {
+      customerEmail = order.email.toLowerCase();
+    }
+  }
 
   // Já está logado?
   if (user) {
