@@ -74,15 +74,11 @@ export default function Home() {
                 textDecoration: "none",
                 fontWeight: 800,
                 display: "inline-block",
-                marginBottom: 18,
                 minHeight: 70,
               }}
             >
               {t("hero.cta")}
             </a>
-            <div style={{ fontSize: 19, color: S.text2, fontWeight: 600, lineHeight: 1.5 }}>
-              {t("checkout.cancelBadge")} · {t("checkout.recurringDisclaimer")}
-            </div>
           </div>
 
           {/* Imagem à direita — ATB acolhedora */}
