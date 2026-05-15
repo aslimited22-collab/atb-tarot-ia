@@ -40,26 +40,26 @@ export default function LoginPage() {
       justifyContent: "center",
       padding: "1.5rem",
     }}>
-      <div style={{ width: "100%", maxWidth: 480 }}>
-        {/* Logo + título */}
+      <div style={{ width: "100%", maxWidth: 520 }}>
+        {/* Logo + título — UX 45+ tipografia maior */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <div style={{ fontSize: 80, marginBottom: 14 }}>🔮</div>
-          <h1 className="serif" style={{ fontSize: "2.8rem", color: "#f5f0ff", lineHeight: 1.1, marginBottom: 10 }}>
+          <div style={{ fontSize: 84, marginBottom: 16 }} aria-hidden="true">🔮</div>
+          <h1 className="serif" style={{ fontSize: "clamp(2.6rem, 6vw, 3.2rem)", color: "#f5f0ff", lineHeight: 1.1, marginBottom: 12, fontWeight: 700 }}>
             ATB
           </h1>
-          <p style={{ color: "#fbf8ff", fontSize: 19, lineHeight: 1.5 }}>
+          <p style={{ color: "#fbf8ff", fontSize: 21, lineHeight: 1.55, fontWeight: 500 }}>
             {t("auth.login_welcome")}
           </p>
         </div>
 
         {/* Formulário */}
-        <form onSubmit={handleSubmit} className="card" style={{ padding: "36px 32px" }}>
-          <h2 className="serif" style={{ fontSize: "1.7rem", color: "#e8b84b", marginBottom: 24, textAlign: "center" }}>
+        <form onSubmit={handleSubmit} className="card" style={{ padding: "40px 32px" }}>
+          <h2 className="serif" style={{ fontSize: "1.9rem", color: "#e8b84b", marginBottom: 28, textAlign: "center", fontWeight: 700 }}>
             {t("nav.signin")}
           </h2>
 
           {/* Email */}
-          <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
+          <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.email_label")}
           </label>
           <input
@@ -76,7 +76,7 @@ export default function LoginPage() {
           />
 
           {/* Senha */}
-          <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
+          <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.password_label")}
           </label>
           <div style={{ position: "relative", marginBottom: 16 }}>
@@ -130,20 +130,35 @@ export default function LoginPage() {
             {loading ? t("auth.login_loading") : `✨ ${t("nav.signin")}`}
           </button>
 
-          {/* Link cadastro */}
-          <div style={{ textAlign: "center", padding: "16px 0", borderTop: "1px solid rgba(196,181,253,0.18)" }}>
-            <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.6, margin: 0 }}>
-              {t("auth.no_account")}<br />
-              <Link href="/cadastro" style={{ color: "#e8b84b", fontWeight: 700, fontSize: 19, textDecoration: "underline", display: "inline-block", marginTop: 8, padding: "8px 16px" }}>
-                ✨ {t("auth.signup_link")}
-              </Link>
+          {/* Link cadastro — botão grande estilo botão pra 45+ */}
+          <div style={{ textAlign: "center", padding: "20px 0 0", borderTop: "1px solid rgba(196,181,253,0.18)", marginTop: 4 }}>
+            <p style={{ fontSize: 19, color: "#fbf8ff", lineHeight: 1.55, margin: "0 0 14px", fontWeight: 500 }}>
+              {t("auth.no_account")}
             </p>
+            <Link
+              href="/cadastro"
+              style={{
+                display: "block",
+                textAlign: "center",
+                color: "#e8b84b",
+                fontWeight: 700,
+                fontSize: 19,
+                textDecoration: "underline",
+                padding: "18px 16px",
+                minHeight: 64,
+                borderRadius: 12,
+                background: "rgba(232,184,75,0.08)",
+                border: "1.5px solid rgba(232,184,75,0.3)",
+              }}
+            >
+              ✨ {t("auth.signup_link")}
+            </Link>
           </div>
         </form>
 
         {/* Voltar para landing */}
-        <div style={{ textAlign: "center", marginTop: 24 }}>
-          <Link href="/" style={{ color: "#c4b5fd", fontSize: 16, textDecoration: "none", padding: "8px 16px" }}>
+        <div style={{ textAlign: "center", marginTop: 28 }}>
+          <Link href="/" style={{ color: "#c4b5fd", fontSize: 17, textDecoration: "none", padding: "12px 18px", display: "inline-block", minHeight: 48 }}>
             ← {t("v2.back")}
           </Link>
         </div>

@@ -1,9 +1,9 @@
 import type { Plan } from "./types";
 
 // Limites MENSAIS de mensagens no chat com ATB
-// (free continua diario - 1 mensagem/dia para tentar engajar e converter)
+// (free não tem mais mensagens — incentiva conversão direto, sem trial diluído)
 export const MESSAGE_LIMITS_MONTH: Record<Plan, number> = {
-  free: 1,        // 1/dia (tratado separadamente)
+  free: 0,        // sem mensagens — exige upgrade
   basic: 30,      // 30/mes
   premium: 100,   // 100/mes
 };
@@ -13,13 +13,13 @@ export const MESSAGE_LIMITS = MESSAGE_LIMITS_MONTH;
 
 // Throttle entre mensagens (anti-spam)
 export const THROTTLE_SECONDS: Record<Plan, number> = {
-  free: 15,
+  free: 0,        // irrelevante — free não envia
   basic: 5,
   premium: 2,
 };
 
-// Plano free continua com limite diario (1/dia) — incentiva conversao
-export const DAILY_LIMIT_FREE = 1;
+// Plano free SEM cota diária — toda mensagem exige plano pago.
+export const DAILY_LIMIT_FREE = 0;
 
 export function planLabel(plan: Plan): string {
   return { free: "Grátis", basic: "Basic", premium: "Premium" }[plan];

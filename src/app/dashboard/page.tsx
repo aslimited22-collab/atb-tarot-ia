@@ -50,12 +50,11 @@ export default async function DashboardHome() {
   return (
     <div style={{ padding: "24px 20px 80px", maxWidth: 720, margin: "0 auto" }}>
 
-      {/* Saudação grande e amorosa */}
-      <div style={{ marginBottom: 22 }}>
-        <h1 className="serif" style={{ fontSize: "clamp(2rem, 5vw, 2.6rem)", color: "#f5f0ff", marginBottom: 6, lineHeight: 1.15 }}>
+      {/* Saudação grande e amorosa — UX 45+ */}
+      <div style={{ marginBottom: 28 }}>
+        <h1 className="serif" style={{ fontSize: "clamp(2.2rem, 5vw, 2.8rem)", color: "#f5f0ff", marginBottom: 10, lineHeight: 1.15, fontWeight: 700 }}>
           {(() => {
             const raw = t("dash.welcome");
-            // Substitui placeholder {name} marcando-o p/ destacar em dourado.
             const parts = raw.split("{name}");
             return (
               <>
@@ -66,26 +65,38 @@ export default async function DashboardHome() {
             );
           })()}
         </h1>
-        <p style={{ color: "#fbf8ff", fontSize: 18, lineHeight: 1.5, fontWeight: 500 }}>
+        <p style={{ color: "#fbf8ff", fontSize: 20, lineHeight: 1.55, fontWeight: 500 }}>
           {t("dash.greeting")}
         </p>
       </div>
 
-      {/* Plano + restante juntos em cards grandes */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 22 }}>
-        <div className="card" style={{ padding: "18px 20px", textAlign: "center" }}>
-          <div style={{ fontSize: 13, color: "#c4b5fd", marginBottom: 8, fontWeight: 600 }}>{t("dash.your_plan")}</div>
+      {/* Plano + restante — cards maiores, fontes 45+ */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 26 }}>
+        <div className="card" style={{ padding: "22px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 15, color: "#c4b5fd", marginBottom: 10, fontWeight: 700, letterSpacing: "0.05em" }}>{t("dash.your_plan")}</div>
           <PlanBadge plan={plan} />
           {plan !== "premium" && (
-            <Link href="/#planos" style={{ display: "block", marginTop: 12, color: "#e8b84b", fontWeight: 700, fontSize: 14, textDecoration: "underline" }}>
+            <Link
+              href="/#planos"
+              style={{
+                display: "inline-block",
+                marginTop: 16,
+                color: "#e8b84b",
+                fontWeight: 700,
+                fontSize: 17,
+                textDecoration: "underline",
+                padding: "10px 16px",
+                minHeight: 44,
+              }}
+            >
               {t("dash.upgrade")}
             </Link>
           )}
         </div>
-        <div className="card-gold" style={{ padding: "18px 20px", textAlign: "center" }}>
-          <div style={{ fontSize: 12, color: "#c4b5fd", marginBottom: 6, fontWeight: 600, lineHeight: 1.3 }}>{periodLabel}</div>
-          <div className="serif" style={{ fontSize: "2.6rem", color: "#e8b84b", fontWeight: 700, lineHeight: 1 }}>{remaining}</div>
-          <div style={{ fontSize: 13, color: "#9575cd", marginTop: 4 }}>
+        <div className="card-gold" style={{ padding: "22px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 14, color: "#c4b5fd", marginBottom: 8, fontWeight: 700, lineHeight: 1.35 }}>{periodLabel}</div>
+          <div className="serif" style={{ fontSize: "3rem", color: "#e8b84b", fontWeight: 800, lineHeight: 1 }}>{remaining}</div>
+          <div style={{ fontSize: 15, color: "#c4b5fd", marginTop: 6, fontWeight: 500 }}>
             {remaining === 1 ? t("dash.remaining_one") : t("dash.remaining_other")}
           </div>
         </div>
@@ -148,45 +159,45 @@ export default async function DashboardHome() {
         {!isPremium && (
           <div style={{
             textAlign: "center",
-            marginTop: 14,
-            padding: "12px 16px",
-            background: "rgba(232,184,75,0.12)",
-            borderRadius: 12,
-            border: "1px solid rgba(232,184,75,0.3)",
+            marginTop: 16,
+            padding: "16px 20px",
+            background: "rgba(232,184,75,0.14)",
+            borderRadius: 14,
+            border: "1.5px solid rgba(232,184,75,0.35)",
           }}>
-            <div style={{ fontSize: 16, color: "#f5c860", fontWeight: 700, marginBottom: 2 }}>
+            <div style={{ fontSize: 18, color: "#f5c860", fontWeight: 700, marginBottom: 4 }}>
               {t("dash.lucky_locked")}
             </div>
-            <div style={{ fontSize: 14, color: "#fbf8ff" }}>
+            <div style={{ fontSize: 16, color: "#fbf8ff", fontWeight: 500 }}>
               {t("dash.lucky_tap")}
             </div>
           </div>
         )}
       </Link>
 
-      {/* Quick access — cards grandes e claros */}
-      <h2 className="serif" style={{ fontSize: "1.4rem", color: "#fbf8ff", marginBottom: 14, marginTop: 8 }}>
+      {/* Quick access — cards grandes e claros UX 45+ */}
+      <h2 className="serif" style={{ fontSize: "1.6rem", color: "#fbf8ff", marginBottom: 18, marginTop: 12, fontWeight: 700 }}>
         {t("dash.quick_title")}
       </h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 28 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 32 }}>
         {quick.map((q) => (
           <Link
             key={q.href}
             href={q.href}
             className="card"
             style={{
-              padding: "22px 20px",
+              padding: "24px 22px",
               textDecoration: "none",
               display: "flex",
               flexDirection: "column",
-              minHeight: 150,
+              minHeight: 168,
               transition: "transform .15s, border-color .15s",
-              border: "1.5px solid rgba(232,184,75,0.25)",
+              border: "2px solid rgba(232,184,75,0.3)",
             }}
           >
-            <div style={{ fontSize: 44, marginBottom: 12 }} aria-hidden="true">{q.icon}</div>
-            <div className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 6, fontWeight: 700, lineHeight: 1.2 }}>{q.title}</div>
-            <p style={{ fontSize: 15, color: "#fbf8ff", margin: 0, lineHeight: 1.5 }}>{q.desc}</p>
+            <div style={{ fontSize: 48, marginBottom: 14 }} aria-hidden="true">{q.icon}</div>
+            <div className="serif" style={{ fontSize: "1.4rem", color: "#e8b84b", marginBottom: 8, fontWeight: 700, lineHeight: 1.2 }}>{q.title}</div>
+            <p style={{ fontSize: 17, color: "#fbf8ff", margin: 0, lineHeight: 1.55, fontWeight: 500 }}>{q.desc}</p>
           </Link>
         ))}
       </div>
@@ -207,21 +218,22 @@ export default async function DashboardHome() {
           boxShadow: "0 12px 36px rgba(232,184,75,0.18)",
         }}
       >
-        <div style={{ fontSize: 64, marginBottom: 10 }} aria-hidden="true">🕊️</div>
-        <div className="serif" style={{ fontSize: "1.8rem", color: "#f5c860", marginBottom: 8, fontWeight: 700 }}>
+        <div style={{ fontSize: 72, marginBottom: 12 }} aria-hidden="true">🕊️</div>
+        <div className="serif" style={{ fontSize: "2rem", color: "#f5c860", marginBottom: 12, fontWeight: 700 }}>
           {t("dash.upsell_h1")}
         </div>
-        <p style={{ fontSize: "1rem", color: "#d9cdfc", lineHeight: 1.6, marginBottom: 14, maxWidth: 380, margin: "0 auto 14px" }}>
+        <p style={{ fontSize: "1.1rem", color: "#fbf8ff", lineHeight: 1.6, marginBottom: 18, maxWidth: 420, margin: "0 auto 18px", fontWeight: 500 }}>
           {t("dash.upsell_desc")}
         </p>
         <div style={{
           display: "inline-block",
           background: "linear-gradient(90deg, #f5c860, #e8b84b)",
           color: "#1e0040",
-          padding: "18px 36px",
+          padding: "20px 40px",
+          minHeight: 64,
           borderRadius: 999,
           fontWeight: 800,
-          fontSize: 17,
+          fontSize: 19,
           boxShadow: "0 6px 22px rgba(232,184,75,0.5)",
         }}>
           {t("dash.upsell_cta")}

@@ -5,47 +5,50 @@ import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { BackButton } from "@/components/BackButton";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 type Msg = { id?: string; role: string; content: string };
 
-const CARDS = [
+// Prompts ficam em PT — vão direto para a IA (DeepSeek/OpenAI) que recebe
+// system prompt em PT. Traduzir aqui quebraria a personalidade da ATB.
+const CARD_DEFS = [
   {
     id: "limpeza",
-    title: "Limpeza Profunda",
     icon: "🕯️",
-    saint: "Nossa Senhora Aparecida",
-    description: "Retire toda energia pesada, mau-olhado, inveja e dor da alma com o manto sagrado de Nossa Senhora.",
+    titleKey: "limpeza_dash.card_limpeza_title",
+    saintKey: "limpeza_dash.card_limpeza_saint",
+    descKey: "limpeza_dash.card_limpeza_desc",
     prompt: "Minha querida ATB, eu sinto que tem energia pesada na minha vida, parece que carrego um peso. Preciso de uma limpeza profunda. Me ajude a entender o que está pesando e como posso me limpar com a força de Nossa Senhora Aparecida.",
     color: "linear-gradient(135deg, #e8b84b 0%, #f5c860 50%, #c89a2a 100%)",
   },
   {
     id: "caminhos",
-    title: "Abrir Caminhos",
     icon: "🗝️",
-    saint: "Santo Antônio + Exu do Ouro",
-    description: "Desate os nós espirituais, separe o que está atrapalhando e abra as portas da prosperidade.",
+    titleKey: "limpeza_dash.card_caminhos_title",
+    saintKey: "limpeza_dash.card_caminhos_saint",
+    descKey: "limpeza_dash.card_caminhos_desc",
     prompt: "Minha querida ATB, sinto que meus caminhos estão fechados, nada flui na minha vida, parece tudo travado. Preciso abrir meus caminhos. Me ajude com a força de Santo Antônio para desatar os nós e Exu do Ouro para abrir minha prosperidade.",
     color: "linear-gradient(135deg, #6a4a8a 0%, #8a5fb0 50%, #4a2f6a 100%)",
   },
   {
     id: "protecao",
-    title: "Proteção Sagrada",
     icon: "⚔️",
-    saint: "São Miguel Arcanjo + São Jorge",
-    description: "Corte feitiços, demandas e inveja com a espada de São Miguel e o escudo de São Jorge guerreiro.",
+    titleKey: "limpeza_dash.card_protecao_title",
+    saintKey: "limpeza_dash.card_protecao_saint",
+    descKey: "limpeza_dash.card_protecao_desc",
     prompt: "Minha querida ATB, sinto que tem gente fazendo coisa ruim contra mim, sinto inveja, olho gordo, talvez até feitiço. Preciso de proteção sagrada. Me ajude a invocar São Miguel Arcanjo e São Jorge para me proteger e cortar tudo de ruim.",
     color: "linear-gradient(135deg, #d4344a 0%, #e85a72 50%, #8a1f30 100%)",
   },
-];
+] as const;
 
-const SAINTS = [
-  { name: "Nossa Senhora Aparecida", icon: "👑", power: "Manto sagrado e cura" },
-  { name: "Sagrado Coração de Jesus", icon: "❤️‍🔥", power: "Queima energias ruins" },
-  { name: "São Miguel Arcanjo", icon: "⚔️", power: "Espada que corta feitiços" },
-  { name: "Santo Antônio", icon: "🙏", power: "Desata os nós" },
-  { name: "São Jorge Guerreiro", icon: "🛡️", power: "Proteção contra inimigos" },
-  { name: "N. S. Desatadora dos Nós", icon: "🪢", power: "Liberta a vida presa" },
-];
+const SAINT_DEFS = [
+  { icon: "👑", nameKey: "limpeza_dash.saint1_name", powerKey: "limpeza_dash.saint1_power" },
+  { icon: "❤️‍🔥", nameKey: "limpeza_dash.saint2_name", powerKey: "limpeza_dash.saint2_power" },
+  { icon: "⚔️", nameKey: "limpeza_dash.saint3_name", powerKey: "limpeza_dash.saint3_power" },
+  { icon: "🙏", nameKey: "limpeza_dash.saint4_name", powerKey: "limpeza_dash.saint4_power" },
+  { icon: "🛡️", nameKey: "limpeza_dash.saint5_name", powerKey: "limpeza_dash.saint5_power" },
+  { icon: "🪢", nameKey: "limpeza_dash.saint6_name", powerKey: "limpeza_dash.saint6_power" },
+] as const;
 
 export default function LimpezaClient({
   purchased,
@@ -65,6 +68,7 @@ export default function LimpezaClient({
   hasProfile?: boolean;
 }) {
   const router = useRouter();
+  const { t } = useT();
   const [messages, setMessages] = useState<Msg[]>(initialMessages);
   const [remaining, setRemaining] = useState(initialRemaining);
   const [input, setInput] = useState("");
@@ -111,7 +115,7 @@ export default function LimpezaClient({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || `Erro ${res.status}`);
+        toast.error(data.error || `${t("limpeza_dash.toast_error_prefix")} ${res.status}`);
         setMessages((m) => m.slice(0, -1));
         setLoading(false);
         return;
@@ -129,8 +133,8 @@ export default function LimpezaClient({
       setMessages((m) => [...m, { role: "assistant", content: acc }]);
       setStreaming("");
       setRemaining((r) => Math.max(0, r - 1));
-    } catch (e) {
-      toast.error("Erro de conexão. Tente novamente.");
+    } catch {
+      toast.error(t("limpeza_dash.toast_connection"));
       setMessages((m) => m.slice(0, -1));
     } finally {
       setLoading(false);
@@ -139,7 +143,7 @@ export default function LimpezaClient({
 
   function pickCard(cardId: string) {
     if (loading || remaining <= 0) return;
-    const card = CARDS.find((c) => c.id === cardId);
+    const card = CARD_DEFS.find((c) => c.id === cardId);
     if (!card) return;
     setActiveCard(cardId);
     setInput(card.prompt);
@@ -162,44 +166,46 @@ export default function LimpezaClient({
 
       {/* Header sagrado */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
-        <div style={{ fontSize: 56, marginBottom: 8 }}>🕊️</div>
+        <div style={{ fontSize: 56, marginBottom: 8 }} aria-hidden="true">🕊️</div>
         <h1 className="serif" style={{ fontSize: "2.2rem", color: "#e8b84b", lineHeight: 1.15, marginBottom: 6 }}>
-          Limpeza Espiritual
+          {t("limpeza_dash.chat_h1")}
         </h1>
         <p style={{ fontSize: "1.05rem", color: "#c4b5fd", lineHeight: 1.55, maxWidth: 480, margin: "0 auto" }}>
-          Olá, <strong style={{ color: "#f5c860" }}>{firstName}</strong>. Esta é uma sessão sagrada com ATB.
+          {t("limpeza_dash.chat_subtitle_part1")}{" "}
+          <strong style={{ color: "#f5c860" }}>{firstName}</strong>
+          {t("limpeza_dash.chat_subtitle_part2")}
         </p>
       </div>
 
       {/* Contador de mensagens */}
       <div className="card-gold" style={{ padding: "14px 18px", textAlign: "center", marginBottom: 20 }}>
         <div style={{ fontSize: 11, color: "#c4b5fd", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-          Mensagens sagradas restantes
+          {t("limpeza_dash.counter_eyebrow")}
         </div>
         <div className="serif" style={{ fontSize: "2.2rem", color: "#e8b84b", fontWeight: 700, lineHeight: 1 }}>
-          {remaining} <span style={{ fontSize: "1rem", color: "#9575cd" }}>de 3</span>
+          {remaining} <span style={{ fontSize: "1rem", color: "#9575cd" }}>{t("limpeza_dash.counter_of")} 3</span>
         </div>
       </div>
 
       {/* Painel de Santos */}
       <div className="card" style={{ padding: "16px 14px", marginBottom: 20 }}>
         <div className="serif" style={{ fontSize: "1.05rem", color: "#e8b84b", textAlign: "center", marginBottom: 12 }}>
-          ✨ Forças que estão com você
+          {t("limpeza_dash.saints_panel_title")}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-          {SAINTS.map((s) => (
-            <div key={s.name} style={{
+          {SAINT_DEFS.map((s) => (
+            <div key={s.nameKey} style={{
               background: "rgba(232,184,75,0.08)",
               border: "1px solid rgba(232,184,75,0.25)",
               borderRadius: 12,
               padding: "10px 8px",
               textAlign: "center",
             }}>
-              <div style={{ fontSize: 26, marginBottom: 4 }}>{s.icon}</div>
+              <div style={{ fontSize: 26, marginBottom: 4 }} aria-hidden="true">{s.icon}</div>
               <div style={{ fontSize: 11, color: "#fbf8ff", fontWeight: 600, lineHeight: 1.25, marginBottom: 2 }}>
-                {s.name}
+                {t(s.nameKey)}
               </div>
-              <div style={{ fontSize: 10, color: "#9575cd", lineHeight: 1.3 }}>{s.power}</div>
+              <div style={{ fontSize: 10, color: "#9575cd", lineHeight: 1.3 }}>{t(s.powerKey)}</div>
             </div>
           ))}
         </div>
@@ -210,15 +216,15 @@ export default function LimpezaClient({
         <>
           <div style={{ textAlign: "center", marginBottom: 14 }}>
             <h2 className="serif" style={{ fontSize: "1.35rem", color: "#e8b84b", marginBottom: 6 }}>
-              Escolha uma carta para começar
+              {t("limpeza_dash.cards_h2")}
             </h2>
             <p style={{ fontSize: 14, color: "#c4b5fd" }}>
-              Toque na carta que mais chama seu coração agora
+              {t("limpeza_dash.cards_subtitle")}
             </p>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14, marginBottom: 24 }}>
-            {CARDS.map((card) => (
+            {CARD_DEFS.map((card) => (
               <button
                 key={card.id}
                 onClick={() => pickCard(card.id)}
@@ -240,18 +246,18 @@ export default function LimpezaClient({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-                  <div style={{ fontSize: 42 }}>{card.icon}</div>
+                  <div style={{ fontSize: 42 }} aria-hidden="true">{card.icon}</div>
                   <div>
                     <div className="serif" style={{ fontSize: "1.4rem", fontWeight: 700, lineHeight: 1.1 }}>
-                      {card.title}
+                      {t(card.titleKey)}
                     </div>
                     <div style={{ fontSize: 12, opacity: 0.85, marginTop: 2, fontStyle: "italic" }}>
-                      ✦ {card.saint}
+                      ✦ {t(card.saintKey)}
                     </div>
                   </div>
                 </div>
                 <p style={{ fontSize: 14, lineHeight: 1.5, margin: 0, opacity: 0.92 }}>
-                  {card.description}
+                  {t(card.descKey)}
                 </p>
               </button>
             ))}
@@ -295,7 +301,7 @@ export default function LimpezaClient({
                 ))}
               </div>
               <span style={{ color: "#e8b84b", fontSize: 14, fontStyle: "italic" }}>
-                ATB está consultando os santos...
+                {t("limpeza_dash.chat_consulting")}
               </span>
             </div>
           )}
@@ -308,7 +314,7 @@ export default function LimpezaClient({
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Conte sua dor para ATB..."
+            placeholder={t("limpeza_dash.chat_placeholder")}
             disabled={loading}
             rows={3}
             style={{
@@ -336,7 +342,7 @@ export default function LimpezaClient({
               whiteSpace: "nowrap",
             }}
           >
-            {loading ? "..." : "✨ Enviar"}
+            {loading ? "..." : t("limpeza_dash.chat_send_cta")}
           </button>
         </div>
       ) : (
@@ -347,6 +353,7 @@ export default function LimpezaClient({
 }
 
 function Bubble({ role, content }: { role: string; content: string }) {
+  const { t } = useT();
   const isUser = role === "user";
   return (
     <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start" }}>
@@ -367,7 +374,7 @@ function Bubble({ role, content }: { role: string; content: string }) {
       >
         {!isUser && (
           <div style={{ fontSize: 11, color: "#e8b84b", fontWeight: 700, marginBottom: 4, letterSpacing: "0.05em" }}>
-            ✨ ATB
+            {t("limpeza_dash.bubble_atb_label")}
           </div>
         )}
         {content}
@@ -376,7 +383,29 @@ function Bubble({ role, content }: { role: string; content: string }) {
   );
 }
 
+const FEELING_DEFS = [
+  { value: "tristeza_profunda", labelKey: "limpeza_dash.feeling_tristeza_profunda", icon: "😔" },
+  { value: "ansiedade", labelKey: "limpeza_dash.feeling_ansiedade", icon: "💔" },
+  { value: "raiva", labelKey: "limpeza_dash.feeling_raiva", icon: "🔥" },
+  { value: "medo", labelKey: "limpeza_dash.feeling_medo", icon: "😰" },
+  { value: "vazio", labelKey: "limpeza_dash.feeling_vazio", icon: "🌑" },
+  { value: "inveja_alheia", labelKey: "limpeza_dash.feeling_inveja_alheia", icon: "👁️" },
+  { value: "energia_pesada", labelKey: "limpeza_dash.feeling_energia_pesada", icon: "⛓️" },
+  { value: "amor_bloqueado", labelKey: "limpeza_dash.feeling_amor_bloqueado", icon: "💔" },
+  { value: "outro", labelKey: "limpeza_dash.feeling_outro", icon: "✨" },
+] as const;
+
+const MARITAL_DEFS = [
+  { value: "solteira", labelKey: "limpeza_dash.marital_solteira" },
+  { value: "casada", labelKey: "limpeza_dash.marital_casada" },
+  { value: "divorciada", labelKey: "limpeza_dash.marital_divorciada" },
+  { value: "viuva", labelKey: "limpeza_dash.marital_viuva" },
+  { value: "uniao_estavel", labelKey: "limpeza_dash.marital_uniao_estavel" },
+  { value: "outro", labelKey: "limpeza_dash.marital_outro" },
+] as const;
+
 function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () => void }) {
+  const { t } = useT();
   const [fullName, setFullName] = useState(firstName !== "querida" ? firstName : "");
   const [age, setAge] = useState<string>("");
   const [marital, setMarital] = useState("");
@@ -385,30 +414,9 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const FEELINGS = [
-    { value: "tristeza_profunda", label: "Tristeza profunda na alma", icon: "😔" },
-    { value: "ansiedade", label: "Ansiedade que não passa", icon: "💔" },
-    { value: "raiva", label: "Raiva e mágoa engolidas", icon: "🔥" },
-    { value: "medo", label: "Medo de tudo", icon: "😰" },
-    { value: "vazio", label: "Sensação de vazio", icon: "🌑" },
-    { value: "inveja_alheia", label: "Sinto inveja perto de mim", icon: "👁️" },
-    { value: "energia_pesada", label: "Energia pesada na minha vida", icon: "⛓️" },
-    { value: "amor_bloqueado", label: "Amor bloqueado, sozinha", icon: "💔" },
-    { value: "outro", label: "Outra coisa", icon: "✨" },
-  ];
-
-  const MARITAL = [
-    { value: "solteira", label: "Solteira" },
-    { value: "casada", label: "Casada" },
-    { value: "divorciada", label: "Divorciada / Separada" },
-    { value: "viuva", label: "Viúva" },
-    { value: "uniao_estavel", label: "União estável" },
-    { value: "outro", label: "Outro" },
-  ];
-
   async function submit() {
     if (!fullName.trim() || !age || !marital || !feeling || !situation.trim()) {
-      toast.error("Por favor preencha tudo, minha querida.");
+      toast.error(t("limpeza_dash.toast_fill_all"));
       return;
     }
     setLoading(true);
@@ -426,14 +434,14 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error || "Erro ao salvar.");
+        toast.error(data.error || t("limpeza_dash.toast_save_error"));
         setLoading(false);
         return;
       }
-      toast.success("Dados recebidos. ATB já vai te receber.");
+      toast.success(t("limpeza_dash.toast_saved"));
       onSaved();
     } catch {
-      toast.error("Erro de conexão.");
+      toast.error(t("limpeza_dash.toast_connection"));
       setLoading(false);
     }
   }
@@ -450,12 +458,12 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <div style={{ fontSize: 60, marginBottom: 12, animation: "pulse 2s infinite" }}>🕊️</div>
+        <div style={{ fontSize: 60, marginBottom: 12, animation: "pulse 2s infinite" }} aria-hidden="true">🕊️</div>
         <h1 className="serif" style={{ fontSize: "2rem", color: "#e8b84b", lineHeight: 1.15, marginBottom: 10 }}>
-          Antes de começar sua limpeza
+          {t("limpeza_dash.profile_h1")}
         </h1>
         <p style={{ fontSize: "1rem", color: "#c4b5fd", lineHeight: 1.6, maxWidth: 460, margin: "0 auto" }}>
-          Me conte um pouquinho sobre você, minha querida alma. Isso ajuda ATB a fazer a sua limpeza certinha, do jeito que você precisa.
+          {t("limpeza_dash.profile_subtitle")}
         </p>
       </div>
 
@@ -476,30 +484,30 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
       {step === 1 && (
         <div className="card" style={{ padding: "24px 22px" }}>
           <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 18, textAlign: "center" }}>
-            Quem é você
+            {t("limpeza_dash.profile_step1_h2")}
           </h2>
 
           <label style={{ display: "block", color: "#c4b5fd", fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
-            Como posso te chamar?
+            {t("limpeza_dash.profile_step1_name_label")}
           </label>
           <input
             className="input"
             style={{ marginBottom: 16, fontSize: 16 }}
             type="text"
-            placeholder="Seu nome"
+            placeholder={t("limpeza_dash.profile_step1_name_placeholder")}
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             maxLength={60}
           />
 
           <label style={{ display: "block", color: "#c4b5fd", fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
-            Sua idade
+            {t("limpeza_dash.profile_step1_age_label")}
           </label>
           <input
             className="input"
             style={{ marginBottom: 16, fontSize: 16 }}
             type="number"
-            placeholder="Anos"
+            placeholder={t("limpeza_dash.profile_step1_age_placeholder")}
             value={age}
             onChange={(e) => setAge(e.target.value)}
             min={13}
@@ -507,10 +515,10 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
           />
 
           <label style={{ display: "block", color: "#c4b5fd", fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
-            Estado civil
+            {t("limpeza_dash.profile_step1_marital_label")}
           </label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 4 }}>
-            {MARITAL.map((m) => (
+            {MARITAL_DEFS.map((m) => (
               <button
                 key={m.value}
                 type="button"
@@ -527,7 +535,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                   textAlign: "left",
                 }}
               >
-                {m.label}
+                {t(m.labelKey)}
               </button>
             ))}
           </div>
@@ -544,7 +552,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
               cursor: canNext1 ? "pointer" : "not-allowed",
             }}
           >
-            Próximo →
+            {t("limpeza_dash.profile_next")}
           </button>
         </div>
       )}
@@ -553,14 +561,14 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
       {step === 2 && (
         <div className="card" style={{ padding: "24px 22px" }}>
           <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 8, textAlign: "center" }}>
-            O que mais pesa em você
+            {t("limpeza_dash.profile_step2_h2")}
           </h2>
           <p style={{ fontSize: 14, color: "#c4b5fd", textAlign: "center", marginBottom: 18, lineHeight: 1.5 }}>
-            Escolha o sentimento que você mais sente agora
+            {t("limpeza_dash.profile_step2_subtitle")}
           </p>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
-            {FEELINGS.map((f) => (
+            {FEELING_DEFS.map((f) => (
               <button
                 key={f.value}
                 type="button"
@@ -580,8 +588,8 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                   textAlign: "left",
                 }}
               >
-                <span style={{ fontSize: 24 }}>{f.icon}</span>
-                <span>{f.label}</span>
+                <span style={{ fontSize: 24 }} aria-hidden="true">{f.icon}</span>
+                <span>{t(f.labelKey)}</span>
               </button>
             ))}
           </div>
@@ -600,7 +608,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                 fontWeight: 600,
               }}
             >
-              ← Voltar
+              {t("limpeza_dash.profile_back")}
             </button>
             <button
               onClick={() => setStep(3)}
@@ -614,7 +622,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                 cursor: canNext2 ? "pointer" : "not-allowed",
               }}
             >
-              Próximo →
+              {t("limpeza_dash.profile_next")}
             </button>
           </div>
         </div>
@@ -624,16 +632,16 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
       {step === 3 && (
         <div className="card" style={{ padding: "24px 22px" }}>
           <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 8, textAlign: "center" }}>
-            Conta pra ATB
+            {t("limpeza_dash.profile_step3_h2")}
           </h2>
           <p style={{ fontSize: 14, color: "#c4b5fd", textAlign: "center", marginBottom: 18, lineHeight: 1.5 }}>
-            Me conte com suas palavras o que está acontecendo. Sem julgamento, fica entre nós duas.
+            {t("limpeza_dash.profile_step3_subtitle")}
           </p>
 
           <textarea
             value={situation}
             onChange={(e) => setSituation(e.target.value)}
-            placeholder="Por exemplo: faz uns meses que sinto que tudo trava na minha vida, que tem alguém com olho gordo em mim, sinto cansaço sem motivo..."
+            placeholder={t("limpeza_dash.profile_step3_placeholder")}
             rows={7}
             maxLength={500}
             style={{
@@ -669,7 +677,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                 fontWeight: 600,
               }}
             >
-              ← Voltar
+              {t("limpeza_dash.profile_back")}
             </button>
             <button
               onClick={submit}
@@ -683,48 +691,47 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                 cursor: canSubmit && !loading ? "pointer" : "not-allowed",
               }}
             >
-              {loading ? "Salvando..." : "✨ Começar minha limpeza"}
+              {loading ? t("limpeza_dash.profile_submit_loading") : t("limpeza_dash.profile_submit_cta")}
             </button>
           </div>
         </div>
       )}
 
       <p style={{ textAlign: "center", fontSize: 12, color: "#9575cd", marginTop: 18, lineHeight: 1.55 }}>
-        🔒 Suas informações ficam protegidas e são usadas só pela ATB para personalizar sua limpeza.
+        {t("limpeza_dash.profile_privacy")}
       </p>
     </div>
   );
 }
 
 function SessionComplete({ firstName }: { firstName: string }) {
+  const { t } = useT();
   const VIDEO_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
 
   return (
     <div className="card-gold" style={{ padding: "28px 22px", textAlign: "center" }}>
-      <div style={{ fontSize: 56, marginBottom: 12 }}>🙏</div>
+      <div style={{ fontSize: 56, marginBottom: 12 }} aria-hidden="true">🙏</div>
 
       <h2 className="serif" style={{ fontSize: "1.5rem", color: "#e8b84b", marginBottom: 10 }}>
-        Sua limpeza foi feita, {firstName}
+        {t("limpeza_dash.complete_h2_part1")} {firstName}
       </h2>
 
       <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.7, marginBottom: 16, maxWidth: 460, margin: "0 auto 16px" }}>
-        Agora siga as orientações que ATB te deu com muita fé. Faça os banhos,
-        acenda as velas, faça as orações. A energia já começou a girar a seu favor.
+        {t("limpeza_dash.complete_desc")}
       </p>
 
       <p style={{ fontSize: 14, color: "#c4b5fd", lineHeight: 1.6, marginBottom: 22, fontStyle: "italic" }}>
-        ✨ Que Nossa Senhora te cubra com seu manto sagrado ✨
+        {t("limpeza_dash.complete_blessing")}
       </p>
 
       {/* Upsell vídeo chamada */}
       <div style={{ background: "linear-gradient(135deg,#3b0764,#2a0055)", border: "1.5px solid rgba(232,184,75,0.5)", borderRadius: 16, padding: "20px 18px", marginTop: 20 }}>
-        <div style={{ fontSize: 36, marginBottom: 8 }}>📞</div>
+        <div style={{ fontSize: 36, marginBottom: 8 }} aria-hidden="true">📞</div>
         <h3 className="serif" style={{ fontSize: "1.25rem", color: "#e8b84b", marginBottom: 8 }}>
-          Quer falar comigo ao vivo?
+          {t("limpeza_dash.video_upsell_h3")}
         </h3>
         <p style={{ fontSize: 14, color: "#d9cdfc", lineHeight: 1.6, marginBottom: 16 }}>
-          Se sua dor for muito profunda e você quiser uma sessão completa,
-          eu te atendo pelo WhatsApp olho no olho.
+          {t("limpeza_dash.video_upsell_desc")}
         </p>
         <a
           href={VIDEO_URL}
@@ -733,7 +740,7 @@ function SessionComplete({ firstName }: { firstName: string }) {
           className="btn-gold"
           style={{ display: "inline-block", padding: "12px 24px", fontSize: 15, fontWeight: 700, textDecoration: "none" }}
         >
-          Agendar Vídeo Chamada
+          {t("limpeza_dash.video_upsell_cta")}
         </a>
       </div>
 
@@ -747,7 +754,7 @@ function SessionComplete({ firstName }: { firstName: string }) {
           textDecoration: "underline",
         }}
       >
-        Voltar para o Painel
+        {t("limpeza_dash.back_to_panel")}
       </Link>
     </div>
   );
@@ -755,6 +762,7 @@ function SessionComplete({ firstName }: { firstName: string }) {
 
 function ConfirmingPurchase({ firstName }: { firstName: string }) {
   const router = useRouter();
+  const { t } = useT();
   const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
@@ -768,26 +776,27 @@ function ConfirmingPurchase({ firstName }: { firstName: string }) {
 
   return (
     <div style={{ padding: "60px 20px", maxWidth: 560, margin: "0 auto", color: "#f5f0ff", textAlign: "center", minHeight: "70vh", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-      <div style={{ fontSize: 80, marginBottom: 18, animation: "pulse 2s ease-in-out infinite" }}>🕊️</div>
+      <div style={{ fontSize: 80, marginBottom: 18, animation: "pulse 2s ease-in-out infinite" }} aria-hidden="true">🕊️</div>
 
       <h1 className="serif" style={{ fontSize: "2.2rem", color: "#e8b84b", lineHeight: 1.2, marginBottom: 16 }}>
-        Pagamento recebido!
+        {t("limpeza_dash.confirming_h1")}
       </h1>
 
       <p style={{ fontSize: "1.2rem", color: "#fbf8ff", lineHeight: 1.65, marginBottom: 24, maxWidth: 460, margin: "0 auto 24px" }}>
-        <strong style={{ color: "#f5c860" }}>{firstName}</strong>, sua compra está sendo confirmada agora.
+        <strong style={{ color: "#f5c860" }}>{firstName}</strong>{t("limpeza_dash.confirming_subtitle_part2")}
       </p>
 
       <div className="card-gold" style={{ padding: "22px 20px", marginBottom: 22 }}>
-        <div style={{ fontSize: 40, marginBottom: 10 }}>✨</div>
+        <div style={{ fontSize: 40, marginBottom: 10 }} aria-hidden="true">✨</div>
         <p style={{ fontSize: "1.05rem", color: "#fbf8ff", lineHeight: 1.7, margin: 0 }}>
-          Estamos preparando sua <strong style={{ color: "#f5c860" }}>Limpeza Espiritual</strong>.
+          {t("limpeza_dash.confirming_card_part1")}{" "}
+          <strong style={{ color: "#f5c860" }}>{t("limpeza_dash.confirming_card_part2")}</strong>.
           <br />
-          Aguarde só um instantinho que ATB já vai te receber.
+          {t("limpeza_dash.confirming_card_part3")}
         </p>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 18 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 18 }} aria-hidden="true">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
@@ -803,17 +812,13 @@ function ConfirmingPurchase({ firstName }: { firstName: string }) {
       </div>
 
       <p style={{ fontSize: 14, color: "#9575cd", lineHeight: 1.6 }}>
-        Esta página vai abrir sozinha em alguns segundos.
-        <br />
-        Por favor, não feche.
+        {t("limpeza_dash.confirming_autoreload")}
       </p>
 
       {seconds >= 30 && (
         <div style={{ marginTop: 24, padding: "14px 18px", background: "rgba(232,184,75,0.1)", borderRadius: 12, border: "1px solid rgba(232,184,75,0.3)" }}>
           <p style={{ fontSize: 14, color: "#fbf8ff", lineHeight: 1.6, margin: 0 }}>
-            Está demorando mais que o normal. Se você já pagou, espere mais alguns instantes.
-            <br />
-            Se precisar de ajuda, entre em contato com nosso suporte.
+            {t("limpeza_dash.confirming_slow")}
           </p>
         </div>
       )}
@@ -833,11 +838,20 @@ function ConfirmingPurchase({ firstName }: { firstName: string }) {
 }
 
 function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: string }) {
-  const CARD_IMGS = [
-    { img: "/img/carta-limpeza.png", title: "Limpeza" },
-    { img: "/img/carta-caminhos.png", title: "Caminhos" },
-    { img: "/img/carta-protecao.png", title: "Proteção" },
-  ];
+  const { t } = useT();
+  const cardImgs = [
+    { img: "/img/carta-limpeza.png", titleKey: "limpeza_dash.card_limpeza_title" },
+    { img: "/img/carta-caminhos.png", titleKey: "limpeza_dash.card_caminhos_title" },
+    { img: "/img/carta-protecao.png", titleKey: "limpeza_dash.card_protecao_title" },
+  ] as const;
+  const benefits = [
+    { icon: "🕯️", key: "limpeza_dash.gate_bullet1" },
+    { icon: "🗝️", key: "limpeza_dash.gate_bullet2" },
+    { icon: "👑", key: "limpeza_dash.gate_bullet3" },
+    { icon: "💧", key: "limpeza_dash.gate_bullet4" },
+    { icon: "⚔️", key: "limpeza_dash.gate_bullet5" },
+    { icon: "✨", key: "limpeza_dash.gate_bullet6" },
+  ] as const;
 
   return (
     <div style={{ padding: "32px 20px 80px", maxWidth: 620, margin: "0 auto", color: "#f5f0ff" }}>
@@ -845,7 +859,7 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
       <div style={{ borderRadius: 22, overflow: "hidden", marginBottom: 22, boxShadow: "0 18px 50px rgba(232,184,75,0.25), 0 0 0 2px rgba(232,184,75,0.4)" }}>
         <Image
           src="/img/limpeza-altar.png"
-          alt="Altar sagrado da Limpeza Espiritual"
+          alt={t("thanks.altar_alt")}
           width={1536}
           height={1024}
           priority
@@ -855,23 +869,23 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
 
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <h1 className="serif" style={{ fontSize: "clamp(2rem, 5vw, 2.6rem)", color: "#e8b84b", lineHeight: 1.15, marginBottom: 12 }}>
-          Limpeza Espiritual com ATB
+          {t("limpeza_dash.gate_h1")}
         </h1>
         <p style={{ fontSize: "1.2rem", color: "#fbf8ff", lineHeight: 1.65, maxWidth: 500, margin: "0 auto", fontWeight: 500 }}>
-          {firstName}, ATB vai te limpar de toda energia pesada, abrir seus caminhos e te proteger com a força dos santos.
+          {firstName}{t("limpeza_dash.gate_subtitle_part2")}
         </p>
       </div>
 
       {/* Preview das cartas reais (borradas) */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 24, filter: "blur(3px) brightness(0.65)" }}>
-        {CARD_IMGS.map((c) => (
-          <div key={c.title} style={{
+        {cardImgs.map((c) => (
+          <div key={c.titleKey} style={{
             borderRadius: 14,
             overflow: "hidden",
             aspectRatio: "1 / 1",
             border: "2px solid rgba(232,184,75,0.5)",
           }}>
-            <Image src={c.img} alt={c.title} width={400} height={400} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <Image src={c.img} alt={t(c.titleKey)} width={400} height={400} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
         ))}
       </div>
@@ -879,20 +893,13 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
       {/* Pacote de benefícios */}
       <div className="card" style={{ padding: "20px 22px", marginBottom: 20 }}>
         <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", textAlign: "center", marginBottom: 14 }}>
-          O que você recebe
+          {t("limpeza_dash.gate_benefits_h2")}
         </h2>
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {[
-            { icon: "🕯️", text: "3 mensagens sagradas com ATB focadas só na sua limpeza" },
-            { icon: "🗝️", text: "Identificação do que está pesando e bloqueando sua vida" },
-            { icon: "👑", text: "Invocação dos santos certos para o seu caso" },
-            { icon: "💧", text: "Banhos, defumações e orações personalizadas" },
-            { icon: "⚔️", text: "Proteção contra inveja, mau-olhado e feitiço" },
-            { icon: "✨", text: "Abertura de caminhos para prosperidade e amor" },
-          ].map((b, i) => (
+          {benefits.map((b, i) => (
             <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "8px 0", fontSize: 15, color: "#d9cdfc", lineHeight: 1.55 }}>
-              <span style={{ fontSize: 20, flexShrink: 0 }}>{b.icon}</span>
-              <span>{b.text}</span>
+              <span style={{ fontSize: 20, flexShrink: 0 }} aria-hidden="true">{b.icon}</span>
+              <span>{t(b.key)}</span>
             </li>
           ))}
         </ul>
@@ -901,20 +908,20 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
       {/* Santos com imagem real */}
       <div className="card-gold" style={{ padding: "16px", marginBottom: 24, textAlign: "center" }}>
         <div style={{ fontSize: 13, color: "#c4b5fd", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, fontWeight: 600 }}>
-          ✨ Os santos que vão estar com você ✨
+          {t("landing.saints_title")}
         </div>
         <div style={{ borderRadius: 14, overflow: "hidden", marginBottom: 12 }}>
           <Image
             src="/img/santos-grid.png"
-            alt="Santos católicos brasileiros"
+            alt={t("limpeza_dash.gate_saints_alt")}
             width={1536}
             height={1024}
             style={{ width: "100%", height: "auto", display: "block" }}
           />
         </div>
         <div style={{ fontSize: 11, color: "#fbf8ff", lineHeight: 1.5, opacity: 0.85 }}>
-          N. S. Aparecida • Sagrado Coração • S. Miguel<br />
-          Santo Antônio • S. Jorge • N. S. Desatadora
+          {t("limpeza_dash.gate_saints_names_line1")}<br />
+          {t("limpeza_dash.gate_saints_names_line2")}
         </div>
       </div>
 
@@ -927,13 +934,13 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
         textAlign: "center",
       }}>
         <div style={{ fontSize: 12, color: "#f5c860", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
-          Investimento único
+          {t("limpeza_dash.gate_cta_eyebrow")}
         </div>
         <div className="serif" style={{ fontSize: "3rem", color: "#e8b84b", fontWeight: 800, lineHeight: 1, marginBottom: 4 }}>
           R$ 100
         </div>
         <div style={{ fontSize: 13, color: "#9575cd", marginBottom: 18 }}>
-          Pagamento único • Acesso imediato após confirmação
+          {t("limpeza_dash.gate_cta_subtitle")}
         </div>
         <a
           href={kiwifyUrl}
@@ -942,11 +949,10 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
           className="btn-gold"
           style={{ display: "inline-block", padding: "16px 32px", fontSize: "1.05rem", fontWeight: 700 }}
         >
-          ✨ Quero minha Limpeza Espiritual
+          {t("limpeza_dash.gate_cta")}
         </a>
         <p style={{ fontSize: 12, color: "#9575cd", marginTop: 14, lineHeight: 1.5 }}>
-          Pagamento seguro processado pela Kiwify.<br />
-          Após a compra, sua limpeza estará liberada automaticamente.
+          {t("limpeza_dash.gate_secure")}
         </p>
       </div>
     </div>

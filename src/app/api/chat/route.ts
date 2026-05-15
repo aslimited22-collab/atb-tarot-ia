@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ATB_SYSTEM_PROMPT, ATB_FREE_SYSTEM_PROMPT, deepseekStream } from "@/lib/deepseek";
-import { MESSAGE_LIMITS_MONTH, THROTTLE_SECONDS, DAILY_LIMIT_FREE, currentMonthKey, currentDayKey } from "@/lib/plans";
+import { ATB_SYSTEM_PROMPT, deepseekStream } from "@/lib/deepseek";
+import { MESSAGE_LIMITS_MONTH, THROTTLE_SECONDS, currentMonthKey } from "@/lib/plans";
 import { sanitizeInput, rateLimit, getClientIp } from "@/lib/security";
 import type { Plan } from "@/lib/types";
 
 export const runtime = "nodejs";
-
-const FREE_CTA = "\n\npara saber o resto dessa leitura e tudo o que as cartas ainda têm a revelar pra você, clique no botão aqui embaixo e deixa eu terminar de te contar o que está escrito no seu caminho.";
 
 export async function POST(req: Request) {
   try {
@@ -50,29 +48,26 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     const plan: Plan = (profile?.plan as Plan) || "free";
-    const today = currentDayKey();
-    const monthKey = currentMonthKey();
-
-    // Free: limite DIARIO (1/dia) - mantido para incentivar conversao
-    // Basic/Premium: limite MENSAL (30/mes, 100/mes)
-    let usedToday = profile?.last_message_date === today ? profile?.messages_today ?? 0 : 0;
-    let usedMonth = profile?.last_message_month === monthKey ? profile?.messages_month ?? 0 : 0;
 
     if (plan === "free") {
-      if (usedToday >= DAILY_LIMIT_FREE) {
-        return NextResponse.json(
-          { error: "Você usou sua mensagem grátis de hoje. Faça upgrade para continuar." },
-          { status: 429 }
-        );
-      }
-    } else {
-      const limit = MESSAGE_LIMITS_MONTH[plan];
-      if (usedMonth >= limit) {
-        return NextResponse.json(
-          { error: `Você atingiu o limite de ${limit} mensagens deste mês no seu plano. Faça upgrade ou aguarde o próximo mês.` },
-          { status: 429 }
-        );
-      }
+      // Plano grátis não envia mensagens — converter direto.
+      return NextResponse.json(
+        {
+          error: "Para conversar com a ATB, escolha um plano. Você só paga uma vez por mês.",
+          needsUpgrade: true,
+        },
+        { status: 402 }
+      );
+    }
+
+    const monthKey = currentMonthKey();
+    const usedMonth = profile?.last_message_month === monthKey ? profile?.messages_month ?? 0 : 0;
+    const limit = MESSAGE_LIMITS_MONTH[plan];
+    if (usedMonth >= limit) {
+      return NextResponse.json(
+        { error: `Você atingiu o limite de ${limit} mensagens deste mês no seu plano. Faça upgrade ou aguarde o próximo mês.` },
+        { status: 429 }
+      );
     }
 
     const { data: lastMsg } = await supabase
@@ -111,13 +106,10 @@ export async function POST(req: Request) {
 
     await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: message });
 
-    const isFree = plan === "free";
-    const systemPrompt = isFree ? ATB_FREE_SYSTEM_PROMPT : ATB_SYSTEM_PROMPT;
-
     let upstream: Response;
     try {
       upstream = await deepseekStream([
-        { role: "system", content: systemPrompt },
+        { role: "system", content: ATB_SYSTEM_PROMPT },
         ...prior,
         { role: "user", content: message },
       ]);
@@ -170,24 +162,18 @@ export async function POST(req: Request) {
               } catch {}
             }
           }
-          if (isFree) {
-            controller.enqueue(encoder.encode(FREE_CTA));
-            full += FREE_CTA;
-          }
         } catch (e) {
           controller.error(e);
           return;
         } finally {
           if (full) {
-            // Sucesso: persiste resposta + incrementa cota (com guard)
+            // Sucesso: persiste resposta + incrementa cota mensal
             await supabase.from("chat_messages").insert({
               user_id: user.id, role: "assistant", content: full,
             });
             await admin
               .from("users")
               .update({
-                messages_today: usedToday + 1,
-                last_message_date: today,
                 messages_month: usedMonth + 1,
                 last_message_month: monthKey,
               })
@@ -233,13 +219,12 @@ export async function GET() {
     .maybeSingle();
 
   const plan: Plan = (profile?.plan as Plan) || "free";
-  const today = currentDayKey();
   const monthKey = currentMonthKey();
 
+  // Free não envia mensagens — sempre 0. Outros planos: cota mensal.
   let remaining: number;
   if (plan === "free") {
-    const usedToday = profile?.last_message_date === today ? profile?.messages_today ?? 0 : 0;
-    remaining = Math.max(0, DAILY_LIMIT_FREE - usedToday);
+    remaining = 0;
   } else {
     const usedMonth = profile?.last_message_month === monthKey ? profile?.messages_month ?? 0 : 0;
     const limit = MESSAGE_LIMITS_MONTH[plan];

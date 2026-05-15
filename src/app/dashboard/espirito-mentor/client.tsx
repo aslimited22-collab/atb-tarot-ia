@@ -5,17 +5,30 @@ import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { BackButton } from "@/components/BackButton";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 type Msg = { id?: string; role: string; content: string };
 
-const MENTORS = [
-  { icon: "👼", name: "Anjo da Guarda", power: "Te protege desde o nascimento" },
-  { icon: "🪶", name: "Caboclo", power: "Força da natureza, cura" },
-  { icon: "🕯️", name: "Preto Velho", power: "Sabedoria e consolação" },
-  { icon: "✨", name: "Mentor de Luz", power: "Guia evolutivo da alma" },
-  { icon: "👑", name: "Nossa Senhora", power: "Mãe que conforta a dor" },
-  { icon: "🌊", name: "Iemanjá", power: "Lava a saudade" },
-];
+const MENTOR_DEFS = [
+  { icon: "👼", nameKey: "espirito_dash.mentor1_name", powerKey: "espirito_dash.mentor1_power" },
+  { icon: "🪶", nameKey: "espirito_dash.mentor2_name", powerKey: "espirito_dash.mentor2_power" },
+  { icon: "🕯️", nameKey: "espirito_dash.mentor3_name", powerKey: "espirito_dash.mentor3_power" },
+  { icon: "✨", nameKey: "espirito_dash.mentor4_name", powerKey: "espirito_dash.mentor4_power" },
+  { icon: "👑", nameKey: "espirito_dash.mentor5_name", powerKey: "espirito_dash.mentor5_power" },
+  { icon: "🌊", nameKey: "espirito_dash.mentor6_name", powerKey: "espirito_dash.mentor6_power" },
+] as const;
+
+const LOST_OPTION_DEFS = [
+  { value: "mae", labelKey: "espirito_dash.lost_mae", icon: "👵" },
+  { value: "pai", labelKey: "espirito_dash.lost_pai", icon: "👴" },
+  { value: "marido_esposa", labelKey: "espirito_dash.lost_marido_esposa", icon: "💑" },
+  { value: "filho", labelKey: "espirito_dash.lost_filho", icon: "👶" },
+  { value: "irmao", labelKey: "espirito_dash.lost_irmao", icon: "👫" },
+  { value: "avo", labelKey: "espirito_dash.lost_avo", icon: "🌹" },
+  { value: "amigo", labelKey: "espirito_dash.lost_amigo", icon: "🤝" },
+  { value: "outro", labelKey: "espirito_dash.lost_outro", icon: "💛" },
+  { value: "ninguem", labelKey: "espirito_dash.lost_ninguem", icon: "🕊️" },
+] as const;
 
 export default function EspiritoMentorClient({
   purchased,
@@ -35,6 +48,7 @@ export default function EspiritoMentorClient({
   hasProfile?: boolean;
 }) {
   const router = useRouter();
+  const { t } = useT();
   const [messages, setMessages] = useState<Msg[]>(initialMessages);
   const [remaining, setRemaining] = useState(initialRemaining);
   const [input, setInput] = useState("");
@@ -68,7 +82,7 @@ export default function EspiritoMentorClient({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || `Erro ${res.status}`);
+        toast.error(data.error || `${t("limpeza_dash.toast_error_prefix")} ${res.status}`);
         setMessages((m) => m.slice(0, -1));
         setLoading(false);
         return;
@@ -87,7 +101,7 @@ export default function EspiritoMentorClient({
       setStreaming("");
       setRemaining((r) => Math.max(0, r - 1));
     } catch {
-      toast.error("Erro de conexão. Tente novamente.");
+      toast.error(t("limpeza_dash.toast_connection"));
       setMessages((m) => m.slice(0, -1));
     } finally {
       setLoading(false);
@@ -111,22 +125,24 @@ export default function EspiritoMentorClient({
 
       {/* Header sagrado */}
       <div style={{ textAlign: "center", marginBottom: 22 }}>
-        <div style={{ fontSize: 56, marginBottom: 10 }}>🕯️</div>
+        <div style={{ fontSize: 56, marginBottom: 10 }} aria-hidden="true">🕯️</div>
         <h1 className="serif" style={{ fontSize: "clamp(2rem, 5vw, 2.4rem)", color: "#e8b84b", lineHeight: 1.15, marginBottom: 6, fontWeight: 700 }}>
-          Sessão Espírita
+          {t("espirito_dash.chat_h1")}
         </h1>
         <p style={{ fontSize: "1.1rem", color: "#fbf8ff", lineHeight: 1.55, maxWidth: 480, margin: "0 auto", fontWeight: 500 }}>
-          Olá, <strong style={{ color: "#f5c860" }}>{firstName}</strong>. Seu mentor espiritual está aqui.
+          {t("espirito_dash.chat_subtitle_part1")}{" "}
+          <strong style={{ color: "#f5c860" }}>{firstName}</strong>
+          {t("espirito_dash.chat_subtitle_part2")}
         </p>
       </div>
 
       {/* Contador */}
       <div className="card-gold" style={{ padding: "16px 18px", textAlign: "center", marginBottom: 22 }}>
         <div style={{ fontSize: 12, color: "#c4b5fd", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-          Mensagens sagradas restantes
+          {t("limpeza_dash.counter_eyebrow")}
         </div>
         <div className="serif" style={{ fontSize: "2.4rem", color: "#e8b84b", fontWeight: 700, lineHeight: 1 }}>
-          {remaining} <span style={{ fontSize: "1rem", color: "#9575cd" }}>de 3</span>
+          {remaining} <span style={{ fontSize: "1rem", color: "#9575cd" }}>{t("limpeza_dash.counter_of")} 3</span>
         </div>
       </div>
 
@@ -158,7 +174,7 @@ export default function EspiritoMentorClient({
                 ))}
               </div>
               <span style={{ color: "#e8b84b", fontSize: 15, fontStyle: "italic" }}>
-                ATB está conectando com o outro lado...
+                {t("espirito_dash.chat_consulting")}
               </span>
             </div>
           )}
@@ -168,13 +184,13 @@ export default function EspiritoMentorClient({
       {/* Estado vazio */}
       {messages.length === 0 && !streaming && !loading && (
         <div className="card" style={{ padding: "24px 22px", marginBottom: 18, textAlign: "center" }}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>🕊️</div>
+          <div style={{ fontSize: 56, marginBottom: 12 }} aria-hidden="true">🕊️</div>
           <h2 className="serif" style={{ fontSize: "1.4rem", color: "#e8b84b", marginBottom: 10 }}>
-            Estou aqui, minha querida alma
+            {t("espirito_dash.empty_h2")}
           </h2>
           <p style={{ fontSize: 16, color: "#fbf8ff", lineHeight: 1.6, fontWeight: 500 }}>
-            Faça sua primeira pergunta para o outro lado.<br />
-            Pode falar com o coração aberto.
+            {t("espirito_dash.empty_desc_line1")}<br />
+            {t("espirito_dash.empty_desc_line2")}
           </p>
         </div>
       )}
@@ -185,7 +201,7 @@ export default function EspiritoMentorClient({
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Pergunte ao seu mentor espiritual..."
+            placeholder={t("espirito_dash.chat_placeholder")}
             disabled={loading}
             rows={3}
             style={{
@@ -214,7 +230,7 @@ export default function EspiritoMentorClient({
               border: "none",
             }}
           >
-            {loading ? "..." : "✨ Enviar"}
+            {loading ? "..." : t("limpeza_dash.chat_send_cta")}
           </button>
         </div>
       ) : (
@@ -225,6 +241,7 @@ export default function EspiritoMentorClient({
 }
 
 function Bubble({ role, content }: { role: string; content: string }) {
+  const { t } = useT();
   const isUser = role === "user";
   return (
     <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start" }}>
@@ -245,7 +262,7 @@ function Bubble({ role, content }: { role: string; content: string }) {
       >
         {!isUser && (
           <div style={{ fontSize: 11, color: "#e8b84b", fontWeight: 700, marginBottom: 4, letterSpacing: "0.05em" }}>
-            🕯️ ATB · Médium
+            {t("espirito_dash.bubble_atb_label")}
           </div>
         )}
         {content}
@@ -255,6 +272,7 @@ function Bubble({ role, content }: { role: string; content: string }) {
 }
 
 function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () => void }) {
+  const { t } = useT();
   const [fullName, setFullName] = useState(firstName !== "querida" ? firstName : "");
   const [age, setAge] = useState<string>("");
   const [lost, setLost] = useState("");
@@ -263,25 +281,13 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const LOST_OPTIONS = [
-    { value: "mae", label: "Minha mãe", icon: "👵" },
-    { value: "pai", label: "Meu pai", icon: "👴" },
-    { value: "marido_esposa", label: "Meu marido/esposa", icon: "💑" },
-    { value: "filho", label: "Meu filho/filha", icon: "👶" },
-    { value: "irmao", label: "Meu irmão/irmã", icon: "👫" },
-    { value: "avo", label: "Meu avô/avó", icon: "🌹" },
-    { value: "amigo", label: "Um amigo querido", icon: "🤝" },
-    { value: "outro", label: "Outra pessoa que amava", icon: "💛" },
-    { value: "ninguem", label: "Ninguém — quero falar com meu guia", icon: "🕊️" },
-  ];
-
   async function submit() {
     if (!fullName.trim() || !age || !lost || !question.trim()) {
-      toast.error("Por favor preencha tudo, minha querida.");
+      toast.error(t("limpeza_dash.toast_fill_all"));
       return;
     }
     if (lost !== "ninguem" && !who.trim()) {
-      toast.error("Por favor escreva o nome dessa pessoa.");
+      toast.error(t("espirito_dash.toast_need_name"));
       return;
     }
     setLoading(true);
@@ -299,14 +305,14 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error || "Erro ao salvar.");
+        toast.error(data.error || t("limpeza_dash.toast_save_error"));
         setLoading(false);
         return;
       }
-      toast.success("Dados recebidos. Seu mentor já vem.");
+      toast.success(t("espirito_dash.toast_saved"));
       onSaved();
     } catch {
-      toast.error("Erro de conexão.");
+      toast.error(t("limpeza_dash.toast_connection"));
       setLoading(false);
     }
   }
@@ -321,12 +327,12 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
       <BackButton />
 
       <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <div style={{ fontSize: 60, marginBottom: 12, animation: "pulse 2s infinite" }}>🕯️</div>
+        <div style={{ fontSize: 60, marginBottom: 12, animation: "pulse 2s infinite" }} aria-hidden="true">🕯️</div>
         <h1 className="serif" style={{ fontSize: "2rem", color: "#e8b84b", lineHeight: 1.15, marginBottom: 10, fontWeight: 700 }}>
-          Antes da sessão começar
+          {t("espirito_dash.profile_h1")}
         </h1>
         <p style={{ fontSize: "1.05rem", color: "#fbf8ff", lineHeight: 1.6, maxWidth: 480, margin: "0 auto", fontWeight: 500 }}>
-          Me conte um pouquinho sobre você e quem você quer alcançar do outro lado, minha querida alma.
+          {t("espirito_dash.profile_subtitle")}
         </p>
       </div>
 
@@ -345,28 +351,28 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
       {step === 1 && (
         <div className="card" style={{ padding: "24px 22px" }}>
           <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 18, textAlign: "center" }}>
-            Quem é você
+            {t("limpeza_dash.profile_step1_h2")}
           </h2>
           <label style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
-            Como posso te chamar?
+            {t("limpeza_dash.profile_step1_name_label")}
           </label>
           <input
             className="input input-big"
             style={{ marginBottom: 18 }}
             type="text"
-            placeholder="Seu nome"
+            placeholder={t("limpeza_dash.profile_step1_name_placeholder")}
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             maxLength={60}
           />
           <label style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
-            Sua idade
+            {t("limpeza_dash.profile_step1_age_label")}
           </label>
           <input
             className="input input-big"
             style={{ marginBottom: 24 }}
             type="number"
-            placeholder="Anos"
+            placeholder={t("limpeza_dash.profile_step1_age_placeholder")}
             value={age}
             onChange={(e) => setAge(e.target.value)}
             min={13}
@@ -383,7 +389,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
               border: "none",
             }}
           >
-            Próximo →
+            {t("limpeza_dash.profile_next")}
           </button>
         </div>
       )}
@@ -392,13 +398,13 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
       {step === 2 && (
         <div className="card" style={{ padding: "24px 22px" }}>
           <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 8, textAlign: "center" }}>
-            Quem você quer alcançar?
+            {t("espirito_dash.profile_step2_h2")}
           </h2>
           <p style={{ fontSize: 14, color: "#c4b5fd", textAlign: "center", marginBottom: 18, lineHeight: 1.5 }}>
-            Quem do outro lado você quer ouvir hoje?
+            {t("espirito_dash.profile_step2_subtitle")}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8, marginBottom: 18 }}>
-            {LOST_OPTIONS.map((o) => (
+            {LOST_OPTION_DEFS.map((o) => (
               <button
                 key={o.value}
                 type="button"
@@ -416,8 +422,8 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                   textAlign: "left",
                 }}
               >
-                <span style={{ fontSize: 24 }}>{o.icon}</span>
-                <span>{o.label}</span>
+                <span style={{ fontSize: 24 }} aria-hidden="true">{o.icon}</span>
+                <span>{t(o.labelKey)}</span>
               </button>
             ))}
           </div>
@@ -425,19 +431,19 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
           {lost && lost !== "ninguem" && (
             <>
               <label style={{ display: "block", color: "#fbf8ff", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
-                Qual o nome dessa pessoa?
+                {t("espirito_dash.profile_who_label")}
               </label>
               <input
                 className="input input-big"
                 style={{ marginBottom: 8 }}
                 type="text"
-                placeholder="Nome"
+                placeholder={t("espirito_dash.profile_who_placeholder")}
                 value={who}
                 onChange={(e) => setWho(e.target.value)}
                 maxLength={80}
               />
               <p className="help-hint" style={{ marginBottom: 18 }}>
-                Eu vou chamar essa pessoa pelo nome dela na sessão
+                {t("espirito_dash.profile_who_hint")}
               </p>
             </>
           )}
@@ -456,7 +462,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                 fontWeight: 600,
               }}
             >
-              ← Voltar
+              {t("limpeza_dash.profile_back")}
             </button>
             <button
               onClick={() => setStep(3)}
@@ -471,7 +477,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                 border: "none",
               }}
             >
-              Próximo →
+              {t("limpeza_dash.profile_next")}
             </button>
           </div>
         </div>
@@ -481,15 +487,15 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
       {step === 3 && (
         <div className="card" style={{ padding: "24px 22px" }}>
           <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", marginBottom: 8, textAlign: "center" }}>
-            O que você quer perguntar?
+            {t("espirito_dash.profile_step3_h2")}
           </h2>
           <p style={{ fontSize: 14, color: "#c4b5fd", textAlign: "center", marginBottom: 18, lineHeight: 1.5 }}>
-            Conte com suas palavras o que quer saber. Pode falar com o coração.
+            {t("espirito_dash.profile_step3_subtitle")}
           </p>
           <textarea
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Por exemplo: minha mãe está bem? Ela me perdoou? O que ela quer me dizer hoje? Preciso de uma orientação..."
+            placeholder={t("espirito_dash.profile_step3_placeholder")}
             rows={7}
             maxLength={500}
             style={{
@@ -525,7 +531,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                 fontWeight: 600,
               }}
             >
-              ← Voltar
+              {t("limpeza_dash.profile_back")}
             </button>
             <button
               onClick={submit}
@@ -540,49 +546,50 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
                 border: "none",
               }}
             >
-              {loading ? "Conectando..." : "✨ Começar a sessão"}
+              {loading ? t("espirito_dash.profile_submit_loading") : t("espirito_dash.profile_submit_cta")}
             </button>
           </div>
         </div>
       )}
 
       <p style={{ textAlign: "center", fontSize: 12, color: "#9575cd", marginTop: 18, lineHeight: 1.55 }}>
-        🔒 Suas informações ficam protegidas e são usadas só pela ATB
+        {t("espirito_dash.profile_privacy")}
       </p>
     </div>
   );
 }
 
 function SessionComplete({ firstName }: { firstName: string }) {
+  const { t } = useT();
   const VIDEO_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
   return (
     <div className="card-gold" style={{ padding: "28px 22px", textAlign: "center" }}>
-      <div style={{ fontSize: 56, marginBottom: 12 }}>🕊️</div>
+      <div style={{ fontSize: 56, marginBottom: 12 }} aria-hidden="true">🕊️</div>
       <h2 className="serif" style={{ fontSize: "1.5rem", color: "#e8b84b", marginBottom: 10 }}>
-        A sessão terminou, {firstName}
+        {t("espirito_dash.complete_h2_part1")} {firstName}
       </h2>
       <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.7, marginBottom: 16, maxWidth: 460, margin: "0 auto 16px" }}>
-        Seu mentor falou com você. Guarde essas palavras no coração e siga as orientações com fé. Eles continuam ao seu lado.
+        {t("espirito_dash.complete_desc")}
       </p>
       <p style={{ fontSize: 14, color: "#c4b5fd", lineHeight: 1.6, marginBottom: 22, fontStyle: "italic" }}>
-        ✨ Que a luz divina ilumine seus caminhos ✨
+        {t("espirito_dash.complete_blessing")}
       </p>
 
       <div style={{ background: "linear-gradient(135deg,#3b0764,#2a0055)", border: "1.5px solid rgba(232,184,75,0.5)", borderRadius: 16, padding: "20px 18px", marginTop: 20 }}>
-        <div style={{ fontSize: 36, marginBottom: 8 }}>📞</div>
+        <div style={{ fontSize: 36, marginBottom: 8 }} aria-hidden="true">📞</div>
         <h3 className="serif" style={{ fontSize: "1.25rem", color: "#e8b84b", marginBottom: 8 }}>
-          Quer falar comigo ao vivo?
+          {t("limpeza_dash.video_upsell_h3")}
         </h3>
         <p style={{ fontSize: 14, color: "#d9cdfc", lineHeight: 1.6, marginBottom: 16 }}>
-          Para uma sessão completa pelo WhatsApp, olho no olho.
+          {t("espirito_dash.video_upsell_desc")}
         </p>
         <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer" className="btn-gold" style={{ display: "inline-block", padding: "12px 24px", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>
-          Agendar Vídeo Chamada
+          {t("limpeza_dash.video_upsell_cta")}
         </a>
       </div>
 
       <Link href="/dashboard" style={{ display: "inline-block", marginTop: 18, color: "#c4b5fd", fontSize: 14, textDecoration: "underline" }}>
-        Voltar para o Painel
+        {t("limpeza_dash.back_to_panel")}
       </Link>
     </div>
   );
@@ -590,6 +597,7 @@ function SessionComplete({ firstName }: { firstName: string }) {
 
 function ConfirmingPurchase({ firstName }: { firstName: string }) {
   const router = useRouter();
+  const { t } = useT();
   const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
@@ -606,30 +614,30 @@ function ConfirmingPurchase({ firstName }: { firstName: string }) {
         @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:0.5} 40%{transform:translateY(-10px);opacity:1} }
         @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
       `}</style>
-      <div style={{ fontSize: 80, marginBottom: 18, animation: "pulse 2s infinite" }}>🕯️</div>
+      <div style={{ fontSize: 80, marginBottom: 18, animation: "pulse 2s infinite" }} aria-hidden="true">🕯️</div>
       <h1 className="serif" style={{ fontSize: "2.2rem", color: "#e8b84b", lineHeight: 1.2, marginBottom: 16 }}>
-        Pagamento recebido!
+        {t("limpeza_dash.confirming_h1")}
       </h1>
       <p style={{ fontSize: "1.2rem", color: "#fbf8ff", lineHeight: 1.65, marginBottom: 24, maxWidth: 460, margin: "0 auto 24px" }}>
-        <strong style={{ color: "#f5c860" }}>{firstName}</strong>, sua sessão espírita está sendo preparada.
+        <strong style={{ color: "#f5c860" }}>{firstName}</strong>{t("espirito_dash.confirming_subtitle_part2")}
       </p>
       <div className="card-gold" style={{ padding: "22px 20px", marginBottom: 22 }}>
         <p style={{ fontSize: "1.05rem", color: "#fbf8ff", lineHeight: 1.7, margin: 0 }}>
-          Aguarde só um instantinho que seu <strong style={{ color: "#f5c860" }}>mentor espiritual</strong> já vai te receber.
+          {t("espirito_dash.confirming_card")}
         </p>
       </div>
-      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 18 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 18 }} aria-hidden="true">
         {[0, 1, 2].map((i) => (
           <div key={i} style={{ width: 14, height: 14, borderRadius: "50%", background: "#e8b84b", animation: `bounce 1.4s ease-in-out ${i * 0.2}s infinite` }} />
         ))}
       </div>
       <p style={{ fontSize: 14, color: "#9575cd", lineHeight: 1.6 }}>
-        Esta página vai abrir sozinha em alguns segundos. Por favor, não feche.
+        {t("limpeza_dash.confirming_autoreload")}
       </p>
       {seconds >= 30 && (
         <div style={{ marginTop: 24, padding: "14px 18px", background: "rgba(232,184,75,0.1)", borderRadius: 12, border: "1px solid rgba(232,184,75,0.3)" }}>
           <p style={{ fontSize: 14, color: "#fbf8ff", lineHeight: 1.6, margin: 0 }}>
-            Está demorando mais que o normal. Se você já pagou, espere mais um pouquinho.
+            {t("espirito_dash.confirming_slow_short")}
           </p>
         </div>
       )}
@@ -638,46 +646,48 @@ function ConfirmingPurchase({ firstName }: { firstName: string }) {
 }
 
 function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: string }) {
+  const { t } = useT();
+  const benefits = [
+    { icon: "✨", key: "espirito_dash.gate_bullet1" },
+    { icon: "🕊️", key: "espirito_dash.gate_bullet2" },
+    { icon: "💫", key: "espirito_dash.gate_bullet3" },
+    { icon: "🌹", key: "espirito_dash.gate_bullet4" },
+    { icon: "🙏", key: "espirito_dash.gate_bullet5" },
+  ] as const;
   return (
     <div style={{ padding: "24px 16px 80px", maxWidth: 620, margin: "0 auto", color: "#f5f0ff" }}>
       <BackButton />
 
       {/* Headline impactante */}
       <div style={{ textAlign: "center", marginBottom: 26 }}>
-        <div style={{ fontSize: 72, marginBottom: 12 }}>🕯️</div>
+        <div style={{ fontSize: 72, marginBottom: 12 }} aria-hidden="true">🕯️</div>
         <div style={{ fontSize: 13, color: "#f5c860", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 10, textTransform: "uppercase" }}>
-          ✦ Sessão Espírita Sagrada ✦
+          {t("espirito_dash.gate_eyebrow")}
         </div>
         <h1 className="serif" style={{ fontSize: "clamp(2rem, 5.5vw, 2.6rem)", color: "#e8b84b", lineHeight: 1.1, marginBottom: 14, fontWeight: 700 }}>
-          Fale com seu<br />Espírito Mentor
+          {t("espirito_dash.gate_h1_line1")}<br />{t("espirito_dash.gate_h1_line2")}
         </h1>
         <p style={{ fontSize: "1.2rem", color: "#fbf8ff", lineHeight: 1.55, maxWidth: 500, margin: "0 auto", fontWeight: 600 }}>
-          O AMOR DE QUEM PARTIU<br />ainda tem algo pra te dizer
+          {t("espirito_dash.gate_subhead_line1")}<br />{t("espirito_dash.gate_subhead_line2")}
         </p>
       </div>
 
       {/* Subheadline emocional */}
       <p style={{ fontSize: 17, color: "#d9cdfc", lineHeight: 1.7, marginBottom: 24, textAlign: "center", padding: "0 8px", fontWeight: 500 }}>
-        Sua mãe, seu pai, seu marido, alguém que você ama e perdeu...<br />
-        <strong style={{ color: "#f5c860" }}>eles estão te esperando</strong>.
+        {t("espirito_dash.gate_emotional_part1")}<br />
+        <strong style={{ color: "#f5c860" }}>{t("espirito_dash.gate_emotional_part2")}</strong>.
       </p>
 
       {/* O que você recebe */}
       <div className="card-gold" style={{ padding: "26px 22px", marginBottom: 22 }}>
         <h2 className="serif" style={{ fontSize: "1.3rem", color: "#e8b84b", textAlign: "center", marginBottom: 18, fontWeight: 700 }}>
-          ✨ O que você vai receber
+          {t("espirito_dash.gate_benefits_h2")}
         </h2>
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {[
-            { icon: "✨", text: "Palavras de conforto de quem você ama e partiu" },
-            { icon: "🕊️", text: "Saber se eles estão bem, em paz" },
-            { icon: "💫", text: "Conhecer seu guia espiritual e o que ele tem pra te dizer" },
-            { icon: "🌹", text: "Conselho do céu sobre uma decisão importante" },
-            { icon: "🙏", text: "Curar a saudade com a verdade do outro lado" },
-          ].map((b, i) => (
+          {benefits.map((b, i) => (
             <li key={i} style={{ display: "flex", gap: 14, alignItems: "center", padding: "10px 0", fontSize: 16, color: "#fbf8ff", lineHeight: 1.5, fontWeight: 500 }}>
-              <span style={{ fontSize: 26, flexShrink: 0 }}>{b.icon}</span>
-              <span>{b.text}</span>
+              <span style={{ fontSize: 26, flexShrink: 0 }} aria-hidden="true">{b.icon}</span>
+              <span>{t(b.key)}</span>
             </li>
           ))}
         </ul>
@@ -686,21 +696,21 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
       {/* Mentores espirituais */}
       <div className="card" style={{ padding: "20px 18px", marginBottom: 22, textAlign: "center" }}>
         <div style={{ fontSize: 13, color: "#c4b5fd", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14, fontWeight: 600 }}>
-          ✦ Os mentores espirituais que podem te falar ✦
+          {t("espirito_dash.gate_mentors_title")}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-          {MENTORS.map((m) => (
-            <div key={m.name} style={{
+          {MENTOR_DEFS.map((m) => (
+            <div key={m.nameKey} style={{
               background: "rgba(232,184,75,0.08)",
               border: "1px solid rgba(232,184,75,0.25)",
               borderRadius: 12,
               padding: "12px 8px",
             }}>
-              <div style={{ fontSize: 32, marginBottom: 6 }}>{m.icon}</div>
+              <div style={{ fontSize: 32, marginBottom: 6 }} aria-hidden="true">{m.icon}</div>
               <div style={{ fontSize: 12, color: "#fbf8ff", fontWeight: 700, lineHeight: 1.25, marginBottom: 4 }}>
-                {m.name}
+                {t(m.nameKey)}
               </div>
-              <div style={{ fontSize: 11, color: "#c4b5fd", lineHeight: 1.3 }}>{m.power}</div>
+              <div style={{ fontSize: 11, color: "#c4b5fd", lineHeight: 1.3 }}>{t(m.powerKey)}</div>
             </div>
           ))}
         </div>
@@ -716,13 +726,13 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
         boxShadow: "0 16px 50px rgba(232,184,75,0.22)",
       }}>
         <div style={{ fontSize: 14, color: "#f5c860", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6, fontWeight: 700 }}>
-          ✦ Investimento único ✦
+          {t("espirito_dash.gate_cta_eyebrow")}
         </div>
         <div className="serif" style={{ fontSize: "clamp(3rem, 8vw, 4rem)", color: "#e8b84b", fontWeight: 800, lineHeight: 1, marginBottom: 4 }}>
           R$ 437
         </div>
         <div style={{ fontSize: 15, color: "#fbf8ff", marginBottom: 24, fontWeight: 500 }}>
-          Você paga uma vez só
+          {t("espirito_dash.gate_cta_once")}
         </div>
         <a
           href={kiwifyUrl}
@@ -739,12 +749,12 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
             color: "#120025",
           }}
         >
-          🕯️ Quero falar com meu Espírito
+          {t("espirito_dash.gate_cta_btn")}
         </a>
         <div style={{ marginTop: 18, padding: "14px 16px", background: "rgba(232,184,75,0.08)", borderRadius: 12, border: "1px solid rgba(232,184,75,0.25)" }}>
           <p style={{ fontSize: 14, color: "#fbf8ff", lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
-            🔒 <strong>Pagamento seguro</strong> · Cartão, Pix ou Boleto<br />
-            Sua sessão fica liberada na hora
+            🔒 <strong>{t("espirito_dash.gate_secure_h")}</strong> · {t("espirito_dash.gate_secure_methods")}<br />
+            {t("espirito_dash.gate_secure_delivery")}
           </p>
         </div>
       </div>

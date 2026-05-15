@@ -49,43 +49,44 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero com imagem real */}
-      <section style={{ padding: "60px 24px 72px", background: "radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 65%)", position: "relative", overflow: "hidden" }}>
+      {/* HERO — produto principal: Chat com ATB */}
+      <section style={{ padding: "70px 24px 80px", background: "radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 65%)", position: "relative", overflow: "hidden" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 40, alignItems: "center" }}>
 
           {/* Texto à esquerda */}
           <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: 14, color: S.gold, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 12 }}>
+            <div style={{ fontSize: 16, color: S.gold, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 16, textTransform: "uppercase" }}>
               {t("landing.hero_badge")}
             </div>
-            <h1 className="serif" style={{ fontSize: "clamp(2.4rem,5.5vw,4.4rem)", color: S.text, lineHeight: 1.1, marginBottom: 22 }}>
+            <h1 className="serif" style={{ fontSize: "clamp(2.6rem,6vw,4.6rem)", color: S.text, lineHeight: 1.1, marginBottom: 24, fontWeight: 700 }}>
               {t("hero.title_1")}<br/>
               <span style={{ color: S.gold }}>{t("hero.title_2")}</span>
             </h1>
-            <p style={{ fontSize: "1.25rem", color: S.text, maxWidth: 540, marginBottom: 32, lineHeight: 1.65, fontWeight: 500 }}>
+            <p style={{ fontSize: "1.4rem", color: S.text, maxWidth: 560, marginBottom: 36, lineHeight: 1.6, fontWeight: 500 }}>
               {t("hero.desc")}
             </p>
-            <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-              <Link href="/cadastro" className="btn-gold" style={{ fontSize: "1.1rem", padding: "18px 32px", textDecoration: "none", fontWeight: 700 }}>
-                {t("hero.cta")}
-              </Link>
-              <a href="#limpeza" style={{
-                fontSize: "1.1rem",
-                padding: "18px 32px",
+            <Link
+              href="/cadastro"
+              className="btn-gold btn-big"
+              style={{
+                fontSize: "1.3rem",
+                padding: "22px 38px",
                 textDecoration: "none",
-                color: S.gold,
-                border: `2px solid ${S.gold}`,
-                borderRadius: 999,
-                fontWeight: 700,
+                fontWeight: 800,
                 display: "inline-block",
-              }}>
-                {t("landing.hero_cta_limpeza")}
-              </a>
+                marginBottom: 18,
+                minHeight: 70,
+              }}
+            >
+              {t("hero.cta")}
+            </Link>
+            <div style={{ fontSize: 16, color: S.text2, fontWeight: 500 }}>
+              {t("checkout.cancelBadge")} · {t("checkout.recurringDisclaimer")}
             </div>
           </div>
 
-          {/* Imagem à direita — mulher madura abençoada */}
-          <div style={{ position: "relative", borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 60px rgba(232,184,75,0.25), 0 0 0 3px rgba(232,184,75,0.4)" }}>
+          {/* Imagem à direita — ATB acolhedora */}
+          <div style={{ position: "relative", borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 60px rgba(232,184,75,0.3), 0 0 0 3px rgba(232,184,75,0.4)" }}>
             <Image
               src="/img/landing-hero.png"
               alt={t("landing.hero_alt")}
@@ -94,7 +95,6 @@ export default function Home() {
               priority
               style={{ width: "100%", height: "auto", display: "block" }}
             />
-            {/* Gradiente sutil pra integrar com fundo */}
             <div style={{
               position: "absolute",
               inset: 0,
@@ -105,19 +105,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features */}
-      <section style={{ padding: "60px 24px", maxWidth: 1100, margin: "0 auto" }}>
-        <h2 className="serif" style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)", color: S.gold, textAlign: "center", marginBottom: 36 }}>
-          {t("features.title")}
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16 }}>
-          {features.map((f) => (
-            <div key={f.title} className="card" style={{ padding: "28px 20px", textAlign: "center" }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>{f.icon}</div>
-              <h3 className="serif" style={{ fontSize: "1.25rem", color: S.gold, marginBottom: 8 }}>{f.title}</h3>
-              <p style={{ color: S.text2, fontSize: 15, lineHeight: 1.65 }}>{f.desc}</p>
+      {/* PRODUTO 1 — Chat com ATB (destaque) */}
+      <section id="chat" style={{ padding: "70px 24px", background: "radial-gradient(ellipse at 50% 50%, #1e0040 0%, #120025 75%)" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={{ fontSize: 16, color: S.gold, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>
+              ✨ Produto 1 ✨
             </div>
-          ))}
+            <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, lineHeight: 1.15, marginBottom: 16, fontWeight: 700 }}>
+              {t("features.chat.title")}
+            </h2>
+            <p style={{ fontSize: "1.3rem", color: S.text, maxWidth: 620, margin: "0 auto", lineHeight: 1.6, fontWeight: 500 }}>
+              {t("features.chat.desc")}
+            </p>
+          </div>
+
+          {/* O que entrega — 4 bullets grandes */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: 18,
+            maxWidth: 900,
+            margin: "0 auto 40px",
+          }}>
+            {features.map((f) => (
+              <div key={f.title} className="card" style={{ padding: "26px 22px", textAlign: "center", border: "1.5px solid rgba(232,184,75,0.25)" }}>
+                <div style={{ fontSize: 52, marginBottom: 14 }} aria-hidden="true">{f.icon}</div>
+                <h3 className="serif" style={{ fontSize: "1.4rem", color: S.gold, marginBottom: 10, fontWeight: 700 }}>{f.title}</h3>
+                <p style={{ color: S.text, fontSize: 17, lineHeight: 1.6, fontWeight: 500 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -324,63 +342,44 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Planos */}
-      <section id="planos" style={{ padding: "60px 24px", background: "radial-gradient(ellipse at 50% 100%, #2a0055 0%, #120025 70%)" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <h2 className="serif" style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)", color: S.gold, textAlign: "center", marginBottom: 36 }}>
+      {/* Planos do Chat — só pagos, dois cards grandes 60+ */}
+      <section id="planos" style={{ padding: "70px 24px", background: "radial-gradient(ellipse at 50% 100%, #2a0055 0%, #120025 70%)" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, textAlign: "center", marginBottom: 14, fontWeight: 700 }}>
             {t("plans.title")}
           </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16 }}>
+          <p style={{ fontSize: 20, color: S.text, textAlign: "center", marginBottom: 40, lineHeight: 1.55, maxWidth: 540, margin: "0 auto 40px", fontWeight: 500 }}>
+            {t("checkout.recurringDisclaimer")}
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 20 }}>
 
-            <div className="card" style={{ padding: "32px 24px", display: "flex", flexDirection: "column" }}>
-              <h3 className="serif" style={{ fontSize: "1.6rem", color: S.text, marginBottom: 4 }}>{t("plans.free.name")}</h3>
-              <div style={{ fontSize: "2rem", fontWeight: 700, color: S.text, marginBottom: 20 }}>{t("plans.free.price")}</div>
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
-                <li style={{ color: S.text2, marginBottom: 8, fontSize: 15 }}>{t("plans.free.f1")}</li>
-                <li style={{ color: S.muted, marginBottom: 8, fontSize: 15 }}>{t("plans.free.f2")}</li>
-                <li style={{ color: S.muted, marginBottom: 8, fontSize: 15 }}>{t("plans.free.f3")}</li>
-                <li style={{ color: S.muted, fontSize: 15 }}>{t("plans.free.f4")}</li>
+            <div className="card" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)" }}>
+              <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.fullAccess")}</h3>
+              <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 24, lineHeight: 1 }}>
+                R$29 <span style={{ fontSize: 18, fontWeight: 400, color: S.text2 }}>{t("price.perMonth")}</span>
+              </div>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", flex: 1 }}>
+                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f1")}</li>
+                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f2")}</li>
+                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f3")}</li>
+                <li style={{ color: S.text2, fontSize: 18, lineHeight: 1.5 }}>{t("plans.basic.f4")}</li>
               </ul>
-              <Link href="/cadastro" className="btn-outline" style={{ textAlign: "center", display: "block" }}>{t("plans.free.cta")}</Link>
+              <a href={BASIC} className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("checkout.cta.access")}</a>
             </div>
 
-            <div className="card" style={{ padding: "32px 24px", display: "flex", flexDirection: "column", border: "1.5px solid rgba(232,184,75,0.5)" }}>
-              {/* CRO: título de plano com posicionamento de valor (não "Plano Mensal") */}
-              <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, marginBottom: 4 }}>{t("checkout.title.fullAccess")}</h3>
-              {/* Tipografia hierárquica: valor grande, /mês discreto */}
-              <div style={{ fontSize: "2rem", fontWeight: 700, color: S.text, marginBottom: 20 }}>
-                R$29 <span style={{ fontSize: 14, fontWeight: 400, color: S.muted }}>{t("price.perMonth")}</span>
+            <div className="card-gold" style={{ padding: "36px 28px", display: "flex", flexDirection: "column" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, background: S.gold, color: "#120025", borderRadius: 999, padding: "5px 16px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em" }}>{t("plans.premium.badge")}</div>
+              <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.madameAriel")}</h3>
+              <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 24, lineHeight: 1 }}>
+                R$59 <span style={{ fontSize: 18, fontWeight: 400, color: S.text2 }}>{t("price.perMonth")}</span>
               </div>
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
-                <li style={{ color: S.text2, marginBottom: 8, fontSize: 15 }}>{t("plans.basic.f1")}</li>
-                <li style={{ color: S.text2, marginBottom: 8, fontSize: 15 }}>{t("plans.basic.f2")}</li>
-                <li style={{ color: S.text2, marginBottom: 8, fontSize: 15 }}>{t("plans.basic.f3")}</li>
-                <li style={{ color: S.muted, fontSize: 15 }}>{t("plans.basic.f4")}</li>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", flex: 1 }}>
+                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f1")}</li>
+                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f2")}</li>
+                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f3")}</li>
+                <li style={{ color: S.text, fontSize: 18, lineHeight: 1.5 }}>{t("plans.premium.f4")}</li>
               </ul>
-              {/* CRO: CTA sem palavra "mensal" — promete acesso, não compromisso */}
-              <a href={BASIC} className="btn-gold" style={{ textAlign: "center", display: "block" }}>{t("checkout.cta.access")}</a>
-              {/* Compliance: recorrência visível antes do clique (Stripe + FTC + EU 2011/83) */}
-              <p style={{ fontSize: 12, color: S.muted, textAlign: "center", marginTop: 10, lineHeight: 1.5 }}>
-                {t("checkout.recurringDisclaimer")}
-              </p>
-            </div>
-
-            <div className="card-gold" style={{ padding: "32px 24px", display: "flex", flexDirection: "column" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, background: S.gold, color: "#120025", borderRadius: 20, padding: "3px 12px", display: "inline-block", marginBottom: 10, alignSelf: "flex-start" }}>{t("plans.premium.badge")}</div>
-              <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, marginBottom: 4 }}>{t("checkout.title.madameAriel")}</h3>
-              <div style={{ fontSize: "2rem", fontWeight: 700, color: S.text, marginBottom: 20 }}>
-                R$59 <span style={{ fontSize: 14, fontWeight: 400, color: S.muted }}>{t("price.perMonth")}</span>
-              </div>
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
-                <li style={{ color: S.text, marginBottom: 8, fontSize: 15 }}>{t("plans.premium.f1")}</li>
-                <li style={{ color: S.text, marginBottom: 8, fontSize: 15 }}>{t("plans.premium.f2")}</li>
-                <li style={{ color: S.text, marginBottom: 8, fontSize: 15 }}>{t("plans.premium.f3")}</li>
-                <li style={{ color: S.text, fontSize: 15 }}>{t("plans.premium.f4")}</li>
-              </ul>
-              <a href={PREMIUM} className="btn-gold" style={{ textAlign: "center", display: "block" }}>{t("checkout.cta.startReading")}</a>
-              <p style={{ fontSize: 12, color: S.muted, textAlign: "center", marginTop: 10, lineHeight: 1.5 }}>
-                {t("checkout.recurringDisclaimer")}
-              </p>
+              <a href={PREMIUM} className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("checkout.cta.startReading")}</a>
             </div>
           </div>
         </div>

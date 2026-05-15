@@ -54,23 +54,23 @@ export default function CadastroPage() {
       padding: "1.5rem",
     }}>
       <div style={{ width: "100%", maxWidth: 520 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 80, marginBottom: 14 }}>🔮</div>
-          <h1 className="serif" style={{ fontSize: "2.8rem", color: "#f5f0ff", lineHeight: 1.1, marginBottom: 10 }}>
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div style={{ fontSize: 84, marginBottom: 16 }} aria-hidden="true">🔮</div>
+          <h1 className="serif" style={{ fontSize: "clamp(2.6rem, 6vw, 3.2rem)", color: "#f5f0ff", lineHeight: 1.1, marginBottom: 12, fontWeight: 700 }}>
             ATB
           </h1>
-          <p style={{ color: "#fbf8ff", fontSize: 19, lineHeight: 1.5 }}>
+          <p style={{ color: "#fbf8ff", fontSize: 21, lineHeight: 1.55, fontWeight: 500 }}>
             {t("auth.signup_welcome")}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card" style={{ padding: "36px 32px" }}>
-          <h2 className="serif" style={{ fontSize: "1.7rem", color: "#e8b84b", marginBottom: 24, textAlign: "center" }}>
+        <form onSubmit={handleSubmit} className="card" style={{ padding: "40px 32px" }}>
+          <h2 className="serif" style={{ fontSize: "1.9rem", color: "#e8b84b", marginBottom: 28, textAlign: "center", fontWeight: 700 }}>
             {t("nav.signup")}
           </h2>
 
           {/* Nome */}
-          <label htmlFor="name" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
+          <label htmlFor="name" style={{ display: "block", color: "#fbf8ff", fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.thanks_name_label")}
           </label>
           <input
@@ -86,13 +86,13 @@ export default function CadastroPage() {
             style={{ marginBottom: nameValid || !name ? 24 : 8 }}
           />
           {name && !nameValid && (
-            <p style={{ color: "#f87171", fontSize: 15, marginBottom: 16, marginTop: 4 }}>
-              {t("auth.signup_name_invalid")}
+            <p role="alert" style={{ color: "#ff8a8a", fontSize: 17, marginBottom: 16, marginTop: 4, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+              <span aria-hidden="true">⚠️</span> {t("auth.signup_name_invalid")}
             </p>
           )}
 
           {/* Email */}
-          <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
+          <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.email_label")}
           </label>
           <input
@@ -107,12 +107,12 @@ export default function CadastroPage() {
             inputMode="email"
             style={{ marginBottom: 6 }}
           />
-          <p className="help-hint" style={{ marginBottom: 24, fontSize: 14 }}>
+          <p className="help-hint" style={{ marginBottom: 24, fontSize: 16, color: "#c4b5fd", lineHeight: 1.55 }}>
             {t("auth.signup_email_hint")}
           </p>
 
           {/* Senha */}
-          <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
+          <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.thanks_password_label")}
           </label>
           <div style={{ position: "relative", marginBottom: 6 }}>
@@ -134,28 +134,32 @@ export default function CadastroPage() {
               aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
               style={{
                 position: "absolute",
-                right: 8,
+                right: 6,
                 top: "50%",
                 transform: "translateY(-50%)",
                 background: "rgba(232,184,75,0.15)",
                 border: "1px solid rgba(232,184,75,0.4)",
                 color: "#e8b84b",
-                fontSize: 14,
+                fontSize: 22,
                 fontWeight: 700,
-                padding: "10px 14px",
-                borderRadius: 10,
+                width: 64,
+                height: 64,
+                padding: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 12,
                 cursor: "pointer",
-                minHeight: 0,
               }}
             >
-              {showPwd ? t("auth.password_hide") : t("auth.password_show")}
+              {showPwd ? "🙈" : "👁️"}
             </button>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, marginTop: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, marginTop: 10 }}>
             {passwordValid ? (
-              <span style={{ color: "#86efac", fontSize: 14, fontWeight: 600 }}>{t("auth.signup_password_good")}</span>
+              <span style={{ color: "#86efac", fontSize: 16, fontWeight: 700 }}>{t("auth.signup_password_good")}</span>
             ) : (
-              <span style={{ color: "#9575cd", fontSize: 14 }}>
+              <span style={{ color: "#c4b5fd", fontSize: 16, fontWeight: 500 }}>
                 {t("auth.signup_password_missing").replace("{n}", String(Math.max(0, 8 - password.length)))}
               </span>
             )}
@@ -176,18 +180,33 @@ export default function CadastroPage() {
             {loading ? t("auth.signup_loading") : t("auth.signup_cta")}
           </button>
 
-          <div style={{ textAlign: "center", padding: "16px 0", borderTop: "1px solid rgba(196,181,253,0.18)" }}>
-            <p style={{ fontSize: 17, color: "#fbf8ff", lineHeight: 1.6, margin: 0 }}>
-              {t("auth.have_account")}<br />
-              <Link href="/login" style={{ color: "#e8b84b", fontWeight: 700, fontSize: 19, textDecoration: "underline", display: "inline-block", marginTop: 8, padding: "8px 16px" }}>
-                {t("auth.login_link")}
-              </Link>
+          <div style={{ textAlign: "center", padding: "20px 0 0", borderTop: "1px solid rgba(196,181,253,0.18)", marginTop: 4 }}>
+            <p style={{ fontSize: 19, color: "#fbf8ff", lineHeight: 1.55, margin: "0 0 14px", fontWeight: 500 }}>
+              {t("auth.have_account")}
             </p>
+            <Link
+              href="/login"
+              style={{
+                display: "block",
+                textAlign: "center",
+                color: "#e8b84b",
+                fontWeight: 700,
+                fontSize: 19,
+                textDecoration: "underline",
+                padding: "18px 16px",
+                minHeight: 64,
+                borderRadius: 12,
+                background: "rgba(232,184,75,0.08)",
+                border: "1.5px solid rgba(232,184,75,0.3)",
+              }}
+            >
+              {t("auth.login_link")}
+            </Link>
           </div>
         </form>
 
-        <div style={{ textAlign: "center", marginTop: 24 }}>
-          <Link href="/" style={{ color: "#c4b5fd", fontSize: 16, textDecoration: "none", padding: "8px 16px" }}>
+        <div style={{ textAlign: "center", marginTop: 28 }}>
+          <Link href="/" style={{ color: "#c4b5fd", fontSize: 17, textDecoration: "none", padding: "12px 18px", display: "inline-block", minHeight: 48 }}>
             ← {t("v2.back")}
           </Link>
         </div>
