@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sanitizeInput, rateLimit, getClientIp, validateEmail } from "@/lib/security";
 import { generatePreview, VALID_THEMES, VALID_SIGNS, THEME_LABELS } from "@/lib/limpeza-v2";
 import { createCheckoutSession, currencyForRequest, detectIsInternational } from "@/lib/stripe";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -164,8 +165,7 @@ export async function POST(req: Request) {
     let checkoutUrl: string | null = null;
     if (isStripe) {
       try {
-        const proto = req.headers.get("x-forwarded-proto") || "https";
-        const host = req.headers.get("host") || "atbtartot.com";
+        const baseUrl = getSiteUrl(req);
         const session = await createCheckoutSession({
           orderId: order.id,
           email,
@@ -173,8 +173,8 @@ export async function POST(req: Request) {
           amount: moneyInfo.amount,
           currency: moneyInfo.currency,
           locale: moneyInfo.locale,
-          successUrl: `${proto}://${host}/entrega/${order.id}?provider=stripe`,
-          cancelUrl: `${proto}://${host}/limpeza/preview/${order.id}`,
+          successUrl: `${baseUrl}/entrega/${order.id}?provider=stripe`,
+          cancelUrl: `${baseUrl}/limpeza/preview/${order.id}`,
         });
         checkoutUrl = session?.url || buildKiwifyUrl(order.id);
       } catch {

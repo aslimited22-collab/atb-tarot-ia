@@ -12,7 +12,8 @@
     "test:ux60": "playwright test tests/e2e/limpeza-ux60.spec.ts",
     "test:redeliver": "vitest run tests/integration/redeliver.spec.ts",
     "test:check-pending": "vitest run tests/integration/check-pending.spec.ts",
-    "verify:all": "npm run build && npx tsc --noEmit && npm run test:ux60 && npm run test:redeliver && npm run test:check-pending"
+    "test:site-url": "vitest run tests/integration/site-url.spec.ts",
+    "verify:all": "npm run build && npx tsc --noEmit && npm run test:ux60 && npm run test:redeliver && npm run test:check-pending && npm run test:site-url"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.1",

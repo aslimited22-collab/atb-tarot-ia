@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { deliverLimpezaOrder } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 // Stripe envia o body cru; nao podemos parsear como JSON antes da verificacao.
@@ -140,8 +141,7 @@ export async function POST(req: Request) {
 
   // Pipeline unificado de entrega (geração + email + Z-API + status)
   if (!wasAlreadyPaid) {
-    const proto = req.headers.get("x-forwarded-proto") || "https";
-    const host = req.headers.get("host") || "atbtartot.com";
+    const baseUrl = getSiteUrl(req);
 
     const result = await deliverLimpezaOrder({
       orderId: v2Order.id,
@@ -149,8 +149,8 @@ export async function POST(req: Request) {
       name: v2Order.name ?? name,
       phone: v2Order.phone || phone || null,
       locale: v2Order.locale,
-      deliveryLink: `${proto}://${host}/entrega/${v2Order.id}`,
-      internalGenUrl: `${proto}://${host}/api/limpeza/generate`,
+      deliveryLink: `${baseUrl}/entrega/${v2Order.id}`,
+      internalGenUrl: `${baseUrl}/api/limpeza/generate`,
       triggerGeneration: true,
     });
 

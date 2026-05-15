@@ -4,6 +4,7 @@ import { verifyKiwifySignature, planFromValue } from "@/lib/kiwify";
 import { rateLimit, getClientIp } from "@/lib/security";
 import { deliverLimpezaOrder, sendCustomerEmailWithLog } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 
@@ -199,8 +200,7 @@ export async function POST(req: Request) {
       }
 
       if (!wasAlreadyPaid) {
-        const proto = req.headers.get("x-forwarded-proto") || "https";
-        const host = req.headers.get("host") || "atbtartot.com";
+        const baseUrl = getSiteUrl(req);
 
         const result = await deliverLimpezaOrder({
           orderId: v2Order.id,
@@ -208,8 +208,8 @@ export async function POST(req: Request) {
           name: v2Order.name ?? customerName,
           phone: v2Order.phone || kiwifyPhone || null,
           locale: v2Order.locale,
-          deliveryLink: `${proto}://${host}/entrega/${v2Order.id}`,
-          internalGenUrl: `${proto}://${host}/api/limpeza/generate`,
+          deliveryLink: `${baseUrl}/entrega/${v2Order.id}`,
+          internalGenUrl: `${baseUrl}/api/limpeza/generate`,
           triggerGeneration: true,
         });
 
@@ -243,7 +243,7 @@ export async function POST(req: Request) {
     });
 
     const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
-    const accessLink = `https://atbtartot.com/obrigado-limpeza?email=${encodeURIComponent(email.toLowerCase())}`;
+    const accessLink = `${getSiteUrl(req)}/obrigado-limpeza?email=${encodeURIComponent(email.toLowerCase())}`;
 
     const customerHtml = `
 <!DOCTYPE html>
@@ -340,7 +340,7 @@ export async function POST(req: Request) {
     });
 
     const espFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
-    const espAccessLink = `https://atbtartot.com/obrigado-espirito?email=${encodeURIComponent(email.toLowerCase())}`;
+    const espAccessLink = `${getSiteUrl(req)}/obrigado-espirito?email=${encodeURIComponent(email.toLowerCase())}`;
 
     const espCustomerHtml = `
 <!DOCTYPE html>

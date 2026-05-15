@@ -2,7 +2,7 @@
 // Autenticado via header X-Admin-Secret comparado a process.env.ADMIN_SECRET.
 //
 // Uso:
-//   curl -X POST https://atbtartot.com/api/admin/orders/<uuid>/redeliver \
+//   curl -X POST $NEXT_PUBLIC_SITE_URL/api/admin/orders/<uuid>/redeliver \
 //        -H "X-Admin-Secret: $ADMIN_SECRET"
 //
 // Resposta: JSON com DeliverResult (generation/email/whatsapp/finalDeliveryStatus).
@@ -11,6 +11,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deliverLimpezaOrder } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,8 +59,7 @@ export async function POST(
     return NextResponse.json({ error: `order status is '${order.status}', expected 'paid'` }, { status: 400 });
   }
 
-  const proto = req.headers.get("x-forwarded-proto") || "https";
-  const host = req.headers.get("host") || "atbtartot.com";
+  const baseUrl = getSiteUrl(req);
 
   logInfo(scope, "manual redeliver triggered", { orderId });
 
@@ -69,8 +69,8 @@ export async function POST(
     name: order.name,
     phone: order.phone,
     locale: order.locale,
-    deliveryLink: `${proto}://${host}/entrega/${order.id}`,
-    internalGenUrl: `${proto}://${host}/api/limpeza/generate`,
+    deliveryLink: `${baseUrl}/entrega/${order.id}`,
+    internalGenUrl: `${baseUrl}/api/limpeza/generate`,
     triggerGeneration: true,
   });
 
