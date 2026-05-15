@@ -59,7 +59,7 @@ export default function LoginPage() {
           </h2>
 
           {/* Email */}
-          <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
+          <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.email_label")}
           </label>
           <input
@@ -76,7 +76,7 @@ export default function LoginPage() {
           />
 
           {/* Senha */}
-          <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
+          <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.password_label")}
           </label>
           <div style={{ position: "relative", marginBottom: 16 }}>
@@ -97,21 +97,25 @@ export default function LoginPage() {
               aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
               style={{
                 position: "absolute",
-                right: 8,
+                right: 6,
                 top: "50%",
                 transform: "translateY(-50%)",
                 background: "rgba(232,184,75,0.15)",
                 border: "1px solid rgba(232,184,75,0.4)",
                 color: "#e8b84b",
-                fontSize: 14,
+                fontSize: 22,
                 fontWeight: 700,
-                padding: "10px 14px",
-                borderRadius: 10,
+                width: 64,
+                height: 64,
+                padding: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 12,
                 cursor: "pointer",
-                minHeight: 0,
               }}
             >
-              {showPwd ? t("auth.password_hide") : t("auth.password_show")}
+              {showPwd ? "🙈" : "👁️"}
             </button>
           </div>
 

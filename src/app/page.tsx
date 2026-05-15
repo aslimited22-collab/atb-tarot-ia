@@ -41,10 +41,10 @@ export default function Home() {
       <header style={{ background: "rgba(30,0,64,0.92)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${S.sep}`, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span className="serif text-2xl" style={{ color: S.gold }}>{t("brand")}</span>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
             <LangSwitcher compact />
-            <Link href="/login" style={{ color: S.text2, fontWeight: 600, fontSize: 16, textDecoration: "none" }}>{t("nav.signin")}</Link>
-            <Link href="/cadastro" className="btn-gold" style={{ padding: "10px 22px", fontSize: 15 }}>{t("nav.signup")}</Link>
+            <Link href="/login" style={{ color: S.text2, fontWeight: 700, fontSize: 18, textDecoration: "none", padding: "10px 14px", minHeight: 44 }}>{t("nav.signin")}</Link>
+            <Link href="/cadastro" className="btn-gold" style={{ padding: "14px 26px", fontSize: 17, fontWeight: 800, minHeight: 48 }}>{t("nav.signup")}</Link>
           </div>
         </div>
       </header>
@@ -55,7 +55,7 @@ export default function Home() {
 
           {/* Texto à esquerda */}
           <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: 16, color: S.gold, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 16, textTransform: "uppercase" }}>
+            <div style={{ fontSize: 18, color: S.gold, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 16, textTransform: "uppercase" }}>
               {t("landing.hero_badge")}
             </div>
             <h1 className="serif" style={{ fontSize: "clamp(2.6rem,6vw,4.6rem)", color: S.text, lineHeight: 1.1, marginBottom: 24, fontWeight: 700 }}>
@@ -65,8 +65,8 @@ export default function Home() {
             <p style={{ fontSize: "1.4rem", color: S.text, maxWidth: 560, marginBottom: 36, lineHeight: 1.6, fontWeight: 500 }}>
               {t("hero.desc")}
             </p>
-            <Link
-              href="/cadastro"
+            <a
+              href="#planos"
               className="btn-gold btn-big"
               style={{
                 fontSize: "1.3rem",
@@ -79,8 +79,8 @@ export default function Home() {
               }}
             >
               {t("hero.cta")}
-            </Link>
-            <div style={{ fontSize: 16, color: S.text2, fontWeight: 500 }}>
+            </a>
+            <div style={{ fontSize: 19, color: S.text2, fontWeight: 600, lineHeight: 1.5 }}>
               {t("checkout.cancelBadge")} · {t("checkout.recurringDisclaimer")}
             </div>
           </div>
@@ -109,8 +109,8 @@ export default function Home() {
       <section id="chat" style={{ padding: "70px 24px", background: "radial-gradient(ellipse at 50% 50%, #1e0040 0%, #120025 75%)" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <div style={{ fontSize: 16, color: S.gold, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>
-              ✨ Produto 1 ✨
+            <div style={{ fontSize: 18, color: S.gold, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>
+              <span aria-hidden="true">✨</span> {t("features.chat.title")} <span aria-hidden="true">✨</span>
             </div>
             <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, lineHeight: 1.15, marginBottom: 16, fontWeight: 700 }}>
               {t("features.chat.title")}
@@ -132,7 +132,7 @@ export default function Home() {
               <div key={f.title} className="card" style={{ padding: "26px 22px", textAlign: "center", border: "1.5px solid rgba(232,184,75,0.25)" }}>
                 <div style={{ fontSize: 52, marginBottom: 14 }} aria-hidden="true">{f.icon}</div>
                 <h3 className="serif" style={{ fontSize: "1.4rem", color: S.gold, marginBottom: 10, fontWeight: 700 }}>{f.title}</h3>
-                <p style={{ color: S.text, fontSize: 17, lineHeight: 1.6, fontWeight: 500 }}>{f.desc}</p>
+                <p style={{ color: S.text, fontSize: 19, lineHeight: 1.6, fontWeight: 500 }}>{f.desc}</p>
               </div>
             ))}
           </div>
@@ -175,7 +175,7 @@ export default function Home() {
               />
             </div>
 
-            <div style={{ fontSize: 16, color: "#f5c860", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+            <div style={{ fontSize: 18, color: "#f5c860", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
               {t("landing.limpeza_eyebrow")}
             </div>
             <h2 className="serif" style={{ fontSize: "clamp(2.4rem,6vw,3.8rem)", color: S.gold, lineHeight: 1.1, marginBottom: 18 }}>
@@ -228,8 +228,8 @@ export default function Home() {
                 {/* Texto abaixo */}
                 <div style={{ padding: "22px 20px" }}>
                   <h3 className="serif" style={{ fontSize: "1.6rem", fontWeight: 700, lineHeight: 1.15, marginBottom: 6, color: S.gold }}>{c.title}</h3>
-                  <div style={{ fontSize: 14, color: S.text2, fontStyle: "italic", marginBottom: 12, fontWeight: 500 }}>✦ {c.saint}</div>
-                  <p style={{ fontSize: 16, lineHeight: 1.55, margin: 0, fontWeight: 500, color: S.text }}>{c.desc}</p>
+                  <div style={{ fontSize: 17, color: S.text2, fontStyle: "italic", marginBottom: 12, fontWeight: 500 }}><span aria-hidden="true">✦</span> {c.saint}</div>
+                  <p style={{ fontSize: 19, lineHeight: 1.6, margin: 0, fontWeight: 500, color: S.text }}>{c.desc}</p>
                 </div>
               </div>
             ))}
@@ -250,8 +250,8 @@ export default function Home() {
                 { icon: "✨", text: t("landing.bullet6") },
               ].map((b, i) => (
                 <div key={i} style={{ display: "flex", gap: 16, alignItems: "center", padding: "8px 0" }}>
-                  <span style={{ fontSize: 32, flexShrink: 0 }}>{b.icon}</span>
-                  <span style={{ fontSize: 17, color: S.text, lineHeight: 1.5, fontWeight: 500 }}>{b.text}</span>
+                  <span style={{ fontSize: 32, flexShrink: 0 }} aria-hidden="true">{b.icon}</span>
+                  <span style={{ fontSize: 19, color: S.text, lineHeight: 1.5, fontWeight: 500 }}>{b.text}</span>
                 </div>
               ))}
             </div>
@@ -278,10 +278,10 @@ export default function Home() {
                 "Santo Antônio", "São Jorge", "N. S. Desatadora",
               ].map((name) => (
                 <div key={name} style={{
-                  fontSize: 14,
+                  fontSize: 17,
                   color: S.text2,
                   fontWeight: 600,
-                  padding: "8px 14px",
+                  padding: "10px 16px",
                   background: "rgba(232,184,75,0.1)",
                   borderRadius: 999,
                   border: "1px solid rgba(232,184,75,0.3)",
@@ -303,13 +303,13 @@ export default function Home() {
             margin: "0 auto",
             boxShadow: "0 16px 50px rgba(232,184,75,0.22)",
           }}>
-            <div style={{ fontSize: 16, color: "#f5c860", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontWeight: 700 }}>
+            <div style={{ fontSize: 18, color: "#f5c860", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontWeight: 700 }}>
               {t("landing.payment_eyebrow")}
             </div>
             <div className="serif" style={{ fontSize: "clamp(3.4rem, 8vw, 4.5rem)", color: S.gold, fontWeight: 800, lineHeight: 1, marginBottom: 6 }}>
               R$ 100
             </div>
-            <div style={{ fontSize: 16, color: "#fbf8ff", marginBottom: 28, fontWeight: 500 }}>
+            <div style={{ fontSize: 19, color: "#fbf8ff", marginBottom: 28, fontWeight: 500 }}>
               {t("landing.payment_once")}
             </div>
             <a
@@ -331,9 +331,9 @@ export default function Home() {
             >
               {t("landing.payment_cta")}
             </a>
-            <div style={{ marginTop: 22, padding: "14px 18px", background: "rgba(232,184,75,0.08)", borderRadius: 12, border: "1px solid rgba(232,184,75,0.2)" }}>
-              <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
-                🔒 <strong>{t("landing.trust_secure")}</strong><br />
+            <div style={{ marginTop: 22, padding: "16px 20px", background: "rgba(232,184,75,0.08)", borderRadius: 12, border: "1px solid rgba(232,184,75,0.2)" }}>
+              <p style={{ fontSize: 18, color: "#fbf8ff", lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+                <span aria-hidden="true">🔒</span> <strong>{t("landing.trust_secure")}</strong><br />
                 {t("landing.trust_methods")}<br />
                 {t("landing.trust_delivery")}
               </p>
@@ -348,7 +348,7 @@ export default function Home() {
           <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, textAlign: "center", marginBottom: 14, fontWeight: 700 }}>
             {t("plans.title")}
           </h2>
-          <p style={{ fontSize: 20, color: S.text, textAlign: "center", marginBottom: 40, lineHeight: 1.55, maxWidth: 540, margin: "0 auto 40px", fontWeight: 500 }}>
+          <p style={{ fontSize: 21, color: S.text, textAlign: "center", marginBottom: 40, lineHeight: 1.55, maxWidth: 580, margin: "0 auto 40px", fontWeight: 500 }}>
             {t("checkout.recurringDisclaimer")}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 20 }}>
@@ -392,15 +392,15 @@ export default function Home() {
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
           {testimonials.map((tm) => (
-            <div key={tm.name} className="card" style={{ padding: "24px" }}>
-              <p style={{ fontStyle: "italic", color: S.text2, lineHeight: 1.75, marginBottom: 14, fontSize: 16 }}>"{tm.text}"</p>
-              <div style={{ fontWeight: 600, color: S.gold, fontSize: 15 }}>— {tm.name}</div>
+            <div key={tm.name} className="card" style={{ padding: "28px 24px" }}>
+              <p style={{ fontStyle: "italic", color: S.text, lineHeight: 1.7, marginBottom: 16, fontSize: 19, fontWeight: 500 }}>&ldquo;{tm.text}&rdquo;</p>
+              <div style={{ fontWeight: 700, color: S.gold, fontSize: 17 }}>— {tm.name}</div>
             </div>
           ))}
         </div>
       </section>
 
-      <footer style={{ textAlign: "center", padding: "24px", borderTop: `1px solid ${S.sep}`, color: S.muted, fontSize: 14 }}>
+      <footer style={{ textAlign: "center", padding: "28px 24px", borderTop: `1px solid ${S.sep}`, color: S.text2, fontSize: 16, fontWeight: 500 }}>
         © {new Date().getFullYear()} ATB — {t("footer.rights")}
       </footer>
     </main>

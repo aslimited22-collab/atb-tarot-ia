@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PlanBadge } from "@/components/PlanBadge";
-import { MESSAGE_LIMITS_MONTH, DAILY_LIMIT_FREE, currentMonthKey, currentDayKey } from "@/lib/plans";
+import { MESSAGE_LIMITS_MONTH, DAILY_LIMIT_FREE, currentMonthKey, currentDayKey, isPaidPlan } from "@/lib/plans";
 import { dailyLuckyNumbers } from "@/lib/numerology";
 import { getServerT } from "@/lib/i18n/server";
 import type { Plan } from "@/lib/types";
 
 const VIDEO_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
 const LIMPEZA_URL = process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL || "#";
+const BASIC_URL = process.env.NEXT_PUBLIC_KIWIFY_BASIC_URL || "#";
+const PREMIUM_URL = process.env.NEXT_PUBLIC_KIWIFY_PREMIUM_URL || "#";
 
 export default async function DashboardHome() {
   const supabase = createClient();
@@ -17,6 +19,82 @@ export default async function DashboardHome() {
     .from("users").select("plan, email, messages_today, last_message_date, messages_month, last_message_month").eq("id", user!.id).maybeSingle();
 
   const plan: Plan = (profile?.plan as Plan) || "free";
+
+  // Gate: sem plano pago = tela "Escolha seu plano" (não tem nada de graça pra usar)
+  if (!isPaidPlan(plan)) {
+    return (
+      <div style={{ padding: "32px 20px 80px", maxWidth: 720, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ fontSize: 80, marginBottom: 16 }} aria-hidden="true">💛</div>
+          <h1 className="serif" style={{ fontSize: "clamp(2.2rem, 5vw, 2.8rem)", color: "#f5f0ff", marginBottom: 14, lineHeight: 1.2, fontWeight: 700 }}>
+            {t("dash.pending_h1")}
+          </h1>
+          <p style={{ color: "#fbf8ff", fontSize: 21, lineHeight: 1.55, fontWeight: 500, maxWidth: 560, margin: "0 auto" }}>
+            {t("dash.pending_desc")}
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, marginBottom: 32 }}>
+          {/* Basic */}
+          <div className="card" style={{ padding: "32px 26px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)" }}>
+            <h2 className="serif" style={{ fontSize: "1.8rem", color: "#e8b84b", marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.fullAccess")}</h2>
+            <div style={{ fontSize: "2.6rem", fontWeight: 800, color: "#f5f0ff", marginBottom: 22, lineHeight: 1 }}>
+              R$29 <span style={{ fontSize: 19, fontWeight: 400, color: "#c4b5fd" }}>{t("price.perMonth")}</span>
+            </div>
+            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 26px", flex: 1 }}>
+              <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f1")}</li>
+              <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f2")}</li>
+              <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f3")}</li>
+              <li style={{ color: "#c4b5fd", fontSize: 19, lineHeight: 1.5 }}>{t("plans.basic.f4")}</li>
+            </ul>
+            <a href={BASIC_URL} target="_blank" rel="noopener noreferrer" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>
+              {t("checkout.cta.access")}
+            </a>
+          </div>
+
+          {/* Premium */}
+          <div className="card-gold" style={{ padding: "32px 26px", display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 14, fontWeight: 800, background: "#e8b84b", color: "#120025", borderRadius: 999, padding: "6px 18px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em" }}>{t("plans.premium.badge")}</div>
+            <h2 className="serif" style={{ fontSize: "1.8rem", color: "#e8b84b", marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.madameAriel")}</h2>
+            <div style={{ fontSize: "2.6rem", fontWeight: 800, color: "#f5f0ff", marginBottom: 22, lineHeight: 1 }}>
+              R$59 <span style={{ fontSize: 19, fontWeight: 400, color: "#c4b5fd" }}>{t("price.perMonth")}</span>
+            </div>
+            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 26px", flex: 1 }}>
+              <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f1")}</li>
+              <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f2")}</li>
+              <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f3")}</li>
+              <li style={{ color: "#f5f0ff", fontSize: 19, lineHeight: 1.5 }}>{t("plans.premium.f4")}</li>
+            </ul>
+            <a href={PREMIUM_URL} target="_blank" rel="noopener noreferrer" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>
+              {t("checkout.cta.startReading")}
+            </a>
+          </div>
+        </div>
+
+        <div style={{ textAlign: "center" }}>
+          <Link
+            href="/"
+            style={{
+              display: "inline-block",
+              color: "#c4b5fd",
+              fontSize: 18,
+              fontWeight: 600,
+              textDecoration: "none",
+              padding: "16px 24px",
+              minHeight: 56,
+              borderRadius: 12,
+              background: "rgba(196,181,253,0.08)",
+              border: "1.5px solid rgba(196,181,253,0.25)",
+            }}
+          >
+            ← {t("v2.back")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- Dashboard normal (plan === basic ou premium) ----------
   const today = currentDayKey();
   const monthKey = currentMonthKey();
 

@@ -22,7 +22,17 @@ export const THROTTLE_SECONDS: Record<Plan, number> = {
 export const DAILY_LIMIT_FREE = 0;
 
 export function planLabel(plan: Plan): string {
-  return { free: "Grátis", basic: "Basic", premium: "Premium" }[plan];
+  // "free" no DB = conta criada sem pagamento confirmado.
+  // No UI mostramos como "Sem plano" pra ser honesto (nada de graça no produto).
+  return { free: "Sem plano", basic: "Basic", premium: "Premium" }[plan];
+}
+
+/**
+ * `true` se o usuário tem um plano pago ativo (basic ou premium).
+ * Use isso pra portões de funcionalidades em vez de checar `plan !== "free"`.
+ */
+export function isPaidPlan(plan: Plan): boolean {
+  return plan === "basic" || plan === "premium";
 }
 
 // Helpers para periodo

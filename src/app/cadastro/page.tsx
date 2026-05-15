@@ -36,7 +36,8 @@ export default function CadastroPage() {
     setLoading(false);
     if (loginError) return toast.error(t("auth.signup_created"));
     toast.success(t("auth.signup_success"));
-    router.push("/dashboard");
+    // Após criar conta, manda direto pros planos — não tem nada de graça pra usar antes
+    router.push("/#planos");
     router.refresh();
   }
 
@@ -70,7 +71,7 @@ export default function CadastroPage() {
           </h2>
 
           {/* Nome */}
-          <label htmlFor="name" style={{ display: "block", color: "#fbf8ff", fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
+          <label htmlFor="name" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.thanks_name_label")}
           </label>
           <input
@@ -92,7 +93,7 @@ export default function CadastroPage() {
           )}
 
           {/* Email */}
-          <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
+          <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.email_label")}
           </label>
           <input
@@ -107,12 +108,12 @@ export default function CadastroPage() {
             inputMode="email"
             style={{ marginBottom: 6 }}
           />
-          <p className="help-hint" style={{ marginBottom: 24, fontSize: 16, color: "#c4b5fd", lineHeight: 1.55 }}>
+          <p className="help-hint" style={{ marginBottom: 24, fontSize: 18, color: "#c4b5fd", lineHeight: 1.55, fontWeight: 500 }}>
             {t("auth.signup_email_hint")}
           </p>
 
           {/* Senha */}
-          <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
+          <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.thanks_password_label")}
           </label>
           <div style={{ position: "relative", marginBottom: 6 }}>
