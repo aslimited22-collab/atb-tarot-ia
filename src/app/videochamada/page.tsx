@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getServerT } from "@/lib/i18n/server";
 
-const CHECKOUT_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
+// Checkout vai pelo roteador /api/checkout/videochamada
+// (decide Kiwify BR vs Stripe intl por IP).
+const CHECKOUT_URL = "/api/checkout/videochamada";
 
 export default function VideoChamadaPage() {
   const { t } = getServerT();
@@ -91,7 +93,7 @@ export default function VideoChamadaPage() {
           <div style={{ fontSize:14, color:"#9575cd", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:8 }}>{t("videochamada.cta_eyebrow")}</div>
           <div style={{ fontFamily:"Georgia, serif", fontSize:"2.2rem", color:"#e8b84b", fontWeight:700, marginBottom:4 }}>R$ 497</div>
           <div style={{ color:"#c4b5fd", fontSize:"0.95rem", marginBottom:24 }}>{t("videochamada.cta_meta")}</div>
-          <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer"
+          <a href={CHECKOUT_URL}
             style={{ display:"block", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:700, fontSize:"1.2rem", padding:"18px 24px", borderRadius:16, textDecoration:"none", marginBottom:12, lineHeight:1.3 }}>
             {t("videochamada.cta_button")}
           </a>
@@ -118,7 +120,7 @@ export default function VideoChamadaPage() {
         </div>
 
         {/* CTA final */}
-        <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer"
+        <a href={CHECKOUT_URL}
           style={{ display:"block", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:700, fontSize:"1.15rem", padding:"18px 24px", borderRadius:16, textDecoration:"none", textAlign:"center" }}>
           {t("videochamada.cta_final")}
         </a>

@@ -706,7 +706,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
 
 function SessionComplete({ firstName }: { firstName: string }) {
   const { t } = useT();
-  const VIDEO_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
+  const VIDEO_URL = "/api/checkout/videochamada"; // roteador BR/intl
 
   return (
     <div className="card-gold" style={{ padding: "28px 22px", textAlign: "center" }}>
@@ -735,8 +735,6 @@ function SessionComplete({ firstName }: { firstName: string }) {
         </p>
         <a
           href={VIDEO_URL}
-          target="_blank"
-          rel="noopener noreferrer"
           className="btn-gold"
           style={{ display: "inline-block", padding: "12px 24px", fontSize: 15, fontWeight: 700, textDecoration: "none" }}
         >

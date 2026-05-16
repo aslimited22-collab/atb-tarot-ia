@@ -68,6 +68,7 @@ export async function POST(req: Request) {
   }
 
   const session = event.data.object as any;
+  const plan: string | undefined = session.metadata?.plan; // "premium" | "basic" | "videochamada" | "limpeza" | undefined
   const orderId: string | undefined = session.client_reference_id || session.metadata?.order_id;
   const email: string = (session.customer_details?.email || session.customer_email || "").toLowerCase();
   const name: string | undefined = session.customer_details?.name;
@@ -76,20 +77,73 @@ export async function POST(req: Request) {
   const currency = String(session.currency || "usd").toLowerCase();
   const paymentId = String(session.id || "");
 
+  const admin = createAdminClient();
+
+  // ---------- BRANCH 1: Plans recorrentes do roteador /api/checkout/[plan] ----------
+  // Estes têm session.metadata.plan setado (premium/basic) e NÃO têm order_id (são subscriptions).
+  if (plan === "premium" || plan === "basic") {
+    if (!email) {
+      logWarn("webhook.stripe", "subscription completed without email", { plan, sessionId: paymentId });
+      return NextResponse.json({ error: "missing email" }, { status: 400 });
+    }
+    logInfo("webhook.stripe", "international subscription paid", { plan, email, currency, amountTotal });
+
+    // Atualiza users.plan (cria o registro se não existir)
+    const { error: usrErr } = await admin
+      .from("users")
+      .update({ plan })
+      .eq("email", email);
+    if (usrErr) {
+      logWarn("webhook.stripe", "users.plan update failed", { plan, email, error: usrErr.message });
+    }
+
+    // Espelha em purchases (auditoria)
+    await admin.from("purchases").insert({
+      email,
+      name: name ?? null,
+      kiwify_order_id: paymentId, // reusa coluna pra Stripe session id
+      plan,
+      event: `${plan}_purchased_intl`,
+      amount_cents: amountTotal,
+      user_id: null,
+    });
+
+    return NextResponse.json({ ok: true, plan, email });
+  }
+
+  // ---------- BRANCH 2: Videochamada one-time intl ----------
+  if (plan === "videochamada") {
+    if (!email) {
+      return NextResponse.json({ error: "missing email" }, { status: 400 });
+    }
+    logInfo("webhook.stripe", "videochamada paid intl", { email, currency, amountTotal });
+
+    await admin.from("purchases").insert({
+      email,
+      name: name ?? null,
+      kiwify_order_id: paymentId,
+      plan: "videochamada",
+      event: "videochamada_purchased_intl",
+      amount_cents: amountTotal,
+      user_id: null,
+    });
+
+    return NextResponse.json({ ok: true, plan: "videochamada", email });
+  }
+
+  // ---------- BRANCH 3 (fluxo legado): Limpeza V2 com order UUID ----------
   if (!orderId || !/^[0-9a-f-]{36}$/i.test(orderId)) {
-    logWarn("webhook.stripe", "missing/invalid order_id", { orderId, eventId: event.id });
+    logWarn("webhook.stripe", "missing/invalid order_id (and no recognized plan)", { orderId, plan, eventId: event.id });
     return NextResponse.json({ error: "missing/invalid order_id" }, { status: 400 });
   }
 
-  logInfo("webhook.stripe", "checkout.session.completed received", {
+  logInfo("webhook.stripe", "checkout.session.completed received (limpeza)", {
     orderId,
     eventId: event.id,
     amountTotal,
     currency,
     hasPhone: !!phone,
   });
-
-  const admin = createAdminClient();
 
   const { data: v2Order, error: orderErr } = await admin
     .from("orders")

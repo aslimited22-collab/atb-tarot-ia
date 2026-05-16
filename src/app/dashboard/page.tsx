@@ -8,8 +8,7 @@ import type { Plan } from "@/lib/types";
 
 const VIDEO_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
 const LIMPEZA_URL = process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL || "#";
-const BASIC_URL = process.env.NEXT_PUBLIC_KIWIFY_BASIC_URL || "#";
-const PREMIUM_URL = process.env.NEXT_PUBLIC_KIWIFY_PREMIUM_URL || "#";
+// Basic/Premium agora passam pelo roteador /api/checkout/[plan] (BR/intl split).
 
 export default async function DashboardHome() {
   const supabase = createClient();
@@ -47,7 +46,7 @@ export default async function DashboardHome() {
               <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f3")}</li>
               <li style={{ color: "#c4b5fd", fontSize: 19, lineHeight: 1.5 }}>{t("plans.basic.f4")}</li>
             </ul>
-            <a href={BASIC_URL} target="_blank" rel="noopener noreferrer" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>
+            <a href="/api/checkout/basic" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>
               {t("checkout.cta.access")}
             </a>
           </div>
@@ -65,7 +64,7 @@ export default async function DashboardHome() {
               <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f3")}</li>
               <li style={{ color: "#f5f0ff", fontSize: 19, lineHeight: 1.5 }}>{t("plans.premium.f4")}</li>
             </ul>
-            <a href={PREMIUM_URL} target="_blank" rel="noopener noreferrer" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>
+            <a href="/api/checkout/premium" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>
               {t("checkout.cta.startReading")}
             </a>
           </div>

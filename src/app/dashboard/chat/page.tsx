@@ -44,9 +44,10 @@ export default function ChatPage() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const BASIC_URL   = process.env.NEXT_PUBLIC_KIWIFY_BASIC_URL   || "#";
-  const PREMIUM_URL = process.env.NEXT_PUBLIC_KIWIFY_PREMIUM_URL || "#";
-  const VIDEO_URL   = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL   || "#";
+  // Roteador /api/checkout/[plan] decide Kiwify (BR) vs Stripe (intl) por IP.
+  const BASIC_URL   = "/api/checkout/basic";
+  const PREMIUM_URL = "/api/checkout/premium";
+  const VIDEO_URL   = "/api/checkout/videochamada";
 
   useEffect(() => {
     fetch("/api/chat").then((r) => r.json()).then((d) => {
@@ -188,7 +189,7 @@ export default function ChatPage() {
                 <ChatBubble role={m.role} content={m.content} typing={m.typing} />
                 {m.role === "assistant" && !m.typing && m.content && i === messages.length - 1 && plan !== "free" && (
                   <div style={{ margin:"12px 0 4px 0", display:"flex", justifyContent:"flex-start" }}>
-                    <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer"
+                    <a href={VIDEO_URL}
                       style={{ display:"inline-flex", alignItems:"center", gap:10, background:"linear-gradient(135deg,#3b0764,#2a0055)", border:"1.5px solid rgba(232,184,75,0.45)", borderRadius:16, padding:"12px 18px", textDecoration:"none", maxWidth:360 }}>
                       <span style={{ fontSize:22 }} aria-hidden="true">📞</span>
                       <div>
@@ -236,8 +237,6 @@ export default function ChatPage() {
         ) : (
           <a
             href={PREMIUM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
             style={{
               display: "block",
               textAlign: "center",

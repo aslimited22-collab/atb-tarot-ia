@@ -561,7 +561,7 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
 
 function SessionComplete({ firstName }: { firstName: string }) {
   const { t } = useT();
-  const VIDEO_URL = process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL || "#";
+  const VIDEO_URL = "/api/checkout/videochamada"; // roteador BR/intl
   return (
     <div className="card-gold" style={{ padding: "28px 22px", textAlign: "center" }}>
       <div style={{ fontSize: 56, marginBottom: 12 }} aria-hidden="true">🕊️</div>
@@ -583,7 +583,7 @@ function SessionComplete({ firstName }: { firstName: string }) {
         <p style={{ fontSize: 14, color: "#d9cdfc", lineHeight: 1.6, marginBottom: 16 }}>
           {t("espirito_dash.video_upsell_desc")}
         </p>
-        <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer" className="btn-gold" style={{ display: "inline-block", padding: "12px 24px", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>
+        <a href={VIDEO_URL} className="btn-gold" style={{ display: "inline-block", padding: "12px 24px", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>
           {t("limpeza_dash.video_upsell_cta")}
         </a>
       </div>

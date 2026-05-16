@@ -17,9 +17,8 @@ const S = {
 
 export default function Home() {
   const { t } = useT();
-  const BASIC   = process.env.NEXT_PUBLIC_KIWIFY_BASIC_URL   || "#";
-  const PREMIUM = process.env.NEXT_PUBLIC_KIWIFY_PREMIUM_URL || "#";
-  const LIMPEZA = process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL || "#";
+  // Os botões Basic/Premium/Limpeza agora vão pelo roteador /api/checkout/[plan]
+  // (decide Kiwify BR vs Stripe intl server-side por IP).
 
   const features = [
     { icon: "💬", title: t("features.chat.title"), desc: t("features.chat.desc") },
@@ -309,9 +308,7 @@ export default function Home() {
               {t("landing.payment_once")}
             </div>
             <a
-              href={LIMPEZA}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/api/checkout/limpeza"
               className="btn-gold"
               style={{
                 display: "block",
@@ -360,7 +357,7 @@ export default function Home() {
                 <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f3")}</li>
                 <li style={{ color: S.text2, fontSize: 18, lineHeight: 1.5 }}>{t("plans.basic.f4")}</li>
               </ul>
-              <a href={BASIC} className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("checkout.cta.access")}</a>
+              <a href="/api/checkout/basic" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("checkout.cta.access")}</a>
             </div>
 
             <div className="card-gold" style={{ padding: "36px 28px", display: "flex", flexDirection: "column" }}>
@@ -375,7 +372,7 @@ export default function Home() {
                 <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f3")}</li>
                 <li style={{ color: S.text, fontSize: 18, lineHeight: 1.5 }}>{t("plans.premium.f4")}</li>
               </ul>
-              <a href={PREMIUM} className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("checkout.cta.startReading")}</a>
+              <a href="/api/checkout/premium" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("checkout.cta.startReading")}</a>
             </div>
           </div>
         </div>
