@@ -40,7 +40,7 @@ export default function EntregaE2EFixture() {
       fullJson={fullJson}
       fullText={null}
       generationStatus="completed"
-      whatsappUrl="https://wa.me/5547999991234"
+      whatsappUrl="https://wa.me/554998051700"
     />
   );
 }
