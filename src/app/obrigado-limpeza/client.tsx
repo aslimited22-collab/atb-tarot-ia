@@ -9,19 +9,9 @@ import { useT } from "@/lib/i18n/I18nProvider";
 
 type Mode = "logged-purchased" | "logged-waiting" | "account-exists" | "needs-signup";
 
-export default function ObrigadoLimpezaClient({ mode, email }: { mode: Mode; email: string }) {
+export default function ObrigadoLimpezaClient({ mode, email, orderId }: { mode: Mode; email: string; orderId: string }) {
   const router = useRouter();
   const { t } = useT();
-
-  // Caso já esteja logado E tenha compra: redirect imediato pra sessão
-  useEffect(() => {
-    if (mode === "logged-purchased") {
-      const t = setTimeout(() => {
-        router.push("/dashboard/limpeza-espiritual");
-      }, 2500);
-      return () => clearTimeout(t);
-    }
-  }, [mode, router]);
 
   // Caso logado e aguardando webhook: poll a cada 4s
   useEffect(() => {
@@ -70,17 +60,17 @@ export default function ObrigadoLimpezaClient({ mode, email }: { mode: Mode; ema
         </div>
 
         <div className="fade-up" style={{ animationDelay: "0.15s" }}>
-          {mode === "logged-purchased" && <LoggedPurchased />}
+          {mode === "logged-purchased" && <LoggedPurchased orderId={orderId} />}
           {mode === "logged-waiting" && <LoggedWaiting />}
-          {mode === "account-exists" && <AccountExists email={email} />}
-          {mode === "needs-signup" && <NeedsSignup initialEmail={email} />}
+          {mode === "account-exists" && <AccountExists email={email} orderId={orderId} />}
+          {mode === "needs-signup" && <NeedsSignup initialEmail={email} orderId={orderId} />}
         </div>
       </div>
     </main>
   );
 }
 
-function LoggedPurchased() {
+function LoggedPurchased({ orderId }: { orderId: string }) {
   const { t } = useT();
   return (
     <>
@@ -88,17 +78,54 @@ function LoggedPurchased() {
       <h1 className="serif" style={{ fontSize: "clamp(2.2rem, 6vw, 3rem)", color: "#e8b84b", lineHeight: 1.1, marginBottom: 18, fontWeight: 700 }}>
         {t("thanks.purchased_h1")}
       </h1>
-      <p style={{ fontSize: "1.3rem", color: "#fbf8ff", lineHeight: 1.65, marginBottom: 28, fontWeight: 500 }}>
+      <p style={{ fontSize: "1.3rem", color: "#fbf8ff", lineHeight: 1.65, marginBottom: 24, fontWeight: 500 }}>
         {t("thanks.purchased_desc")}
       </p>
-      <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 22 }} aria-hidden="true">
-        {[0, 1, 2].map((i) => (
-          <div key={i} style={{
-            width: 16, height: 16, borderRadius: "50%", background: "#e8b84b",
-            animation: `bounce 1.4s ease-in-out ${i * 0.2}s infinite`,
-          }} />
-        ))}
-      </div>
+
+      {orderId ? (
+        <Link
+          href={`/entrega/${orderId}`}
+          style={{
+            display: "block",
+            background: "linear-gradient(135deg,#e8b84b,#c9950a)",
+            color: "#120025",
+            fontWeight: 800,
+            fontSize: 22,
+            padding: "22px 28px",
+            borderRadius: 16,
+            textDecoration: "none",
+            minHeight: 72,
+            margin: "8px auto 18px",
+            maxWidth: 460,
+            boxShadow: "0 12px 28px rgba(232,184,75,0.45)",
+            textAlign: "center",
+          }}
+        >
+          {t("thanks.receive_cta")} →
+        </Link>
+      ) : (
+        <Link
+          href="/dashboard/limpeza-espiritual"
+          style={{
+            display: "block",
+            background: "linear-gradient(135deg,#e8b84b,#c9950a)",
+            color: "#120025",
+            fontWeight: 800,
+            fontSize: 22,
+            padding: "22px 28px",
+            borderRadius: 16,
+            textDecoration: "none",
+            minHeight: 72,
+            margin: "8px auto 18px",
+            maxWidth: 460,
+            boxShadow: "0 12px 28px rgba(232,184,75,0.45)",
+            textAlign: "center",
+          }}
+        >
+          {t("thanks.receive_cta")} →
+        </Link>
+      )}
+
       <p style={{ fontSize: 15, color: "#c4b5fd", fontStyle: "italic" }}>
         {t("thanks.purchased_blessing")}
       </p>
@@ -136,7 +163,7 @@ function LoggedWaiting() {
   );
 }
 
-function AccountExists({ email }: { email: string }) {
+function AccountExists({ email, orderId }: { email: string; orderId: string }) {
   const router = useRouter();
   const { t } = useT();
   const [password, setPassword] = useState("");
@@ -154,7 +181,8 @@ function AccountExists({ email }: { email: string }) {
     setLoading(false);
     if (error) return toast.error(t("auth.login_error"));
     toast.success(t("auth.login_welcome_back"));
-    router.push("/dashboard/limpeza-espiritual");
+    const target = orderId ? `/entrega/${orderId}` : "/dashboard/limpeza-espiritual";
+    router.push(target);
     router.refresh();
   }
 
@@ -240,7 +268,7 @@ function AccountExists({ email }: { email: string }) {
   );
 }
 
-function NeedsSignup({ initialEmail }: { initialEmail: string }) {
+function NeedsSignup({ initialEmail, orderId }: { initialEmail: string; orderId: string }) {
   const router = useRouter();
   const { t } = useT();
   const [name, setName] = useState("");
@@ -280,7 +308,8 @@ function NeedsSignup({ initialEmail }: { initialEmail: string }) {
     }
 
     toast.success(t("auth.thanks_toast_ready"));
-    router.push("/dashboard/limpeza-espiritual");
+    const target = orderId ? `/entrega/${orderId}` : "/dashboard/limpeza-espiritual";
+    router.push(target);
     router.refresh();
   }
 

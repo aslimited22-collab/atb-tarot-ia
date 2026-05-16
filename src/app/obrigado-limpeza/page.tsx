@@ -47,11 +47,11 @@ export default async function ObrigadoLimpezaPage({
       .maybeSingle();
 
     if (purchase) {
-      return <ObrigadoLimpezaClient mode="logged-purchased" email={userEmail} />;
+      return <ObrigadoLimpezaClient mode="logged-purchased" email={userEmail} orderId={orderIdValid} />;
     }
 
     // Logado mas sem compra registrada ainda — webhook pode estar atrasado
-    return <ObrigadoLimpezaClient mode="logged-waiting" email={userEmail} />;
+    return <ObrigadoLimpezaClient mode="logged-waiting" email={userEmail} orderId={orderIdValid} />;
   }
 
   // Não logado — verifica se já existe conta com esse email
@@ -65,10 +65,10 @@ export default async function ObrigadoLimpezaPage({
 
     if (existingUser) {
       // Já tem conta — manda fazer login
-      return <ObrigadoLimpezaClient mode="account-exists" email={customerEmail} />;
+      return <ObrigadoLimpezaClient mode="account-exists" email={customerEmail} orderId={orderIdValid} />;
     }
   }
 
   // Não logado, sem conta — pede pra criar conta
-  return <ObrigadoLimpezaClient mode="needs-signup" email={customerEmail} />;
+  return <ObrigadoLimpezaClient mode="needs-signup" email={customerEmail} orderId={orderIdValid} />;
 }
