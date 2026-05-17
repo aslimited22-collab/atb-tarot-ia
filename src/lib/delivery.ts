@@ -159,6 +159,11 @@ export async function deliverLimpezaOrder(input: DeliverInput): Promise<DeliverR
         ? "Vai chegar em até 5 minutos. Pode abrir e ler com calma."
         : "It will arrive within 5 minutes. Take your time to read.";
 
+      const saveTitle = isPt ? "💡 Guarde este email" : "💡 Save this email";
+      const saveDesc = isPt
+        ? "Se precisar voltar a esta limpeza, é só fazer login em <strong style=\"color:#e8b84b\">atbtartot.com</strong> com este endereço de email — sua limpeza fica salva em \"Minhas limpezas\"."
+        : "If you need to come back, just log in at <strong style=\"color:#e8b84b\">atbtartot.com</strong> with this email — your cleansing is saved in \"My cleansings\".";
+
       const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
 <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
   <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.4);">
@@ -167,6 +172,10 @@ export async function deliverLimpezaOrder(input: DeliverInput): Promise<DeliverR
     <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">${greeting}</p>
     <a href="${escapeHtml(input.deliveryLink)}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px rgba(232,184,75,0.4);">${cta}</a>
     <p style="color:#c4b5fd;font-size:13px;margin:24px 0 0;">${note}</p>
+  </div>
+  <div style="margin-top:20px;padding:18px 20px;background:rgba(126,232,248,0.08);border:1.5px solid rgba(126,232,248,0.32);border-radius:14px;color:#fbf8ff;text-align:left;">
+    <div style="font-size:17px;font-weight:700;color:#7ee8f8;margin-bottom:8px;line-height:1.3;">${saveTitle}</div>
+    <div style="font-size:16px;line-height:1.6;font-weight:500;">${saveDesc}</div>
   </div>
 </div></body></html>`;
 

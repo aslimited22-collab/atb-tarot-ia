@@ -50,6 +50,8 @@ const SAINT_DEFS = [
   { icon: "🪢", nameKey: "limpeza_dash.saint6_name", powerKey: "limpeza_dash.saint6_power" },
 ] as const;
 
+type PastLimpeza = { id: string; createdAt: string };
+
 export default function LimpezaClient({
   purchased,
   justPurchased,
@@ -58,6 +60,7 @@ export default function LimpezaClient({
   initialMessages,
   initialRemaining,
   hasProfile,
+  pastLimpezas = [],
 }: {
   purchased: boolean;
   justPurchased?: boolean;
@@ -66,6 +69,7 @@ export default function LimpezaClient({
   initialMessages: Msg[];
   initialRemaining: number;
   hasProfile?: boolean;
+  pastLimpezas?: PastLimpeza[];
 }) {
   const router = useRouter();
   const { t } = useT();
@@ -186,6 +190,9 @@ export default function LimpezaClient({
           {remaining} <span style={{ fontSize: "1rem", color: "#9575cd" }}>{t("limpeza_dash.counter_of")} 3</span>
         </div>
       </div>
+
+      {/* Histórico de limpezas anteriores (UX 60+ — pra revisitar) */}
+      <PastLimpezasList items={pastLimpezas} />
 
       {/* Painel de Santos */}
       <div className="card" style={{ padding: "16px 14px", marginBottom: 20 }}>
@@ -952,6 +959,89 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
         <p style={{ fontSize: 12, color: "#9575cd", marginTop: 14, lineHeight: 1.5 }}>
           {t("limpeza_dash.gate_secure")}
         </p>
+      </div>
+    </div>
+  );
+}
+
+function PastLimpezasList({ items }: { items: PastLimpeza[] }) {
+  const { t } = useT();
+  if (!items.length) return null;
+
+  function formatDate(iso: string) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, { day: "2-digit", month: "long", year: "numeric" });
+    } catch {
+      return "";
+    }
+  }
+
+  return (
+    <div
+      className="card"
+      style={{
+        padding: "20px 18px",
+        marginBottom: 20,
+        background: "linear-gradient(135deg, rgba(232,184,75,0.08), rgba(126,232,248,0.04))",
+        border: "1.5px solid rgba(232,184,75,0.32)",
+      }}
+    >
+      <div
+        className="serif"
+        style={{
+          fontSize: "1.25rem",
+          color: "#e8b84b",
+          fontWeight: 700,
+          marginBottom: 14,
+          textAlign: "center",
+          lineHeight: 1.25,
+        }}
+      >
+        {t("limpeza_dash.history_title")}
+      </div>
+      <div style={{ display: "grid", gap: 10 }}>
+        {items.map((it) => (
+          <div
+            key={it.id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              padding: "14px 16px",
+              background: "rgba(18,0,37,0.5)",
+              borderRadius: 12,
+              border: "1px solid rgba(232,184,75,0.25)",
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <div style={{ fontSize: 14, color: "#c4b5fd", lineHeight: 1.4, fontWeight: 500 }}>
+                {t("limpeza_dash.history_date_prefix")}
+              </div>
+              <div style={{ fontSize: 18, color: "#fbf8ff", fontWeight: 700, lineHeight: 1.3 }}>
+                {formatDate(it.createdAt)}
+              </div>
+            </div>
+            <Link
+              href={`/entrega/${it.id}`}
+              style={{
+                display: "inline-block",
+                background: "linear-gradient(135deg, #e8b84b, #c9950a)",
+                color: "#120025",
+                fontWeight: 800,
+                fontSize: 16,
+                padding: "14px 20px",
+                borderRadius: 12,
+                textDecoration: "none",
+                minHeight: 52,
+                boxShadow: "0 6px 16px rgba(232,184,75,0.3)",
+              }}
+            >
+              {t("limpeza_dash.history_open_again")}
+            </Link>
+          </div>
+        ))}
       </div>
     </div>
   );

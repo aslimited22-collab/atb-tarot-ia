@@ -59,6 +59,8 @@ export default function ObrigadoLimpezaClient({ mode, email, orderId }: { mode: 
           />
         </div>
 
+        <HowToReceiveBox />
+
         <div className="fade-up" style={{ animationDelay: "0.15s" }}>
           {mode === "logged-purchased" && <LoggedPurchased orderId={orderId} />}
           {mode === "logged-waiting" && <LoggedWaiting />}
@@ -67,6 +69,88 @@ export default function ObrigadoLimpezaClient({ mode, email, orderId }: { mode: 
         </div>
       </div>
     </main>
+  );
+}
+
+function HowToReceiveBox() {
+  const { t } = useT();
+  const rows = [
+    { h: t("thanks.how_email_h"), d: t("thanks.how_email_d") },
+    { h: t("thanks.how_whatsapp_h"), d: t("thanks.how_whatsapp_d") },
+    { h: t("thanks.how_button_h"), d: t("thanks.how_button_d") },
+  ];
+  return (
+    <div
+      className="fade-up"
+      style={{
+        animationDelay: "0.08s",
+        textAlign: "left",
+        background: "linear-gradient(135deg, rgba(232,184,75,0.16), rgba(126,232,248,0.10))",
+        border: "2px solid rgba(232,184,75,0.5)",
+        borderRadius: 18,
+        padding: "22px 22px 18px",
+        margin: "12px 0 24px",
+        boxShadow: "0 12px 30px rgba(232,184,75,0.18)",
+      }}
+    >
+      <div
+        className="serif"
+        style={{
+          fontSize: "1.25rem",
+          color: "#f5c860",
+          fontWeight: 700,
+          textAlign: "center",
+          marginBottom: 14,
+          lineHeight: 1.3,
+        }}
+      >
+        {t("thanks.how_to_receive_title")}
+      </div>
+      <div style={{ display: "grid", gap: 12 }}>
+        {rows.map((r, i) => (
+          <div
+            key={i}
+            style={{
+              padding: "12px 14px",
+              background: "rgba(18,0,37,0.55)",
+              borderRadius: 12,
+              border: "1px solid rgba(232,184,75,0.25)",
+            }}
+          >
+            <div style={{ fontSize: 21, fontWeight: 800, color: "#fbf8ff", lineHeight: 1.3, marginBottom: 6 }}>
+              {r.h}
+            </div>
+            <div style={{ fontSize: 20, color: "#c4b5fd", lineHeight: 1.55, fontWeight: 500 }}>
+              {r.d}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SaveLinkAviso() {
+  const { t } = useT();
+  return (
+    <div
+      style={{
+        margin: "10px auto 0",
+        maxWidth: 460,
+        padding: "16px 18px",
+        background: "rgba(126,232,248,0.08)",
+        border: "1.5px solid rgba(126,232,248,0.35)",
+        borderRadius: 14,
+        textAlign: "left",
+      }}
+    >
+      <div style={{ fontSize: 20, fontWeight: 800, color: "#7ee8f8", marginBottom: 8, lineHeight: 1.3 }}>
+        {t("thanks.save_link_title")}
+      </div>
+      <div style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.55, fontWeight: 500 }}>
+        {t("thanks.save_link_desc")}
+      </div>
+    </div>
   );
 }
 
@@ -126,7 +210,9 @@ function LoggedPurchased({ orderId }: { orderId: string }) {
         </Link>
       )}
 
-      <p style={{ fontSize: 15, color: "#c4b5fd", fontStyle: "italic" }}>
+      <SaveLinkAviso />
+
+      <p style={{ fontSize: 15, color: "#c4b5fd", fontStyle: "italic", marginTop: 16 }}>
         {t("thanks.purchased_blessing")}
       </p>
     </>

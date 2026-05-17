@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import LimpezaClient from "./client";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,23 @@ export default async function LimpezaPage({
 
   const purchased = !!purchase;
   const justPurchased = searchParams?.just_purchased === "1";
+
+  // Histórico de limpezas pagas (orders v2 com leituras geradas)
+  // Usa admin client porque RLS de orders permite ler só do próprio email
+  // mas algumas orders antigas podem não ter user_id; busca por email.
+  const admin = createAdminClient();
+  const { data: pastOrders } = await admin
+    .from("orders")
+    .select("id, created_at")
+    .eq("email", userEmail)
+    .eq("product_type", "limpeza_espiritual")
+    .eq("status", "paid")
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const pastLimpezas = (pastOrders || []).map((o) => ({
+    id: o.id,
+    createdAt: o.created_at,
+  }));
 
   const { data: profile } = await supabase
     .from("users").select("name, email").eq("id", user!.id).maybeSingle();
@@ -69,6 +87,7 @@ export default async function LimpezaPage({
       initialMessages={messages}
       initialRemaining={remaining}
       hasProfile={!!limpezaProfile?.main_feeling}
+      pastLimpezas={pastLimpezas}
     />
   );
 }

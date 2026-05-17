@@ -230,6 +230,55 @@ export default function LimpezaV2Page() {
         </div>
       </section>
 
+      {/* COMO VOCÊ VAI RECEBER (UX 60+) */}
+      <section style={{ padding: "44px 20px", maxWidth: 760, margin: "0 auto" }}>
+        <h2 className="serif" style={{
+          fontSize: "clamp(1.6rem, 4vw, 2rem)",
+          color: "#e8b84b",
+          textAlign: "center",
+          marginBottom: 24,
+          fontWeight: 700,
+        }}>
+          {t("v2.receive.title")}
+        </h2>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 14,
+        }}>
+          {[
+            { h: t("v2.receive.email_h"), d: t("v2.receive.email_d") },
+            { h: t("v2.receive.whatsapp_h"), d: t("v2.receive.whatsapp_d") },
+            { h: t("v2.receive.site_h"), d: t("v2.receive.site_d") },
+          ].map((card, i) => (
+            <div key={i} style={{
+              padding: "20px 18px",
+              background: "linear-gradient(135deg, rgba(232,184,75,0.10), rgba(126,232,248,0.06))",
+              border: "1.5px solid rgba(232,184,75,0.35)",
+              borderRadius: 16,
+            }}>
+              <div className="serif" style={{
+                fontSize: "1.25rem",
+                color: "#f5c860",
+                fontWeight: 700,
+                marginBottom: 8,
+                lineHeight: 1.25,
+              }}>
+                {card.h}
+              </div>
+              <div style={{
+                fontSize: 20,
+                color: "#fbf8ff",
+                lineHeight: 1.55,
+                fontWeight: 500,
+              }}>
+                {card.d}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* FORMULÁRIO */}
       <section id="formulario" style={{ padding: "44px 20px 80px", maxWidth: 640, margin: "0 auto" }}>
         <h2 className="serif" style={{
