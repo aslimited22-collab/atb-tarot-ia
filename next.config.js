@@ -24,11 +24,11 @@ module.exports = {
               "default-src 'self'",
               // 'unsafe-inline' ainda necessário pro Next.js inline runtime
               // 'unsafe-eval' REMOVIDO — Next.js 14 prod não precisa
-              "script-src 'self' 'unsafe-inline' https://js.stripe.com",
+              "script-src 'self' 'unsafe-inline' https://js.stripe.com https://va.vercel-scripts.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://*.supabase.co https://api.deepseek.com https://api.openai.com https://api.stripe.com https://*.vercel-storage.com wss://*.supabase.co",
+              "connect-src 'self' https://*.supabase.co https://api.deepseek.com https://api.openai.com https://api.stripe.com https://*.vercel-storage.com wss://*.supabase.co https://va.vercel-scripts.com",
               "frame-src 'self' https://js.stripe.com https://checkout.stripe.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",

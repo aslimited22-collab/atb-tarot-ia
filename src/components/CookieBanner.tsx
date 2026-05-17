@@ -19,6 +19,10 @@ function getConsent(): Consent {
 function setConsent(value: "all" | "essential") {
   const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
   document.cookie = `${CONSENT_COOKIE}=${value}; Max-Age=${CONSENT_MAX_AGE}; Path=/; SameSite=Lax${secure}`;
+  // Notifica o AnalyticsWrapper pra reagir sem reload
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("atb-consent-changed"));
+  }
 }
 
 export function CookieBanner() {
