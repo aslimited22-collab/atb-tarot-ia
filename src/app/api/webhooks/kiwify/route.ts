@@ -227,8 +227,9 @@ export async function POST(req: Request) {
   }
 
   // ─── PERGUNTA AVULSA (créditos one-time: 1/3/7 perguntas) ───
-  // Detecta por product_id (envs) OU por faixa de valor (R$14,90 / R$19,90 / R$39,90).
-  // Incrementa users.chat_credits_balance com N créditos correspondentes.
+  // Fluxo PRIMÁRIO destes produtos é Stripe (BR usa Pix/cartão).
+  // Este branch fica como FALLBACK defensivo caso o user crie manualmente
+  // os produtos no Kiwify no futuro — detecta por product_id ou faixa de valor.
   if (event === "order.approved" || event === "order_approved") {
     const p1Id = process.env.KIWIFY_PERGUNTA1_PRODUCT_ID;
     const p3Id = process.env.KIWIFY_PERGUNTA3_PRODUCT_ID;

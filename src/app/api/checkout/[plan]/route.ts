@@ -1,15 +1,18 @@
 // GET /api/checkout/[plan]
-// Roteador dinâmico de checkout — decide entre Kiwify (BR) e Stripe (intl) por IP.
+// Roteador dinâmico de checkout.
 //
-// Mesmo link público continua funcionando: o usuário clica no botão "Premium"
-// na landing e cai aqui. Server-side decide pra onde redirecionar.
+// Plans tradicionais (premium, basic, videochamada, limpeza):
+//   BR (x-vercel-ip-country=BR) → 307 redirect pra Kiwify URL (envs)
+//   Intl → cria Stripe Checkout session em USD/EUR/JPY e 303 redirect pra session.url
 //
-// Plans suportados: premium, basic, videochamada, limpeza
-// - Premium/Basic → subscription mensal (recurring)
-// - Videochamada/Limpeza → one-time payment
+// Plans avulsos (pergunta1, pergunta3, pergunta7):
+//   SEMPRE Stripe (Kiwify não tem API pública de criar produto).
+//   BR → Stripe BRL com payment_method_types Pix + cartão (boleto opcional)
+//   Intl → Stripe USD/EUR/JPY só cartão
 //
-// BR (x-vercel-ip-country=BR) → redirect 307 pra Kiwify URL (envs)
-// Intl → cria Stripe Checkout session e redirect 303 pra session.url
+// Modes:
+//   - Premium/Basic → subscription mensal
+//   - Videochamada/Limpeza/Pergunta1/3/7 → payment (one-time)
 
 import { NextResponse } from "next/server";
 import { getStripe, currencyForRequest, detectIsInternational } from "@/lib/stripe";
@@ -20,6 +23,7 @@ import {
   planDisplayName,
   stripeLocale,
   isValidPlan,
+  isPerguntaPlan,
 } from "@/lib/pricing";
 import { getSiteUrl } from "@/lib/site-url";
 import { logInfo, logWarn, logError } from "@/lib/logger";
@@ -34,16 +38,17 @@ export async function GET(
   const planParam = (params.plan || "").toLowerCase();
   const baseUrl = getSiteUrl(req);
 
-  // Validação básica do plano
   if (!isValidPlan(planParam)) {
     logWarn("checkout", "invalid plan", { plan: planParam });
     return NextResponse.redirect(`${baseUrl}/#planos`, 307);
   }
   const plan = planParam;
-
-  // ---------- BRANCH BR — redirect direto pra Kiwify ----------
   const isIntl = detectIsInternational(req);
-  if (!isIntl) {
+  const isPergunta = isPerguntaPlan(plan);
+
+  // ---------- BRANCH 1: plans tradicionais + BR → Kiwify ----------
+  // Pergunta avulsa (pergunta1/3/7) NÃO usa Kiwify (sem API), vai direto pro Stripe abaixo.
+  if (!isIntl && !isPergunta) {
     const url = kiwifyUrlFor(plan);
     if (!url) {
       logWarn("checkout", "kiwify url missing for plan", { plan });
@@ -53,25 +58,34 @@ export async function GET(
     return NextResponse.redirect(url, 307);
   }
 
-  // ---------- BRANCH INTL — Stripe Checkout session inline ----------
+  // ---------- BRANCH 2: Stripe Checkout session (intl + todos os pergunta1/3/7) ----------
   const stripe = getStripe();
   if (!stripe) {
     logError("checkout", "Stripe not configured (missing STRIPE_SECRET_KEY)", { plan });
     return NextResponse.redirect(`${baseUrl}/#planos?error=stripe_unavailable`, 307);
   }
 
-  const { currency, locale } = currencyForRequest(req);
+  // Pergunta BR: força currency=BRL + Pix/cartão. Outros casos: usa detecção normal.
+  let currency: "brl" | "usd" | "eur" | "jpy";
+  let locale: string;
+  if (isPergunta && !isIntl) {
+    currency = "brl";
+    locale = "pt-BR";
+  } else {
+    const detected = currencyForRequest(req);
+    currency = detected.currency;
+    locale = detected.locale;
+  }
+
   const amount = PLAN_PRICES[plan][currency];
   if (!amount) {
     logError("checkout", "no price for currency", { plan, currency });
     return NextResponse.redirect(`${baseUrl}/#planos?error=no_price`, 307);
   }
 
-  // Defesa em profundidade: Stripe (path intl) NUNCA cobra BRL.
-  // Se por edge case (headers contaminados) detectIsInternational retornou true
-  // mas currencyForRequest retornou BRL, força fallback pra Kiwify.
-  // Evita o incidente do R$58 no painel Stripe (cliente BR caindo em fluxo intl).
-  if (currency === "brl") {
+  // Defesa em profundidade pro PATH INTL (não-pergunta): Stripe nunca cobra BRL
+  // sem ser BR. Pergunta BR é a única exceção legítima (intencional).
+  if (currency === "brl" && !isPergunta) {
     logWarn("checkout", "currency=brl detected in intl path — falling back to Kiwify", {
       plan,
       ipCountry: req.headers.get("x-vercel-ip-country"),
@@ -84,13 +98,18 @@ export async function GET(
 
   const isSubscription = PLAN_TYPE[plan] === "subscription";
 
+  // payment_method_types:
+  // - BR pergunta avulsa (BRL): Pix + cartão (Pix exige currency=brl + mode=payment)
+  // - Outros intl/subscription: só cartão
+  const paymentMethodTypes: string[] =
+    isPergunta && currency === "brl"
+      ? ["card", "pix"]
+      : ["card"];
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: isSubscription ? "subscription" : "payment",
-      payment_method_types: ["card"], // SEM Pix/boleto/CPF na experiência intl
-      // Desativa adaptive_pricing (default Stripe = enabled true): impede que
-      // Stripe converta automaticamente USD/EUR/JPY → BRL na tela do cliente
-      // com IP brasileiro. Cliente intl SEMPRE vê preço na moeda original.
+      payment_method_types: paymentMethodTypes as any,
       adaptive_pricing: { enabled: false },
       locale: stripeLocale(locale) as any,
       line_items: [
@@ -108,12 +127,14 @@ export async function GET(
           },
         },
       ],
-      success_url: `${baseUrl}/dashboard?welcome=${plan}`,
-      cancel_url: `${baseUrl}/#planos`,
+      success_url: isPergunta
+        ? `${baseUrl}/obrigado-pergunta?session_id={CHECKOUT_SESSION_ID}`
+        : `${baseUrl}/dashboard?welcome=${plan}`,
+      cancel_url: isPergunta ? `${baseUrl}/#pergunta` : `${baseUrl}/#planos`,
       billing_address_collection: "auto",
       metadata: {
         plan,
-        source: "international",
+        source: isPergunta && !isIntl ? "br_pergunta" : "international",
         locale,
         currency,
       },
@@ -124,10 +145,11 @@ export async function GET(
       return NextResponse.redirect(`${baseUrl}/#planos?error=session_no_url`, 307);
     }
 
-    logInfo("checkout", "creating intl Stripe session", {
+    logInfo("checkout", "creating Stripe session", {
       plan,
       currency,
       amount,
+      paymentMethods: paymentMethodTypes.join(","),
       ipCountry: req.headers.get("x-vercel-ip-country"),
       acceptLanguage: req.headers.get("accept-language"),
       sessionId: session.id,
@@ -137,6 +159,7 @@ export async function GET(
     logError("checkout", "stripe session.create failed", {
       plan,
       currency,
+      paymentMethods: paymentMethodTypes.join(","),
       error: err instanceof Error ? err.message : String(err),
     });
     return NextResponse.redirect(`${baseUrl}/#planos?error=stripe_session_failed`, 307);
