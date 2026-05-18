@@ -67,12 +67,31 @@ export async function GET(
     return NextResponse.redirect(`${baseUrl}/#planos?error=no_price`, 307);
   }
 
+  // Defesa em profundidade: Stripe (path intl) NUNCA cobra BRL.
+  // Se por edge case (headers contaminados) detectIsInternational retornou true
+  // mas currencyForRequest retornou BRL, força fallback pra Kiwify.
+  // Evita o incidente do R$58 no painel Stripe (cliente BR caindo em fluxo intl).
+  if (currency === "brl") {
+    logWarn("checkout", "currency=brl detected in intl path — falling back to Kiwify", {
+      plan,
+      ipCountry: req.headers.get("x-vercel-ip-country"),
+      acceptLanguage: req.headers.get("accept-language"),
+    });
+    const kiwifyUrl = kiwifyUrlFor(plan);
+    if (kiwifyUrl) return NextResponse.redirect(kiwifyUrl, 307);
+    return NextResponse.redirect(`${baseUrl}/#planos`, 307);
+  }
+
   const isSubscription = PLAN_TYPE[plan] === "subscription";
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: isSubscription ? "subscription" : "payment",
       payment_method_types: ["card"], // SEM Pix/boleto/CPF na experiência intl
+      // Desativa adaptive_pricing (default Stripe = enabled true): impede que
+      // Stripe converta automaticamente USD/EUR/JPY → BRL na tela do cliente
+      // com IP brasileiro. Cliente intl SEMPRE vê preço na moeda original.
+      adaptive_pricing: { enabled: false },
       locale: stripeLocale(locale) as any,
       line_items: [
         {
@@ -105,7 +124,14 @@ export async function GET(
       return NextResponse.redirect(`${baseUrl}/#planos?error=session_no_url`, 307);
     }
 
-    logInfo("checkout", "routing intl → Stripe", { plan, currency, sessionId: session.id });
+    logInfo("checkout", "creating intl Stripe session", {
+      plan,
+      currency,
+      amount,
+      ipCountry: req.headers.get("x-vercel-ip-country"),
+      acceptLanguage: req.headers.get("accept-language"),
+      sessionId: session.id,
+    });
     return NextResponse.redirect(session.url, 303);
   } catch (err) {
     logError("checkout", "stripe session.create failed", {
