@@ -94,20 +94,20 @@ export const PLAN_TYPE: Record<PlanId, CheckoutMode> = {
 /**
  * Mapa de URL Kiwify por plano (env vars). Usado pelo branch BR do roteador.
  *
- * Plans `pergunta1/3/7` NÃO usam Kiwify (sem API pública pra criar produto):
- * vão direto pro Stripe mesmo pra clientes BR, com Pix/cartão.
+ * Cliente quer todos os pagamentos BR num único painel (Kiwify), incluindo
+ * as perguntas avulsas pergunta1/3/7 — produtos criados manualmente via Chrome MCP.
  */
 export function kiwifyUrlFor(plan: PlanId): string | undefined {
-  if (plan === "pergunta1" || plan === "pergunta3" || plan === "pergunta7") {
-    return undefined;
-  }
-  const map: Record<Exclude<PlanId, "pergunta1" | "pergunta3" | "pergunta7">, string | undefined> = {
+  const map: Record<PlanId, string | undefined> = {
     premium: process.env.NEXT_PUBLIC_KIWIFY_PREMIUM_URL,
     basic: process.env.NEXT_PUBLIC_KIWIFY_BASIC_URL,
     videochamada: process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL,
     limpeza: process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL,
+    pergunta1: process.env.NEXT_PUBLIC_KIWIFY_PERGUNTA1_URL,
+    pergunta3: process.env.NEXT_PUBLIC_KIWIFY_PERGUNTA3_URL,
+    pergunta7: process.env.NEXT_PUBLIC_KIWIFY_PERGUNTA7_URL,
   };
-  return map[plan as Exclude<PlanId, "pergunta1" | "pergunta3" | "pergunta7">];
+  return map[plan];
 }
 
 /**
