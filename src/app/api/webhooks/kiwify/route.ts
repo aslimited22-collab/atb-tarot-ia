@@ -226,6 +226,59 @@ export async function POST(req: Request) {
     }
   }
 
+  // ─── PERGUNTA AVULSA (créditos one-time: 1/3/7 perguntas) ───
+  // Detecta por product_id (envs) OU por faixa de valor (R$14,90 / R$19,90 / R$39,90).
+  // Incrementa users.chat_credits_balance com N créditos correspondentes.
+  if (event === "order.approved" || event === "order_approved") {
+    const p1Id = process.env.KIWIFY_PERGUNTA1_PRODUCT_ID;
+    const p3Id = process.env.KIWIFY_PERGUNTA3_PRODUCT_ID;
+    const p7Id = process.env.KIWIFY_PERGUNTA7_PRODUCT_ID;
+
+    const isP1 = (p1Id && productId === p1Id) || (!p1Id && valueBRL >= 14 && valueBRL <= 16);
+    const isP3 = (p3Id && productId === p3Id) || (!p3Id && valueBRL >= 19 && valueBRL <= 21);
+    const isP7 = (p7Id && productId === p7Id) || (!p7Id && valueBRL >= 38 && valueBRL <= 41);
+
+    if (isP1 || isP3 || isP7) {
+      const credits = isP1 ? 1 : isP3 ? 3 : 7;
+      const planKey: "pergunta1" | "pergunta3" | "pergunta7" =
+        isP1 ? "pergunta1" : isP3 ? "pergunta3" : "pergunta7";
+
+      // Busca user existente (pode não existir ainda — cliente paga ANTES de criar conta)
+      const { data: userRow } = await admin
+        .from("users")
+        .select("id, chat_credits_balance, chat_credits_total_purchased")
+        .eq("email", email.toLowerCase())
+        .maybeSingle();
+
+      if (userRow) {
+        // Já tem conta — incrementa direto
+        const newBalance = (userRow.chat_credits_balance ?? 0) + credits;
+        const newTotal = (userRow.chat_credits_total_purchased ?? 0) + credits;
+        await admin
+          .from("users")
+          .update({
+            chat_credits_balance: newBalance,
+            chat_credits_total_purchased: newTotal,
+          })
+          .eq("id", userRow.id);
+      }
+      // Se NÃO tem conta ainda: a tela /obrigado-pergunta vai criar a conta
+      // e creditar a partir das purchases registradas pra esse email.
+
+      await admin.from("purchases").insert({
+        email: email.toLowerCase(),
+        name: customerName ?? null,
+        kiwify_order_id: orderId ?? "unknown",
+        plan: planKey,
+        event: `${planKey}_purchased`,
+        amount_cents: Math.round(valueBRL * 100),
+        user_id: userRow?.id ?? null,
+      });
+
+      return NextResponse.json({ ok: true, plan: planKey, credits });
+    }
+  }
+
   const limpezaProductId = process.env.KIWIFY_LIMPEZA_PRODUCT_ID;
   const isLimpezaByProduct = limpezaProductId && productId && productId === limpezaProductId;
   const isLimpezaByValue = !limpezaProductId && valueBRL >= 95 && valueBRL <= 110;

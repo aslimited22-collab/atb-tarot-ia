@@ -106,6 +106,32 @@ export async function POST(req: Request) {
           })
           .eq("id", data.user.id);
       }
+
+      // Credita "perguntas avulsas" compradas ANTES do signup (funil de entrada):
+      // soma todos os credits de purchases pergunta1/3/7 desse email.
+      const { data: perguntaPurchases } = await adminClient
+        .from("purchases")
+        .select("plan")
+        .eq("email", normalizedEmail)
+        .in("plan", ["pergunta1", "pergunta3", "pergunta7"]);
+
+      if (perguntaPurchases && perguntaPurchases.length > 0) {
+        let credits = 0;
+        for (const p of perguntaPurchases) {
+          if (p.plan === "pergunta1") credits += 1;
+          else if (p.plan === "pergunta3") credits += 3;
+          else if (p.plan === "pergunta7") credits += 7;
+        }
+        if (credits > 0) {
+          await adminClient
+            .from("users")
+            .update({
+              chat_credits_balance: credits,
+              chat_credits_total_purchased: credits,
+            })
+            .eq("id", data.user.id);
+        }
+      }
     } catch {
       // Falha silenciosa — não quebra signup
     }

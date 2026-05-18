@@ -8,6 +8,22 @@ import type { Plan } from "@/lib/types";
 
 export const runtime = "nodejs";
 
+/**
+ * Remove markdown defensivo da resposta da ATB.
+ * O system prompt JÁ pede texto puro, mas DeepSeek às vezes desobedece.
+ * Usado em: (1) cada chunk de delta antes de streamar pro cliente,
+ *           (2) texto completo antes de salvar no DB.
+ */
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*+/g, "")            // **bold** ou *italic* — remove todos asteriscos
+    .replace(/__+/g, "")             // __underline__
+    .replace(/`+/g, "")              // `code`
+    .replace(/^#{1,6}\s+/gm, "")     // # headers
+    .replace(/^[-+]\s+/gm, "")       // listas - + (preserva texto)
+    .replace(/^\d+\.\s+/gm, "");     // listas numeradas
+}
+
 export async function POST(req: Request) {
   try {
     const ip = getClientIp(req);
@@ -43,17 +59,20 @@ export async function POST(req: Request) {
 
     const { data: profile } = await supabase
       .from("users")
-      .select("plan, messages_today, last_message_date, messages_month, last_message_month")
+      .select("plan, messages_today, last_message_date, messages_month, last_message_month, chat_credits_balance")
       .eq("id", user.id)
       .maybeSingle();
 
     const plan: Plan = (profile?.plan as Plan) || "free";
+    const creditsBalance = (profile?.chat_credits_balance as number | undefined) ?? 0;
+    const usingCredits = creditsBalance > 0;
 
-    if (plan === "free") {
-      // Plano grátis não envia mensagens — converter direto.
+    // Bloqueia só se for free SEM créditos avulsos. Cliente que comprou perguntas
+    // avulsas (pergunta1/3/7) pode usar mesmo com plan="free".
+    if (plan === "free" && !usingCredits) {
       return NextResponse.json(
         {
-          error: "Para conversar com a ATB, escolha um plano. Você só paga uma vez por mês.",
+          error: "Para conversar com a ATB, escolha um plano ou compre uma pergunta avulsa.",
           needsUpgrade: true,
         },
         { status: 402 }
@@ -62,10 +81,13 @@ export async function POST(req: Request) {
 
     const monthKey = currentMonthKey();
     const usedMonth = profile?.last_message_month === monthKey ? profile?.messages_month ?? 0 : 0;
-    const limit = MESSAGE_LIMITS_MONTH[plan];
-    if (usedMonth >= limit) {
+    const planLimit = plan === "free" ? 0 : MESSAGE_LIMITS_MONTH[plan];
+
+    // Gating: se NÃO está usando créditos, valida cota mensal do plano (basic/premium).
+    // Se está usando créditos avulsos, ignora cota — credit já é o saldo.
+    if (!usingCredits && usedMonth >= planLimit) {
       return NextResponse.json(
-        { error: `Você atingiu o limite de ${limit} mensagens deste mês no seu plano. Faça upgrade ou aguarde o próximo mês.` },
+        { error: `Você atingiu o limite de ${planLimit} mensagens deste mês no seu plano. Faça upgrade ou aguarde o próximo mês.` },
         { status: 429 }
       );
     }
@@ -158,7 +180,13 @@ export async function POST(req: Request) {
               try {
                 const json = JSON.parse(payload);
                 const delta = json.choices?.[0]?.delta?.content;
-                if (delta) { full += delta; controller.enqueue(encoder.encode(delta)); }
+                if (delta) {
+                  // Sanitização defensiva: DeepSeek às vezes injeta ** mesmo
+                  // sendo proibido no prompt. Remove markdown antes de streamar.
+                  const cleanDelta = stripMarkdown(delta);
+                  full += cleanDelta;
+                  if (cleanDelta) controller.enqueue(encoder.encode(cleanDelta));
+                }
               } catch {}
             }
           }
@@ -167,17 +195,27 @@ export async function POST(req: Request) {
           return;
         } finally {
           if (full) {
-            // Sucesso: persiste resposta + incrementa cota mensal
+            // Sucesso: persiste resposta (já sanitizada via stripMarkdown nos deltas)
             await supabase.from("chat_messages").insert({
               user_id: user.id, role: "assistant", content: full,
             });
-            await admin
-              .from("users")
-              .update({
-                messages_month: usedMonth + 1,
-                last_message_month: monthKey,
-              })
-              .eq("id", user.id);
+            // Decremento: créditos avulsos têm prioridade sobre cota mensal.
+            // Se cliente comprou pergunta1/3/7 (credits > 0), gasta 1 crédito
+            // em vez de incrementar messages_month.
+            if (usingCredits) {
+              await admin
+                .from("users")
+                .update({ chat_credits_balance: creditsBalance - 1 })
+                .eq("id", user.id);
+            } else {
+              await admin
+                .from("users")
+                .update({
+                  messages_month: usedMonth + 1,
+                  last_message_month: monthKey,
+                })
+                .eq("id", user.id);
+            }
           } else {
             // Stream abriu mas não veio conteúdo — rollback
             await supabase
@@ -214,16 +252,21 @@ export async function GET() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("plan, messages_today, last_message_date, messages_month, last_message_month, name, email")
+    .select("plan, messages_today, last_message_date, messages_month, last_message_month, name, email, chat_credits_balance")
     .eq("id", user.id)
     .maybeSingle();
 
   const plan: Plan = (profile?.plan as Plan) || "free";
   const monthKey = currentMonthKey();
+  const creditsBalance = (profile?.chat_credits_balance as number | undefined) ?? 0;
 
-  // Free não envia mensagens — sempre 0. Outros planos: cota mensal.
+  // Saldo mostrado: créditos avulsos têm precedência. Se tem 5 créditos, mostra 5.
+  // Se não tem créditos e tem plano basic/premium, mostra cota mensal restante.
+  // Se free e zero créditos → 0.
   let remaining: number;
-  if (plan === "free") {
+  if (creditsBalance > 0) {
+    remaining = creditsBalance;
+  } else if (plan === "free") {
     remaining = 0;
   } else {
     const usedMonth = profile?.last_message_month === monthKey ? profile?.messages_month ?? 0 : 0;
@@ -236,5 +279,12 @@ export async function GET() {
   const fallback = emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : "";
   const displayName = rawName.trim().split(" ")[0] || fallback || "Alma";
 
-  return NextResponse.json({ messages: (data || []).reverse(), plan, remaining, name: displayName });
+  return NextResponse.json({
+    messages: (data || []).reverse(),
+    plan,
+    remaining,
+    name: displayName,
+    creditsBalance,
+    usingCredits: creditsBalance > 0,
+  });
 }

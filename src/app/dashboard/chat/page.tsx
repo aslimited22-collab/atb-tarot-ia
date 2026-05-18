@@ -10,22 +10,30 @@ type Msg = { id?: string; role: "user" | "assistant"; content: string; typing?: 
 const CHAR_DELAY = 38;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-function UpgradeCard({ basicUrl, premiumUrl }: { basicUrl: string; premiumUrl: string }) {
+function UpgradeCard({ basicUrl, premiumUrl, pergunta3Url, isCreditsExhausted }: { basicUrl: string; premiumUrl: string; pergunta3Url: string; isCreditsExhausted?: boolean }) {
   const { t } = useT();
   return (
-    <div className="card" style={{ margin:"16px auto", maxWidth:380, padding:28, textAlign:"center" }}>
+    <div className="card" style={{ margin:"16px auto", maxWidth:420, padding:28, textAlign:"center" }}>
       <div style={{ fontSize:44, marginBottom:8 }} aria-hidden="true">🔮</div>
-      <p className="serif" style={{ fontSize:"1.35rem", color:"#e8b84b", marginBottom:8 }}>{t("chat.upgrade_h1")}</p>
+      <p className="serif" style={{ fontSize:"1.35rem", color:"#e8b84b", marginBottom:8 }}>
+        {isCreditsExhausted ? t("chat.credits_empty_title") : t("chat.upgrade_h1")}
+      </p>
       <p style={{ fontSize:15, color:"#c4b5fd", marginBottom:24, lineHeight:1.6 }}>
         {t("chat.upgrade_desc")}
       </p>
-      <a href={premiumUrl} target="_blank" rel="noopener noreferrer"
-        style={{ display:"block", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:700, fontSize:17, padding:"16px", borderRadius:14, marginBottom:12, textDecoration:"none" }}>
-        {t("chat.upgrade_cta_premium")}
+      {isCreditsExhausted && (
+        <a href={pergunta3Url}
+          style={{ display:"block", background:"linear-gradient(135deg,#7ee8f8,#5fb3e3)", color:"#120025", fontWeight:800, fontSize:17, padding:"16px", borderRadius:14, marginBottom:12, textDecoration:"none" }}>
+          {t("chat.credits_buy_3")}
+        </a>
+      )}
+      <a href={basicUrl}
+        style={{ display:"block", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:800, fontSize:17, padding:"16px", borderRadius:14, marginBottom:12, textDecoration:"none" }}>
+        {t("chat.credits_subscribe_basic")}
       </a>
-      <a href={basicUrl} target="_blank" rel="noopener noreferrer"
+      <a href={premiumUrl}
         style={{ display:"block", border:"2px solid #e8b84b", color:"#e8b84b", fontWeight:600, fontSize:16, padding:"13px", borderRadius:14, textDecoration:"none" }}>
-        {t("chat.upgrade_cta_basic")}
+        {t("chat.upgrade_cta_premium")}
       </a>
       <p style={{ fontSize:13, color:"#9575cd", marginTop:12 }}>{t("chat.upgrade_security")}</p>
     </div>
@@ -41,6 +49,7 @@ export default function ChatPage() {
   const [remaining, setRemaining] = useState<number>(-1);
   const [name, setName]         = useState("Alma");
   const [plan, setPlan]         = useState("free");
+  const [usingCredits, setUsingCredits] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -48,6 +57,7 @@ export default function ChatPage() {
   const BASIC_URL   = "/api/checkout/basic";
   const PREMIUM_URL = "/api/checkout/premium";
   const VIDEO_URL   = "/api/checkout/videochamada";
+  const PERGUNTA3_URL = "/api/checkout/pergunta3";
 
   useEffect(() => {
     fetch("/api/chat").then((r) => r.json()).then((d) => {
@@ -55,7 +65,14 @@ export default function ChatPage() {
       setRemaining(d.remaining ?? -1);
       if (d.name) setName(d.name);
       if (d.plan) setPlan(d.plan);
-      if (d.plan === "free" && (d.remaining === 0 || (d.messages?.length ?? 0) > 0)) setShowUpgrade(true);
+      if (typeof d.usingCredits === "boolean") setUsingCredits(d.usingCredits);
+      // Upsell: free sem créditos OU acabou de gastar todos os créditos avulsos
+      const noCreditsLeft = d.remaining === 0;
+      if ((d.plan === "free" || d.usingCredits) && noCreditsLeft && (d.messages?.length ?? 0) > 0) {
+        setShowUpgrade(true);
+      } else if (d.plan === "free" && (d.remaining === 0 || (d.messages?.length ?? 0) > 0)) {
+        setShowUpgrade(true);
+      }
     }).catch(() => toast.error(t("chat.toast.history_error"))).finally(() => setLoading(false));
   }, []);
 
@@ -201,7 +218,14 @@ export default function ChatPage() {
                 )}
               </div>
             ))}
-            {showUpgrade && !sending && <UpgradeCard basicUrl={BASIC_URL} premiumUrl={PREMIUM_URL} />}
+            {showUpgrade && !sending && (
+              <UpgradeCard
+                basicUrl={BASIC_URL}
+                premiumUrl={PREMIUM_URL}
+                pergunta3Url={PERGUNTA3_URL}
+                isCreditsExhausted={usingCredits && remaining === 0}
+              />
+            )}
           </>
         )}
       </div>

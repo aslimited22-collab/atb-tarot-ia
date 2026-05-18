@@ -111,6 +111,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, plan, email });
   }
 
+  // ---------- BRANCH 1.5: Pergunta avulsa (créditos one-time) ----------
+  // Plans pergunta1 (1 crédito), pergunta3 (3 créditos), pergunta7 (7 créditos).
+  // Cliente paga ANTES de criar conta — webhook só grava em purchases.
+  // /obrigado-pergunta cria a conta e credita o saldo a partir das purchases.
+  if (plan === "pergunta1" || plan === "pergunta3" || plan === "pergunta7") {
+    if (!email) {
+      logWarn("webhook.stripe", "pergunta paid without email", { plan, sessionId: paymentId });
+      return NextResponse.json({ error: "missing email" }, { status: 400 });
+    }
+    const credits = plan === "pergunta1" ? 1 : plan === "pergunta3" ? 3 : 7;
+    logInfo("webhook.stripe", "pergunta avulsa paid intl", { plan, email, currency, amountTotal, credits });
+
+    // Se já existe user, credita direto
+    const { data: userRow } = await admin
+      .from("users")
+      .select("id, chat_credits_balance, chat_credits_total_purchased")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (userRow) {
+      const newBalance = (userRow.chat_credits_balance ?? 0) + credits;
+      const newTotal = (userRow.chat_credits_total_purchased ?? 0) + credits;
+      await admin
+        .from("users")
+        .update({
+          chat_credits_balance: newBalance,
+          chat_credits_total_purchased: newTotal,
+        })
+        .eq("id", userRow.id);
+    }
+
+    await admin.from("purchases").insert({
+      email,
+      name: name ?? null,
+      kiwify_order_id: paymentId, // reusa coluna pra Stripe session id
+      plan,
+      event: `${plan}_purchased_intl`,
+      amount_cents: amountTotal,
+      user_id: userRow?.id ?? null,
+    });
+
+    return NextResponse.json({ ok: true, plan, email, credits });
+  }
+
   // ---------- BRANCH 2: Videochamada one-time intl ----------
   if (plan === "videochamada") {
     if (!email) {
