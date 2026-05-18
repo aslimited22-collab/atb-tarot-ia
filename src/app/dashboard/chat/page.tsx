@@ -138,7 +138,9 @@ export default function ChatPage() {
       setMessages((m) => { const c=[...m]; c[c.length-1]={ role:"assistant", content:"" }; return c; });
       await typeOut(full, (d) => setMessages((m) => { const c=[...m]; c[c.length-1]={ role:"assistant", content:d }; return c; }));
       setRemaining((r) => (r>0 ? r-1 : 0));
-      if (plan==="free") setShowUpgrade(true);
+      // Mostra UpgradeCard só quando free SEM créditos (evita confundir 60+
+      // que acabou de comprar pergunta avulsa e ainda tem créditos restantes).
+      if (plan === "free" && !usingCredits) setShowUpgrade(true);
     } catch (e: unknown) {
       const msg = e instanceof Error && e.name === "AbortError" ? t("chat.toast.timeout") : t("chat.toast.network");
       toast.error(msg);
@@ -177,7 +179,9 @@ export default function ChatPage() {
             <span>{t("chat.back")}</span>
           </Link>
           <div style={{ fontSize: 16, color: "#fbf8ff", fontWeight: 600, background: "rgba(232,184,75,0.12)", padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(232,184,75,0.3)" }}>
-            {remaining < 0 ? "∞" : remaining} {remaining === 1 ? t("dash.remaining_one") : t("dash.remaining_other")}
+            {usingCredits
+              ? (remaining === 1 ? t("chat.credits_count_one") : t("chat.credits_count_other").replace("{n}", String(remaining)))
+              : `${remaining < 0 ? "∞" : remaining} ${remaining === 1 ? t("dash.remaining_one") : t("dash.remaining_other")}`}
           </div>
         </div>
         <h1 className="serif" style={{ fontSize: "1.7rem", color: "#f5f0ff", fontWeight: 700, margin: 0 }}>{t("chat.header")}</h1>
@@ -187,18 +191,45 @@ export default function ChatPage() {
         {loading ? (
           <div className="space-y-3"><Skeleton className="h-12 w-2/3" /><Skeleton className="h-12 w-1/2 ml-auto" /><Skeleton className="h-12 w-2/3" /></div>
         ) : messages.length === 0 && !showUpgrade ? (
-          <div style={{ textAlign: "center", color: "#fbf8ff", marginTop: 60, padding: "0 20px" }}>
-            <div style={{ fontSize: 80, marginBottom: 18 }} aria-hidden="true">🔮</div>
-            <h2 className="serif" style={{ fontSize: "1.6rem", color: "#e8b84b", marginBottom: 12, fontWeight: 700 }}>
-              {t("chat.empty_h1")}
-            </h2>
-            <p style={{ fontSize: 18, color: "#fbf8ff", lineHeight: 1.6, maxWidth: 420, margin: "0 auto", fontWeight: 500 }}>
-              {t("chat.empty_desc")}
-            </p>
-            <p style={{ fontSize: 15, color: "#c4b5fd", lineHeight: 1.6, marginTop: 18, fontStyle: "italic" }}>
-              {t("chat.empty_hint")} <strong style={{ color: "#e8b84b" }}>{t("chat.empty_hint_btn")}</strong>
-            </p>
-          </div>
+          usingCredits ? (
+            <div style={{ textAlign: "center", color: "#fbf8ff", marginTop: 40, padding: "0 20px" }}>
+              <div style={{ fontSize: 64, marginBottom: 14 }} aria-hidden="true">🌟</div>
+              <h2 className="serif" style={{ fontSize: "1.7rem", color: "#e8b84b", marginBottom: 14, fontWeight: 700, lineHeight: 1.2 }}>
+                {t("chat.welcome_credits_h1")}
+              </h2>
+              <div
+                style={{
+                  background: "linear-gradient(135deg, rgba(232,184,75,0.18), rgba(126,232,248,0.10))",
+                  border: "2px solid rgba(232,184,75,0.5)",
+                  borderRadius: 16,
+                  padding: "20px 22px",
+                  margin: "0 auto 18px",
+                  maxWidth: 460,
+                  textAlign: "left",
+                }}
+              >
+                <p style={{ fontSize: 21, color: "#fbf8ff", lineHeight: 1.55, fontWeight: 700, margin: 0, marginBottom: 8 }}>
+                  {t("chat.welcome_credits_desc").replace("{n}", String(remaining))}
+                </p>
+                <p style={{ fontSize: 19, color: "#c4b5fd", lineHeight: 1.55, fontWeight: 500, margin: 0 }}>
+                  {t("chat.welcome_credits_hint")}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", color: "#fbf8ff", marginTop: 60, padding: "0 20px" }}>
+              <div style={{ fontSize: 80, marginBottom: 18 }} aria-hidden="true">🔮</div>
+              <h2 className="serif" style={{ fontSize: "1.6rem", color: "#e8b84b", marginBottom: 12, fontWeight: 700 }}>
+                {t("chat.empty_h1")}
+              </h2>
+              <p style={{ fontSize: 18, color: "#fbf8ff", lineHeight: 1.6, maxWidth: 420, margin: "0 auto", fontWeight: 500 }}>
+                {t("chat.empty_desc")}
+              </p>
+              <p style={{ fontSize: 15, color: "#c4b5fd", lineHeight: 1.6, marginTop: 18, fontStyle: "italic" }}>
+                {t("chat.empty_hint")} <strong style={{ color: "#e8b84b" }}>{t("chat.empty_hint_btn")}</strong>
+              </p>
+            </div>
+          )
         ) : (
           <>
             {messages.map((m,i) => (

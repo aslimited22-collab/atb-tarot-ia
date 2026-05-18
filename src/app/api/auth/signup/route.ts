@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateEmail, rateLimit, getClientIp } from "@/lib/security";
+import { logInfo, logWarn } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -123,17 +124,34 @@ export async function POST(req: Request) {
           else if (p.plan === "pergunta7") credits += 7;
         }
         if (credits > 0) {
-          await adminClient
+          const { error: creditErr } = await adminClient
             .from("users")
             .update({
               chat_credits_balance: credits,
               chat_credits_total_purchased: credits,
             })
             .eq("id", data.user.id);
+          if (creditErr) {
+            logWarn("signup", "reconciliation failed", {
+              email: normalizedEmail,
+              credits,
+              error: creditErr.message,
+            });
+          } else {
+            logInfo("signup", "reconciled pergunta credits", {
+              email: normalizedEmail,
+              credits,
+              purchases_count: perguntaPurchases.length,
+            });
+          }
         }
       }
-    } catch {
-      // Falha silenciosa — não quebra signup
+    } catch (e) {
+      // Falha silenciosa — não quebra signup, mas registra
+      logWarn("signup", "reconciliation exception", {
+        email: normalizedEmail,
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 
