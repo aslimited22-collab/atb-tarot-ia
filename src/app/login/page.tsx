@@ -63,9 +63,28 @@ export default function LoginPage() {
 
         {/* Formulário */}
         <form onSubmit={handleSubmit} className="card" style={{ padding: "40px 32px" }}>
-          <h2 className="serif" style={{ fontSize: "1.9rem", color: "#e8b84b", marginBottom: 28, textAlign: "center", fontWeight: 700 }}>
+          <h2 className="serif" style={{ fontSize: "1.9rem", color: "#e8b84b", marginBottom: 18, textAlign: "center", fontWeight: 700 }}>
             {t("nav.signin")}
           </h2>
+
+          {/* ⚠️ Aviso — usar email do pagamento */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(232,184,75,0.18), rgba(232,184,75,0.08))",
+              border: "1.5px solid rgba(232,184,75,0.5)",
+              borderRadius: 12,
+              padding: "14px 16px",
+              marginBottom: 26,
+              display: "flex",
+              gap: 10,
+              alignItems: "flex-start",
+            }}
+          >
+            <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }} aria-hidden="true">💡</span>
+            <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
+              Use o <strong style={{ color: "#e8b84b" }}>mesmo email do pagamento (Kiwify)</strong>. Se usou email diferente, seu plano não vai aparecer.
+            </p>
+          </div>
 
           {/* Email */}
           <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>

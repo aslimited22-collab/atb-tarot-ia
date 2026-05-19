@@ -66,9 +66,33 @@ export default function CadastroPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="card" style={{ padding: "40px 32px" }}>
-          <h2 className="serif" style={{ fontSize: "1.9rem", color: "#e8b84b", marginBottom: 28, textAlign: "center", fontWeight: 700 }}>
+          <h2 className="serif" style={{ fontSize: "1.9rem", color: "#e8b84b", marginBottom: 18, textAlign: "center", fontWeight: 700 }}>
             {t("nav.signup")}
           </h2>
+
+          {/* ⚠️ Aviso CRÍTICO — cliente DEVE usar mesmo email do Kiwify */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(232,184,75,0.22), rgba(232,184,75,0.10))",
+              border: "2px solid rgba(232,184,75,0.6)",
+              borderRadius: 14,
+              padding: "16px 18px",
+              marginBottom: 28,
+              display: "flex",
+              gap: 12,
+              alignItems: "flex-start",
+            }}
+          >
+            <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }} aria-hidden="true">⚠️</span>
+            <div>
+              <p style={{ fontSize: 17, color: "#e8b84b", fontWeight: 800, margin: 0, marginBottom: 6, lineHeight: 1.3 }}>
+                Já pagou? Use o MESMO email!
+              </p>
+              <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}>
+                Sua conta precisa ter o <strong style={{ color: "#e8b84b" }}>mesmo email que você usou no pagamento (Kiwify)</strong>. Se usar email diferente, seu plano não vai aparecer aqui.
+              </p>
+            </div>
+          </div>
 
           {/* Nome */}
           <label htmlFor="name" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>

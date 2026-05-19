@@ -324,8 +324,17 @@ export async function POST(req: Request) {
       <a href="${accessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
         ✨ Acessar minha Limpeza
       </a>
-      <p style="color:#c4b5fd;font-size:14px;line-height:1.6;margin:28px 0 0;">
-        Ao clicar, você vai criar uma conta com este mesmo email (${escapeHtml(email.toLowerCase())}) ou entrar se já tiver. A sua limpeza estará liberada na hora.
+    </div>
+
+    <!-- ⚠️ Aviso CRÍTICO — email da conta = email do pagamento -->
+    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
+      <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;line-height:1.3;">
+        ⚠️ IMPORTANTE — USE ESTE EMAIL
+      </p>
+      <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;font-weight:500;">
+        Crie sua conta com o <strong style="color:#e8b84b;">mesmo email que você usou no pagamento:</strong><br/>
+        <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email.toLowerCase())}</strong><br/>
+        <span style="font-size:14px;color:#c4b5fd;">Se usar email diferente, sua compra não vai aparecer.</span>
       </p>
     </div>
 
@@ -424,8 +433,17 @@ export async function POST(req: Request) {
       <a href="${espAccessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
         ✨ Falar com meu Espírito Mentor
       </a>
-      <p style="color:#c4b5fd;font-size:14px;line-height:1.6;margin:28px 0 0;">
-        Ao clicar você cria uma conta com este email (${escapeHtml(email.toLowerCase())}) ou entra se já tiver. Sua sessão fica liberada na hora.
+    </div>
+
+    <!-- ⚠️ Aviso CRÍTICO — email da conta = email do pagamento -->
+    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
+      <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;line-height:1.3;">
+        ⚠️ IMPORTANTE — USE ESTE EMAIL
+      </p>
+      <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;font-weight:500;">
+        Crie sua conta com o <strong style="color:#e8b84b;">mesmo email que você usou no pagamento:</strong><br/>
+        <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email.toLowerCase())}</strong><br/>
+        <span style="font-size:14px;color:#c4b5fd;">Se usar email diferente, sua compra não vai aparecer.</span>
       </p>
     </div>
 
