@@ -620,6 +620,80 @@ export async function POST(req: Request) {
       amount_cents: valueCents > 0 ? Math.round(valueCents > 1000 ? valueCents : valueCents * 100) : null,
       user_id: userRow?.id ?? null,
     });
+
+    // Welcome email pra Basic/Premium se cliente NÃO tinha conta ainda.
+    // Sem isso, cliente paga R$29 ou R$250/mês e fica sem saber como acessar.
+    if (!userRow) {
+      const subFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
+      const subAccessLink = `${getSiteUrl(req)}/cadastro?email=${encodeURIComponent(email.toLowerCase())}`;
+      const subProductName = plan === "premium" ? "Premium (Consulta com ATB)" : "Basic";
+      const subPriceLabel = plan === "premium" ? "R$ 250/mês" : "R$ 29/mês";
+
+      const subCustomerHtml = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
+  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
+    <div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+      <div style="font-size:64px;margin-bottom:16px;">🔮</div>
+      <h1 style="color:#e8b84b;font-size:32px;margin:0 0 12px;line-height:1.15;">
+        Bem-vinda ao ATB ${escapeHtml(subProductName)}
+      </h1>
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
+        Olá, <strong style="color:#f5c860;">${escapeHtml(subFirstName)}</strong>!<br>
+        Sua assinatura ${escapeHtml(subPriceLabel)} foi confirmada. ATB já está pronta pra te receber.
+      </p>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 28px;">
+        Crie sua conta em 30 segundos pra começar a conversar:
+      </p>
+      <a href="${subAccessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+        ✨ Criar minha conta agora
+      </a>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
+      <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;line-height:1.3;">
+        ⚠️ IMPORTANTE — USE ESTE EMAIL
+      </p>
+      <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;font-weight:500;">
+        Crie sua conta com o <strong style="color:#e8b84b;">mesmo email que você usou no pagamento:</strong><br/>
+        <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email.toLowerCase())}</strong><br/>
+        <span style="font-size:14px;color:#c4b5fd;">Se usar email diferente, seu plano não vai aparecer.</span>
+      </p>
+    </div>
+
+    <div style="background:rgba(232,184,75,0.08);border:1px solid rgba(232,184,75,0.3);border-radius:14px;padding:22px;margin-top:20px;">
+      <h2 style="color:#e8b84b;font-size:18px;margin:0 0 12px;font-family:Georgia,serif;">
+        ✦ Como começar
+      </h2>
+      <ol style="color:#fbf8ff;font-size:16px;line-height:1.75;padding-left:22px;margin:0;">
+        <li>Aperte o botão "Criar minha conta agora"</li>
+        <li>Coloque seu nome + crie uma senha</li>
+        <li>Pronto — converse com ATB no chat</li>
+      </ol>
+    </div>
+
+    <div style="text-align:center;margin-top:28px;padding:20px;color:#9575cd;font-size:13px;line-height:1.6;font-style:italic;">
+      Estamos aqui, minha querida alma. 💛
+    </div>
+
+    <div style="text-align:center;margin-top:20px;color:#9575cd;font-size:12px;">
+      Pedido: ${escapeHtml(orderId) || "N/A"} · ATB
+    </div>
+  </div>
+</body>
+</html>`;
+
+      await sendCustomerEmailWithLog({
+        scope: "webhook.kiwify.subscription",
+        to: email.toLowerCase(),
+        subject: `🔮 Bem-vinda ao ATB ${subProductName}`,
+        html: subCustomerHtml,
+        refId: orderId,
+      });
+    }
+
     return NextResponse.json({ ok: true, plan });
   }
 
