@@ -19,51 +19,54 @@ export type CheckoutMode = "subscription" | "payment";
  * Preços por plano e moeda, em centavos (exceto JPY que não tem decimal).
  * Espelha os valores mostrados na landing via dict.ts.
  */
+// Estratégia: MESMO NÚMERO em todas as moedas (não converter cambialmente).
+// R$14,90 → $14.90 → €14,90 → ¥1490. Padrão "charm pricing" global —
+// cliente intl percebe o mesmo valor psicológico que o BR.
 export const PLAN_PRICES: Record<PlanId, Record<Currency, number>> = {
   premium: {
     brl: 25000, // R$250,00/mês
-    usd: 5000,  // $50.00/month
-    eur: 4500,  // €45,00/mês
-    jpy: 7500,  // ¥7,500/月 (sem decimal)
+    usd: 25000, // $250.00/month
+    eur: 25000, // €250,00/mês
+    jpy: 25000, // ¥25000/月
   },
   basic: {
     brl: 2900, // R$29,00/mês
-    usd: 900,  // $9.00/month
-    eur: 800,  // €8,00/mês
-    jpy: 900,  // ¥900/月
+    usd: 2900, // $29.00/month
+    eur: 2900, // €29,00/mês
+    jpy: 2900, // ¥2900/月
   },
   videochamada: {
     brl: 49700, // R$497,00 (one-time)
-    usd: 9700,  // $97.00
-    eur: 8700,  // €87,00
-    jpy: 14000, // ¥14,000
+    usd: 49700, // $497.00
+    eur: 49700, // €497,00
+    jpy: 49700, // ¥49700
   },
   limpeza: {
     brl: 10000, // R$100,00 (one-time)
-    usd: 1900,  // $19.00
-    eur: 1800,  // €18,00
-    jpy: 2900,  // ¥2,900
+    usd: 10000, // $100.00
+    eur: 10000, // €100,00
+    jpy: 10000, // ¥10000
   },
-  // ─── Funil de entrada barato (perguntas avulsas one-time) ───
+  // ─── Funil de entrada (perguntas avulsas one-time) ───
   // Cliente paga → cria conta → faz N perguntas no /dashboard/chat.
   // Webhook (Kiwify ou Stripe) incrementa users.chat_credits_balance += N.
   pergunta1: {
-    brl: 1490, // R$14,90 — 1 pergunta profunda
-    usd:  300, // $3.00
-    eur:  280, // €2,80
-    jpy:  450, // ¥450
+    brl: 1490, // R$14,90
+    usd: 1490, // $14.90
+    eur: 1490, // €14,90
+    jpy: 1490, // ¥1490
   },
   pergunta3: {
-    brl: 1990, // R$19,90 — 3 perguntas
-    usd:  400, // $4.00
-    eur:  380, // €3,80
-    jpy:  600, // ¥600
+    brl: 1990, // R$19,90
+    usd: 1990, // $19.90
+    eur: 1990, // €19,90
+    jpy: 1990, // ¥1990
   },
   pergunta7: {
-    brl: 3990, // R$39,90 — 7 perguntas (melhor custo-benefício avulso)
-    usd:  800, // $8.00
-    eur:  750, // €7,50
-    jpy: 1200, // ¥1,200
+    brl: 3990, // R$39,90
+    usd: 3990, // $39.90
+    eur: 3990, // €39,90
+    jpy: 3990, // ¥3990
   },
 };
 
