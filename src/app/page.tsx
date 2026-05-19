@@ -65,7 +65,7 @@ export default function Home() {
               {t("hero.desc")}
             </p>
             <a
-              href="#planos"
+              href="#pergunta"
               className="btn-gold btn-big"
               style={{
                 fontSize: "1.3rem",
@@ -76,8 +76,11 @@ export default function Home() {
                 minHeight: 70,
               }}
             >
-              {t("hero.cta")}
+              💬 Começar por R$ 14,90
             </a>
+            <p style={{ fontSize: 15, color: "#c4b5fd", marginTop: 14, fontWeight: 500 }}>
+              Sua primeira pergunta espiritual com a ATB
+            </p>
           </div>
 
           {/* Imagem à direita — ATB acolhedora */}
@@ -131,6 +134,122 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Funil de entrada: Pergunta avulsa (R$14,90/R$19,90/R$39,90) */}
+      <section id="pergunta" style={{ padding: "70px 24px", background: "radial-gradient(ellipse at 50% 0%, #1e0040 0%, #120025 70%)" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{
+            fontSize: 16,
+            color: S.gold,
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            textAlign: "center",
+            textTransform: "uppercase",
+            marginBottom: 14,
+          }}>
+            {t("landing.pergunta_eyebrow")}
+          </div>
+          <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, textAlign: "center", marginBottom: 14, fontWeight: 700 }}>
+            {t("landing.pergunta_title")}
+          </h2>
+          <p style={{ fontSize: 22, color: S.text, textAlign: "center", marginBottom: 40, lineHeight: 1.55, maxWidth: 640, margin: "0 auto 40px", fontWeight: 500 }}>
+            {t("landing.pergunta_subtitle")}
+          </p>
+
+          {/* 3 cards lado a lado */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: 22,
+            marginBottom: 28,
+          }}>
+            {[
+              { plan: "pergunta1", h: t("landing.pergunta_card_1_h"), price: t("landing.pergunta_card_1_price"), badge: null, highlight: false },
+              { plan: "pergunta3", h: t("landing.pergunta_card_3_h"), price: t("landing.pergunta_card_3_price"), badge: t("landing.pergunta_card_3_badge"), highlight: false },
+              { plan: "pergunta7", h: t("landing.pergunta_card_7_h"), price: t("landing.pergunta_card_7_price"), badge: t("landing.pergunta_card_7_badge"), highlight: true },
+            ].map((card) => (
+              <div
+                key={card.plan}
+                style={{
+                  position: "relative",
+                  padding: "32px 24px 28px",
+                  background: card.highlight
+                    ? "linear-gradient(135deg, rgba(232,184,75,0.18) 0%, rgba(126,232,248,0.10) 100%)"
+                    : "linear-gradient(135deg, #1e0040 0%, #2a0055 100%)",
+                  border: card.highlight ? "2.5px solid #e8b84b" : "1.5px solid rgba(232,184,75,0.35)",
+                  borderRadius: 20,
+                  boxShadow: card.highlight ? "0 18px 44px rgba(232,184,75,0.25)" : "0 8px 24px rgba(0,0,0,0.3)",
+                  textAlign: "center",
+                }}
+              >
+                {card.badge && (
+                  <div style={{
+                    position: "absolute",
+                    top: -14,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    background: card.highlight ? "linear-gradient(135deg, #e8b84b, #c9950a)" : "linear-gradient(135deg, #7ee8f8, #5fb3e3)",
+                    color: "#120025",
+                    fontSize: 15,
+                    fontWeight: 800,
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    letterSpacing: "0.04em",
+                    whiteSpace: "nowrap",
+                  }}>
+                    {card.badge}
+                  </div>
+                )}
+                <div className="serif" style={{ fontSize: "1.6rem", color: S.gold, fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
+                  {card.h}
+                </div>
+                <div className="serif" style={{ fontSize: "2.8rem", color: S.text, fontWeight: 800, marginBottom: 22, lineHeight: 1 }}>
+                  {card.price}
+                </div>
+                <a
+                  href={`/api/checkout/${card.plan}`}
+                  className="btn-gold btn-big"
+                  style={{
+                    display: "block",
+                    textAlign: "center",
+                    padding: "18px 24px",
+                    fontSize: "1.15rem",
+                    fontWeight: 800,
+                    textDecoration: "none",
+                    border: "none",
+                  }}
+                >
+                  {t("landing.pergunta_card_cta")}
+                </a>
+              </div>
+            ))}
+          </div>
+
+          {/* Linha upsell pra Basic */}
+          <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <a
+              href="#planos"
+              style={{
+                display: "inline-block",
+                fontSize: 20,
+                color: S.text2,
+                textDecoration: "none",
+                fontWeight: 600,
+                padding: "14px 22px",
+                borderRadius: 12,
+                background: "rgba(126,232,248,0.10)",
+                border: "1.5px solid rgba(126,232,248,0.35)",
+              }}
+            >
+              {t("landing.pergunta_upsell")} →
+            </a>
+          </div>
+
+          <p style={{ fontSize: 18, color: S.muted, textAlign: "center", lineHeight: 1.5, fontWeight: 500, marginTop: 14 }}>
+            {t("landing.pergunta_security")}
+          </p>
         </div>
       </section>
 
@@ -332,122 +451,6 @@ export default function Home() {
               </p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Funil de entrada: Pergunta avulsa (R$14,90/R$19,90/R$39,90) */}
-      <section id="pergunta" style={{ padding: "70px 24px", background: "radial-gradient(ellipse at 50% 0%, #1e0040 0%, #120025 70%)" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{
-            fontSize: 16,
-            color: S.gold,
-            fontWeight: 700,
-            letterSpacing: "0.12em",
-            textAlign: "center",
-            textTransform: "uppercase",
-            marginBottom: 14,
-          }}>
-            {t("landing.pergunta_eyebrow")}
-          </div>
-          <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, textAlign: "center", marginBottom: 14, fontWeight: 700 }}>
-            {t("landing.pergunta_title")}
-          </h2>
-          <p style={{ fontSize: 22, color: S.text, textAlign: "center", marginBottom: 40, lineHeight: 1.55, maxWidth: 640, margin: "0 auto 40px", fontWeight: 500 }}>
-            {t("landing.pergunta_subtitle")}
-          </p>
-
-          {/* 3 cards lado a lado */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: 22,
-            marginBottom: 28,
-          }}>
-            {[
-              { plan: "pergunta1", h: t("landing.pergunta_card_1_h"), price: t("landing.pergunta_card_1_price"), badge: null, highlight: false },
-              { plan: "pergunta3", h: t("landing.pergunta_card_3_h"), price: t("landing.pergunta_card_3_price"), badge: t("landing.pergunta_card_3_badge"), highlight: false },
-              { plan: "pergunta7", h: t("landing.pergunta_card_7_h"), price: t("landing.pergunta_card_7_price"), badge: t("landing.pergunta_card_7_badge"), highlight: true },
-            ].map((card) => (
-              <div
-                key={card.plan}
-                style={{
-                  position: "relative",
-                  padding: "32px 24px 28px",
-                  background: card.highlight
-                    ? "linear-gradient(135deg, rgba(232,184,75,0.18) 0%, rgba(126,232,248,0.10) 100%)"
-                    : "linear-gradient(135deg, #1e0040 0%, #2a0055 100%)",
-                  border: card.highlight ? "2.5px solid #e8b84b" : "1.5px solid rgba(232,184,75,0.35)",
-                  borderRadius: 20,
-                  boxShadow: card.highlight ? "0 18px 44px rgba(232,184,75,0.25)" : "0 8px 24px rgba(0,0,0,0.3)",
-                  textAlign: "center",
-                }}
-              >
-                {card.badge && (
-                  <div style={{
-                    position: "absolute",
-                    top: -14,
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    background: card.highlight ? "linear-gradient(135deg, #e8b84b, #c9950a)" : "linear-gradient(135deg, #7ee8f8, #5fb3e3)",
-                    color: "#120025",
-                    fontSize: 15,
-                    fontWeight: 800,
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    letterSpacing: "0.04em",
-                    whiteSpace: "nowrap",
-                  }}>
-                    {card.badge}
-                  </div>
-                )}
-                <div className="serif" style={{ fontSize: "1.6rem", color: S.gold, fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
-                  {card.h}
-                </div>
-                <div className="serif" style={{ fontSize: "2.8rem", color: S.text, fontWeight: 800, marginBottom: 22, lineHeight: 1 }}>
-                  {card.price}
-                </div>
-                <a
-                  href={`/api/checkout/${card.plan}`}
-                  className="btn-gold btn-big"
-                  style={{
-                    display: "block",
-                    textAlign: "center",
-                    padding: "18px 24px",
-                    fontSize: "1.15rem",
-                    fontWeight: 800,
-                    textDecoration: "none",
-                    border: "none",
-                  }}
-                >
-                  {t("landing.pergunta_card_cta")}
-                </a>
-              </div>
-            ))}
-          </div>
-
-          {/* Linha upsell pra Basic */}
-          <div style={{ textAlign: "center", marginBottom: 16 }}>
-            <a
-              href="#planos"
-              style={{
-                display: "inline-block",
-                fontSize: 20,
-                color: S.text2,
-                textDecoration: "none",
-                fontWeight: 600,
-                padding: "14px 22px",
-                borderRadius: 12,
-                background: "rgba(126,232,248,0.10)",
-                border: "1.5px solid rgba(126,232,248,0.35)",
-              }}
-            >
-              {t("landing.pergunta_upsell")} →
-            </a>
-          </div>
-
-          <p style={{ fontSize: 18, color: S.muted, textAlign: "center", lineHeight: 1.5, fontWeight: 500, marginTop: 14 }}>
-            {t("landing.pergunta_security")}
-          </p>
         </div>
       </section>
 
