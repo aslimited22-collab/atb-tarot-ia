@@ -86,10 +86,10 @@ export default function CadastroPage() {
             <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }} aria-hidden="true">⚠️</span>
             <div>
               <p style={{ fontSize: 17, color: "#e8b84b", fontWeight: 800, margin: 0, marginBottom: 6, lineHeight: 1.3 }}>
-                Já pagou? Use o MESMO email!
+                {t("auth.email_warning_title")}
               </p>
               <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}>
-                Sua conta precisa ter o <strong style={{ color: "#e8b84b" }}>mesmo email que você usou no pagamento (Kiwify)</strong>. Se usar email diferente, seu plano não vai aparecer aqui.
+                {t("auth.email_warning_body_pre")}<strong style={{ color: "#e8b84b" }}>{t("auth.email_warning_body_strong")}</strong>{t("auth.email_warning_body_post")}
               </p>
             </div>
           </div>

@@ -118,7 +118,7 @@ export default async function DashboardHome() {
   let periodLabel: string;
   if (hasCredits) {
     remaining = creditsBalance;
-    periodLabel = creditsBalance === 1 ? "Pergunta restante" : "Perguntas restantes";
+    periodLabel = creditsBalance === 1 ? t("dash.period_credits_one") : t("dash.period_credits_other");
   } else if (plan === "free") {
     const usedToday = profile?.last_message_date === today ? profile?.messages_today ?? 0 : 0;
     remaining = Math.max(0, DAILY_LIMIT_FREE - usedToday);
@@ -186,7 +186,9 @@ export default async function DashboardHome() {
             lineHeight: 1.3,
           }}
         >
-          💬 Você tem {creditsBalance} {creditsBalance === 1 ? "pergunta" : "perguntas"} — fazer agora
+          {creditsBalance === 1
+            ? t("dash.credits_cta_one")
+            : t("dash.credits_cta_other").replace("{n}", String(creditsBalance))}
         </Link>
       )}
 

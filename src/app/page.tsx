@@ -76,10 +76,10 @@ export default function Home() {
                 minHeight: 70,
               }}
             >
-              💬 Começar por R$ 14,90
+              {t("hero.cta_pergunta")}
             </a>
             <p style={{ fontSize: 15, color: "#c4b5fd", marginTop: 14, fontWeight: 500 }}>
-              Sua primeira pergunta espiritual com a ATB
+              {t("hero.cta_pergunta_sub")}
             </p>
           </div>
 

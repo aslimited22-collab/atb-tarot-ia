@@ -1,5 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 const HIDDEN_PATHS = [
   "/dashboard/chat",
@@ -12,12 +13,13 @@ const HIDDEN_PATHS = [
 
 export default function WhatsAppFloat() {
   const pathname = usePathname() || "";
+  const { t } = useT();
   if (HIDDEN_PATHS.some((p) => pathname.startsWith(p))) return null;
 
   const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
   if (!phone) return null;
 
-  const msg = encodeURIComponent("Oi ATB, quero saber mais sobre as consultas");
+  const msg = encodeURIComponent(t("nav.whatsapp_message"));
   const href = `https://wa.me/${phone}?text=${msg}`;
 
   return (
@@ -25,7 +27,7 @@ export default function WhatsAppFloat() {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Falar com ATB no WhatsApp"
+      aria-label={t("nav.whatsapp_label")}
       style={{
         position: "fixed",
         bottom: "calc(env(safe-area-inset-bottom, 0) + 96px)",

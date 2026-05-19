@@ -82,7 +82,7 @@ export default function LoginPage() {
           >
             <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }} aria-hidden="true">💡</span>
             <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
-              Use o <strong style={{ color: "#e8b84b" }}>mesmo email do pagamento (Kiwify)</strong>. Se usou email diferente, seu plano não vai aparecer.
+              {t("auth.email_warning_login_pre")}<strong style={{ color: "#e8b84b" }}>{t("auth.email_warning_login_strong")}</strong>{t("auth.email_warning_login_post")}
             </p>
           </div>
 

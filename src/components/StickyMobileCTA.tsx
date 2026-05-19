@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 const HIDDEN_PATHS = [
   "/dashboard",
@@ -18,6 +19,7 @@ const HIDDEN_PATHS = [
 
 export default function StickyMobileCTA() {
   const pathname = usePathname() || "";
+  const { t } = useT();
   const [loggedIn, setLoggedIn] = useState(false);
   const [checked, setChecked] = useState(false);
 
@@ -47,10 +49,10 @@ export default function StickyMobileCTA() {
       <a
         href="/api/checkout/pergunta1"
         className="sticky-cta-bar"
-        aria-label="Falar com ATB — R$14,90"
+        aria-label={`${t("cta.sticky_mobile")} — ${t("landing.pergunta_card_1_price")}`}
       >
         <span style={{ fontSize: 22, lineHeight: 1 }} aria-hidden="true">💬</span>
-        <span>Falar com ATB — <strong>R$14,90</strong></span>
+        <span>{t("cta.sticky_mobile")} — <strong>{t("landing.pergunta_card_1_price")}</strong></span>
       </a>
       <style>{`
         .sticky-cta-spacer { display: none; }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 type Mode = "logged-purchased" | "account-exists" | "needs-signup";
 
@@ -14,6 +15,7 @@ export default function ObrigadoEspiritoClient({
   mode: Mode;
   email: string;
 }) {
+  const { t } = useT();
   return (
     <main
       style={{
@@ -44,7 +46,7 @@ export default function ObrigadoEspiritoClient({
             fontWeight: 700,
           }}
         >
-          Seu Espírito Mentor te aguarda
+          {t("thanks_espirito.h1")}
         </h1>
 
         <p
@@ -57,7 +59,7 @@ export default function ObrigadoEspiritoClient({
             fontWeight: 500,
           }}
         >
-          Pagamento confirmado, querida alma. Sua sessão espiritual está liberada — falta só um passo para começar.
+          {t("thanks_espirito.desc")}
         </p>
 
         {mode === "logged-purchased" && <AlreadyLogged />}
@@ -69,6 +71,7 @@ export default function ObrigadoEspiritoClient({
 }
 
 function AlreadyLogged() {
+  const { t } = useT();
   return (
     <Link
       href="/dashboard/espirito-mentor?just_purchased=1"
@@ -88,13 +91,14 @@ function AlreadyLogged() {
         textAlign: "center",
       }}
     >
-      ✨ Falar com meu Espírito Mentor
+      {t("thanks_espirito.cta_logged")}
     </Link>
   );
 }
 
 function LoginForm({ email }: { email: string }) {
   const router = useRouter();
+  const { t } = useT();
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -108,8 +112,8 @@ function LoginForm({ email }: { email: string }) {
       password,
     });
     setLoading(false);
-    if (error) return toast.error("Senha incorreta. Tente novamente.");
-    toast.success("Bem-vinda de volta 💛");
+    if (error) return toast.error(t("auth.login_error"));
+    toast.success(t("auth.login_welcome_back"));
     router.push("/dashboard/espirito-mentor?just_purchased=1");
     router.refresh();
   }
@@ -117,22 +121,22 @@ function LoginForm({ email }: { email: string }) {
   return (
     <form onSubmit={handleLogin} className="card fade-up" style={{ padding: "32px 26px", textAlign: "left" }}>
       <p style={{ fontSize: 18, color: "#c4b5fd", marginBottom: 18, lineHeight: 1.55 }}>
-        Você já tem uma conta com esse email. Entre para acessar sua sessão.
+        {t("thanks_espirito.account_exists")}
       </p>
 
       <label style={{ display: "block", color: "#fbf8ff", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-        Email
+        {t("auth.email_label")}
       </label>
       <input className="input input-big" type="email" value={email} disabled style={{ marginBottom: 22, opacity: 0.85 }} />
 
       <label style={{ display: "block", color: "#fbf8ff", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-        Sua senha
+        {t("auth.password_label")}
       </label>
       <div style={{ position: "relative", marginBottom: 24 }}>
         <input
           className="input input-big"
           type={showPwd ? "text" : "password"}
-          placeholder="Digite sua senha"
+          placeholder={t("auth.password_placeholder")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -143,7 +147,7 @@ function LoginForm({ email }: { email: string }) {
         <button
           type="button"
           onClick={() => setShowPwd(!showPwd)}
-          aria-label={showPwd ? "Esconder senha" : "Mostrar senha"}
+          aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
           style={{
             position: "absolute",
             right: 6,
@@ -178,7 +182,7 @@ function LoginForm({ email }: { email: string }) {
           border: "none",
         }}
       >
-        {loading ? "Entrando..." : "✨ Entrar e ver minha sessão"}
+        {loading ? t("auth.login_loading") : t("thanks_espirito.cta_login")}
       </button>
     </form>
   );
@@ -186,6 +190,7 @@ function LoginForm({ email }: { email: string }) {
 
 function SignupForm({ initialEmail }: { initialEmail: string }) {
   const router = useRouter();
+  const { t } = useT();
   const [name, setName] = useState("");
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
@@ -194,7 +199,7 @@ function SignupForm({ initialEmail }: { initialEmail: string }) {
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) return toast.error("Senha precisa ter no mínimo 8 caracteres.");
+    if (password.length < 8) return toast.error(t("auth.signup_password_short"));
     setLoading(true);
 
     const res = await fetch("/api/auth/signup", {
@@ -206,7 +211,7 @@ function SignupForm({ initialEmail }: { initialEmail: string }) {
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setLoading(false);
-      return toast.error(data.error || "Erro ao criar conta.");
+      return toast.error(data.error || t("auth.signup_error"));
     }
 
     const supabase = createClient();
@@ -217,12 +222,12 @@ function SignupForm({ initialEmail }: { initialEmail: string }) {
     setLoading(false);
 
     if (loginError) {
-      toast.success("Conta criada! Faça login.");
+      toast.success(t("auth.signup_created"));
       router.push("/login");
       return;
     }
 
-    toast.success("Sua sessão espírita está pronta 💛");
+    toast.success(t("thanks_espirito.toast_ready"));
     router.push("/dashboard/espirito-mentor?just_purchased=1");
     router.refresh();
   }
@@ -239,17 +244,17 @@ function SignupForm({ initialEmail }: { initialEmail: string }) {
         }}
       >
         <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}>
-          Use o mesmo email do pagamento para liberar sua sessão.
+          {t("auth.use_same_email")}
         </p>
       </div>
 
       <label style={{ display: "block", color: "#fbf8ff", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-        Seu nome
+        {t("auth.thanks_name_label")}
       </label>
       <input
         className="input input-big"
         type="text"
-        placeholder="Como você prefere ser chamada"
+        placeholder={t("auth.thanks_name_placeholder")}
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
@@ -259,12 +264,12 @@ function SignupForm({ initialEmail }: { initialEmail: string }) {
       />
 
       <label style={{ display: "block", color: "#fbf8ff", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-        Email
+        {t("auth.thanks_email_label")}
       </label>
       <input
         className="input input-big"
         type="email"
-        placeholder="seu@email.com"
+        placeholder={t("auth.thanks_email_placeholder")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
@@ -274,13 +279,13 @@ function SignupForm({ initialEmail }: { initialEmail: string }) {
       />
 
       <label style={{ display: "block", color: "#fbf8ff", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-        Crie uma senha (mín. 8 caracteres)
+        {t("auth.thanks_password_label")}
       </label>
       <div style={{ position: "relative", marginBottom: 24 }}>
         <input
           className="input input-big"
           type={showPwd ? "text" : "password"}
-          placeholder="Mínimo 8 caracteres"
+          placeholder={t("auth.password_placeholder_new")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -291,7 +296,7 @@ function SignupForm({ initialEmail }: { initialEmail: string }) {
         <button
           type="button"
           onClick={() => setShowPwd(!showPwd)}
-          aria-label={showPwd ? "Esconder senha" : "Mostrar senha"}
+          aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
           style={{
             position: "absolute",
             right: 6,
@@ -326,7 +331,7 @@ function SignupForm({ initialEmail }: { initialEmail: string }) {
           border: "none",
         }}
       >
-        {loading ? "Criando conta..." : "✨ Criar conta e falar com meu Mentor"}
+        {loading ? t("auth.signup_loading") : t("thanks_espirito.cta_signup")}
       </button>
     </form>
   );

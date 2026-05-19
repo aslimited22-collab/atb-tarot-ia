@@ -6,6 +6,7 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { AnalyticsWrapper } from "@/components/AnalyticsWrapper";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
+import GlobalLangSwitcher from "@/components/GlobalLangSwitcher";
 
 export const metadata: Metadata = {
   title: "ATB — Sessão Espírita Transformadora",
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <I18nProvider>
           {children}
+          <GlobalLangSwitcher />
           <StickyMobileCTA />
           <WhatsAppFloat />
           <CookieBanner />
