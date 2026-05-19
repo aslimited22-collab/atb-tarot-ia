@@ -729,7 +729,7 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
           {t("espirito_dash.gate_cta_eyebrow")}
         </div>
         <div className="serif" style={{ fontSize: "clamp(3rem, 8vw, 4rem)", color: "#e8b84b", fontWeight: 800, lineHeight: 1, marginBottom: 4 }}>
-          R$ 437
+          {t("plans.espirito_price")}
         </div>
         <div style={{ fontSize: 15, color: "#fbf8ff", marginBottom: 24, fontWeight: 500 }}>
           {t("espirito_dash.gate_cta_once")}

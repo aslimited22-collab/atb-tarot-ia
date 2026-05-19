@@ -942,7 +942,7 @@ function PurchaseGate({ firstName, kiwifyUrl }: { firstName: string; kiwifyUrl: 
           {t("limpeza_dash.gate_cta_eyebrow")}
         </div>
         <div className="serif" style={{ fontSize: "3rem", color: "#e8b84b", fontWeight: 800, lineHeight: 1, marginBottom: 4 }}>
-          R$ 100
+          {t("landing.limpeza_price")}
         </div>
         <div style={{ fontSize: 13, color: "#9575cd", marginBottom: 18 }}>
           {t("limpeza_dash.gate_cta_subtitle")}

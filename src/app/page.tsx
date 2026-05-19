@@ -421,7 +421,7 @@ export default function Home() {
               {t("landing.payment_eyebrow")}
             </div>
             <div className="serif" style={{ fontSize: "clamp(3.4rem, 8vw, 4.5rem)", color: S.gold, fontWeight: 800, lineHeight: 1, marginBottom: 6 }}>
-              R$ 100
+              {t("landing.limpeza_price")}
             </div>
             <div style={{ fontSize: 19, color: "#fbf8ff", marginBottom: 28, fontWeight: 500 }}>
               {t("landing.payment_once")}
@@ -468,7 +468,7 @@ export default function Home() {
             <div className="card" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)" }}>
               <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.fullAccess")}</h3>
               <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 24, lineHeight: 1 }}>
-                R$29 <span style={{ fontSize: 18, fontWeight: 400, color: S.text2 }}>{t("price.perMonth")}</span>
+                {t("plans.basic_price")} <span style={{ fontSize: 18, fontWeight: 400, color: S.text2 }}>{t("price.perMonth")}</span>
               </div>
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", flex: 1 }}>
                 <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f1")}</li>
@@ -483,7 +483,7 @@ export default function Home() {
               <div style={{ fontSize: 13, fontWeight: 700, background: S.gold, color: "#120025", borderRadius: 999, padding: "5px 16px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em" }}>{t("plans.premium.badge")}</div>
               <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.madameAriel")}</h3>
               <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 24, lineHeight: 1 }}>
-                R$250 <span style={{ fontSize: 18, fontWeight: 400, color: S.text2 }}>{t("price.perMonth")}</span>
+                {t("plans.premium_price")} <span style={{ fontSize: 18, fontWeight: 400, color: S.text2 }}>{t("price.perMonth")}</span>
               </div>
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", flex: 1 }}>
                 <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f1")}</li>

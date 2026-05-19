@@ -52,7 +52,7 @@ export default async function DashboardHome() {
           <div className="card" style={{ padding: "32px 26px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)" }}>
             <h2 className="serif" style={{ fontSize: "1.8rem", color: "#e8b84b", marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.fullAccess")}</h2>
             <div style={{ fontSize: "2.6rem", fontWeight: 800, color: "#f5f0ff", marginBottom: 22, lineHeight: 1 }}>
-              R$29 <span style={{ fontSize: 19, fontWeight: 400, color: "#c4b5fd" }}>{t("price.perMonth")}</span>
+              {t("plans.basic_price")} <span style={{ fontSize: 19, fontWeight: 400, color: "#c4b5fd" }}>{t("price.perMonth")}</span>
             </div>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 26px", flex: 1 }}>
               <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f1")}</li>
@@ -70,7 +70,7 @@ export default async function DashboardHome() {
             <div style={{ fontSize: 14, fontWeight: 800, background: "#e8b84b", color: "#120025", borderRadius: 999, padding: "6px 18px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em" }}>{t("plans.premium.badge")}</div>
             <h2 className="serif" style={{ fontSize: "1.8rem", color: "#e8b84b", marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.madameAriel")}</h2>
             <div style={{ fontSize: "2.6rem", fontWeight: 800, color: "#f5f0ff", marginBottom: 22, lineHeight: 1 }}>
-              R$250 <span style={{ fontSize: 19, fontWeight: 400, color: "#c4b5fd" }}>{t("price.perMonth")}</span>
+              {t("plans.premium_price")} <span style={{ fontSize: 19, fontWeight: 400, color: "#c4b5fd" }}>{t("price.perMonth")}</span>
             </div>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 26px", flex: 1 }}>
               <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f1")}</li>
