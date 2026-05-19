@@ -1,19 +1,30 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/I18nProvider";
 
-type Mode = "logged-with-credits" | "account-exists" | "needs-signup";
+type Mode = "logged-with-credits" | "account-exists" | "needs-signup" | "auto-create";
+
+function genPassword(): string {
+  // Senha auto-gerada: 16 chars, sempre tem letra+número+símbolo
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let pwd = "";
+  const a = crypto.getRandomValues(new Uint32Array(14));
+  for (let i = 0; i < 14; i++) pwd += chars[a[i] % chars.length];
+  return pwd + "@9";
+}
 
 export default function ObrigadoPerguntaClient({
   mode,
   email,
+  name,
 }: {
   mode: Mode;
   email: string;
+  name?: string;
 }) {
   const { t } = useT();
 
@@ -66,34 +77,118 @@ export default function ObrigadoPerguntaClient({
         {mode === "logged-with-credits" && <AlreadyLogged />}
         {mode === "account-exists" && <LoginForm email={email} />}
         {mode === "needs-signup" && <SignupForm initialEmail={email} />}
+        {mode === "auto-create" && <AutoCreate email={email} name={name || ""} />}
       </div>
     </main>
   );
 }
 
-function AlreadyLogged() {
+function AutoCreate({ email, name }: { email: string; name: string }) {
+  const router = useRouter();
   const { t } = useT();
+  const [status, setStatus] = useState<"creating" | "logging-in" | "ready" | "fallback">("creating");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function run() {
+      try {
+        const password = genPassword();
+
+        // 1. Cria conta no servidor (idempotente — se já existe, retorna ok)
+        const signupRes = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, name }),
+        });
+
+        if (cancelled) return;
+
+        // Resposta sempre 200 ok da nossa /api/auth/signup (anti-enumeration)
+        if (!signupRes.ok) {
+          setStatus("fallback");
+          return;
+        }
+
+        // 2. Auto-login
+        setStatus("logging-in");
+        const supabase = createClient();
+        const { error: loginError } = await supabase.auth.signInWithPassword({
+          email: email.toLowerCase().trim(),
+          password,
+        });
+
+        if (cancelled) return;
+
+        if (loginError) {
+          // Conta provavelmente já existia com outra senha — fallback pro form de login
+          setStatus("fallback");
+          return;
+        }
+
+        // 3. Direto pro chat
+        setStatus("ready");
+        router.push("/dashboard/chat?welcome=pergunta&new=1");
+        router.refresh();
+      } catch {
+        if (!cancelled) setStatus("fallback");
+      }
+    }
+
+    run();
+    return () => { cancelled = true; };
+  }, [email, name, router]);
+
+  if (status === "fallback") {
+    return <SignupForm initialEmail={email} />;
+  }
+
+  const msg =
+    status === "creating" ? t("thanks_pergunta.h1") :
+    status === "logging-in" ? t("thanks_pergunta.h1") :
+    t("thanks_pergunta.cta");
+
   return (
-    <Link
-      href="/dashboard/chat"
-      style={{
-        display: "block",
-        background: "linear-gradient(135deg, #e8b84b, #c9950a)",
-        color: "#120025",
-        fontWeight: 800,
-        fontSize: 22,
-        padding: "22px 28px",
-        borderRadius: 16,
-        textDecoration: "none",
-        minHeight: 72,
-        margin: "20px auto",
-        maxWidth: 460,
-        boxShadow: "0 12px 28px rgba(232,184,75,0.45)",
-        textAlign: "center",
-      }}
-    >
-      {t("thanks_pergunta.cta")}
-    </Link>
+    <div className="fade-up" style={{ padding: "40px 20px", textAlign: "center" }}>
+      <div style={{
+        display: "inline-flex",
+        gap: 10,
+        marginBottom: 24,
+      }}>
+        <span className="typing-dot" />
+        <span className="typing-dot" />
+        <span className="typing-dot" />
+      </div>
+      <p style={{ fontSize: 20, color: "#fbf8ff", fontWeight: 600, margin: 0, lineHeight: 1.5 }}>
+        {msg}
+      </p>
+      <p style={{ fontSize: 15, color: "#c4b5fd", marginTop: 14, lineHeight: 1.55 }}>
+        {email}
+      </p>
+    </div>
+  );
+}
+
+function AlreadyLogged() {
+  const router = useRouter();
+  const { t } = useT();
+  useEffect(() => {
+    // Cliente já tem conta logada — manda direto pro chat. Zero fricção.
+    router.push("/dashboard/chat?welcome=pergunta");
+    router.refresh();
+  }, [router]);
+
+  return (
+    <div className="fade-up" style={{ padding: "40px 20px", textAlign: "center" }}>
+      <div style={{ display: "inline-flex", gap: 10, marginBottom: 24 }}>
+        <span className="typing-dot" />
+        <span className="typing-dot" />
+        <span className="typing-dot" />
+      </div>
+      <p style={{ fontSize: 20, color: "#fbf8ff", fontWeight: 600, margin: 0, lineHeight: 1.5 }}>
+        {t("thanks_pergunta.cta")}
+      </p>
+    </div>
   );
 }
 
