@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
-import { deliverLimpezaOrder } from "@/lib/delivery";
+import { deliverLimpezaOrder, sendCustomerEmailWithLog } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
 import { getSiteUrl } from "@/lib/site-url";
+
+function escapeHtml(s: string | undefined | null): string {
+  if (!s) return "";
+  return String(s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 
 export const runtime = "nodejs";
 // Stripe envia o body cru; nao podemos parsear como JSON antes da verificacao.
@@ -150,6 +157,39 @@ export async function POST(req: Request) {
       event: `${plan}_purchased_intl`,
       amount_cents: amountTotal,
       user_id: userRow?.id ?? null,
+    });
+
+    // Welcome email com link de signup (sem isso o cliente fica perdido)
+    const pFirstName = name ? name.split(" ")[0] : "dear soul";
+    const pLink = `${getSiteUrl(req)}/obrigado-pergunta?session_id=${encodeURIComponent(paymentId)}`;
+    const cLabel = credits === 1 ? "1 question" : `${credits} questions`;
+    const pHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
+  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
+    <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+      <div style="font-size:64px;margin-bottom:16px;">✨</div>
+      <h1 style="color:#e8b84b;font-size:32px;margin:0 0 12px;line-height:1.15;">Your ${cLabel} is ready</h1>
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">
+        Hi <strong style="color:#f5c860;">${escapeHtml(pFirstName)}</strong>! Payment confirmed. ATB is ready to answer.
+      </p>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 28px;">Press the gold button to create your account in 30 seconds:</p>
+      <a href="${pLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;">✨ Ask my question</a>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;">
+      <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;">⚠️ IMPORTANT — USE THIS EMAIL</p>
+      <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;">
+        Create your account with the <strong style="color:#e8b84b;">same email used in payment:</strong><br/>
+        <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email)}</strong>
+      </p>
+    </div>
+  </div>
+</body></html>`;
+    await sendCustomerEmailWithLog({
+      scope: "webhook.stripe.pergunta",
+      to: email,
+      subject: `✨ Your ${cLabel} with ATB is ready`,
+      html: pHtml,
+      refId: paymentId,
     });
 
     return NextResponse.json({ ok: true, plan, email, credits });
