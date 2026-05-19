@@ -105,7 +105,15 @@ export default function AdminClient({ customers, purchases, metrics }: {
       <h1 style={{ fontSize: "1.8rem", color: "#f5f0ff", marginBottom: 4, fontFamily: "Georgia, serif" }}>
         Painel Admin
       </h1>
-      <p style={{ color: "#9575cd", fontSize: 14, marginBottom: 28 }}>Visão geral dos seus clientes</p>
+      <p style={{ color: "#9575cd", fontSize: 14, marginBottom: 12 }}>Visão geral dos seus clientes</p>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
+        <a href="/admin/insights" style={{ color: "#e8b84b", fontSize: 13, textDecoration: "none", padding: "8px 14px", background: "rgba(232,184,75,0.12)", border: "1px solid rgba(232,184,75,0.4)", borderRadius: 8, fontWeight: 700 }}>
+          ✨ Insights (novo)
+        </a>
+        <a href="/admin/analytics" style={{ color: "#9575cd", fontSize: 13, textDecoration: "none", padding: "8px 14px", background: "rgba(149,117,205,0.1)", border: "1px solid rgba(149,117,205,0.3)", borderRadius: 8 }}>
+          Analytics antigo →
+        </a>
+      </div>
 
       {/* Métricas */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 28 }}>

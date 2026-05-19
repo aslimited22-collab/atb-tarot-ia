@@ -40,7 +40,7 @@ export default async function ObrigadoLimpezaPage({
       .from("purchases")
       .select("id")
       .eq("email", userEmail)
-      .eq("plan", "limpeza")
+      .in("plan", ["limpeza", "limpeza_v2", "limpeza_v2_intl"])
       .neq("event", "order.refunded")
       .neq("event", "order_refunded")
       .limit(1)

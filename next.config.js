@@ -17,14 +17,14 @@ module.exports = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           // Desativa features desnecessárias
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
-          // Content Security Policy — hardened (sem unsafe-eval)
+          // Content Security Policy — unsafe-eval só em dev (HMR precisa)
           {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // 'unsafe-inline' ainda necessário pro Next.js inline runtime
-              // 'unsafe-eval' REMOVIDO — Next.js 14 prod não precisa
-              "script-src 'self' 'unsafe-inline' https://js.stripe.com https://va.vercel-scripts.com",
+              process.env.NODE_ENV === "development"
+                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com"
+                : "script-src 'self' 'unsafe-inline' https://js.stripe.com https://va.vercel-scripts.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",

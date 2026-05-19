@@ -235,9 +235,11 @@ export async function POST(req: Request) {
     const p3Id = process.env.KIWIFY_PERGUNTA3_PRODUCT_ID;
     const p7Id = process.env.KIWIFY_PERGUNTA7_PRODUCT_ID;
 
-    const isP1 = (p1Id && productId === p1Id) || (!p1Id && valueBRL >= 14 && valueBRL <= 16);
-    const isP3 = (p3Id && productId === p3Id) || (!p3Id && valueBRL >= 19 && valueBRL <= 21);
-    const isP7 = (p7Id && productId === p7Id) || (!p7Id && valueBRL >= 38 && valueBRL <= 41);
+    // Value range SEMPRE como fallback (mesmo com env var setada).
+    // Evita misclassificação como "basic" se env var apontar pra produto errado.
+    const isP1 = (p1Id && productId === p1Id) || (valueBRL >= 14 && valueBRL <= 16);
+    const isP3 = (p3Id && productId === p3Id) || (valueBRL >= 19 && valueBRL <= 21);
+    const isP7 = (p7Id && productId === p7Id) || (valueBRL >= 38 && valueBRL <= 41);
 
     if (isP1 || isP3 || isP7) {
       const credits = isP1 ? 1 : isP3 ? 3 : 7;

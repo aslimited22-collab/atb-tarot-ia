@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import EspiritoMentorClient from "./client";
 
@@ -10,7 +11,8 @@ export default async function EspiritoMentorPage({
 }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const userEmail = (user!.email || "").toLowerCase();
+  if (!user) redirect("/login");
+  const userEmail = (user.email || "").toLowerCase();
 
   const { data: purchase } = await supabase
     .from("purchases")
@@ -26,7 +28,7 @@ export default async function EspiritoMentorPage({
   const justPurchased = searchParams?.just_purchased === "1";
 
   const { data: profile } = await supabase
-    .from("users").select("name, email").eq("id", user!.id).maybeSingle();
+    .from("users").select("name, email").eq("id", user.id).maybeSingle();
   const firstName = (profile?.name || profile?.email?.split("@")[0] || "querida").split(" ")[0];
 
   let messages: Array<{ id: string; role: string; content: string }> = [];
@@ -43,7 +45,7 @@ export default async function EspiritoMentorPage({
     const { data } = await supabase
       .from("espirito_messages")
       .select("id, role, content, created_at")
-      .eq("user_id", user!.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: true })
       .limit(50);
     messages = data || [];
@@ -53,7 +55,7 @@ export default async function EspiritoMentorPage({
     const { data: profileData } = await supabase
       .from("espirito_profile")
       .select("full_name, age, lost_loved_one, who_to_talk, main_question")
-      .eq("user_id", user!.id)
+      .eq("user_id", user.id)
       .maybeSingle();
     espiritoProfile = profileData;
   }

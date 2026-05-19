@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { PlanBadge } from "@/components/PlanBadge";
 import { MESSAGE_LIMITS_MONTH, DAILY_LIMIT_FREE, currentMonthKey, currentDayKey, isPaidPlan } from "@/lib/plans";
 import { dailyLuckyNumbers } from "@/lib/numerology";
+import { reconcileChatCredits } from "@/lib/reconcileCredits";
 import { getServerT } from "@/lib/i18n/server";
 import type { Plan } from "@/lib/types";
 
@@ -14,13 +16,25 @@ export default async function DashboardHome() {
   const supabase = createClient();
   const { t } = getServerT();
   const { data: { user } } = await supabase.auth.getUser();
+
+  // Reconcilia créditos órfãos antes de ler perfil. Cobre o caso do cliente
+  // pagar pergunta avulsa e chegar aqui antes do webhook do Kiwify processar.
+  if (user) {
+    const admin = createAdminClient();
+    await reconcileChatCredits(admin, user.id, user.email || "");
+  }
+
   const { data: profile } = await supabase
-    .from("users").select("plan, email, messages_today, last_message_date, messages_month, last_message_month").eq("id", user!.id).maybeSingle();
+    .from("users").select("plan, email, messages_today, last_message_date, messages_month, last_message_month, chat_credits_balance").eq("id", user!.id).maybeSingle();
 
   const plan: Plan = (profile?.plan as Plan) || "free";
+  const creditsBalance = (profile?.chat_credits_balance as number | undefined) ?? 0;
+  const hasCredits = creditsBalance > 0;
 
-  // Gate: sem plano pago = tela "Escolha seu plano" (não tem nada de graça pra usar)
-  if (!isPaidPlan(plan)) {
+  // Gate: sem plano pago E sem créditos avulsos = tela "Escolha seu plano".
+  // Cliente que comprou pergunta1/3/7 (R$14,90/19,90/39,90) tem plan="free" mas
+  // chat_credits_balance > 0 — DEVE ver o dashboard com CTA pro chat.
+  if (!isPaidPlan(plan) && !hasCredits) {
     return (
       <div style={{ padding: "32px 20px 80px", maxWidth: 720, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -97,10 +111,15 @@ export default async function DashboardHome() {
   const today = currentDayKey();
   const monthKey = currentMonthKey();
 
-  // Free: limite diario | Basic/Premium: limite mensal
+  // Free com créditos: mostra saldo de perguntas avulsas (precedência)
+  // Free sem créditos: cota diária (mas gate acima já bloqueia isso)
+  // Basic/Premium: limite mensal
   let remaining: number;
   let periodLabel: string;
-  if (plan === "free") {
+  if (hasCredits) {
+    remaining = creditsBalance;
+    periodLabel = creditsBalance === 1 ? "Pergunta restante" : "Perguntas restantes";
+  } else if (plan === "free") {
     const usedToday = profile?.last_message_date === today ? profile?.messages_today ?? 0 : 0;
     remaining = Math.max(0, DAILY_LIMIT_FREE - usedToday);
     periodLabel = t("dash.period_today_free");
@@ -146,6 +165,30 @@ export default async function DashboardHome() {
           {t("dash.greeting")}
         </p>
       </div>
+
+      {/* CTA destacado para quem comprou pergunta avulsa (créditos disponíveis) */}
+      {hasCredits && (
+        <Link
+          href="/dashboard/chat"
+          style={{
+            display: "block",
+            background: "linear-gradient(135deg, #e8b84b, #c9950a)",
+            color: "#120025",
+            fontWeight: 800,
+            fontSize: 21,
+            padding: "24px 28px",
+            borderRadius: 18,
+            textDecoration: "none",
+            textAlign: "center",
+            minHeight: 80,
+            marginBottom: 24,
+            boxShadow: "0 12px 28px rgba(232,184,75,0.45)",
+            lineHeight: 1.3,
+          }}
+        >
+          💬 Você tem {creditsBalance} {creditsBalance === 1 ? "pergunta" : "perguntas"} — fazer agora
+        </Link>
+      )}
 
       {/* Plano + restante — cards maiores, fontes 45+ */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 26 }}>

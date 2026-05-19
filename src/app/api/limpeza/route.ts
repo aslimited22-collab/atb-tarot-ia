@@ -147,7 +147,12 @@ export async function POST(req: Request) {
 
 Use essas informações para chamá-la pelo nome, levar em conta a fase da vida dela, e adaptar a leitura ao que ela está sentindo. Não repita esses dados literalmente, apenas use como contexto interno.`;
 
-    await supabase.from("limpeza_messages").insert({ user_id: user.id, role: "user", content: message });
+    const { data: userMsgRow } = await supabase
+      .from("limpeza_messages")
+      .insert({ user_id: user.id, role: "user", content: message })
+      .select("id")
+      .single();
+    const userMsgId = userMsgRow?.id as string | undefined;
 
     let upstream: Response;
     try {
@@ -158,16 +163,11 @@ Use essas informações para chamá-la pelo nome, levar em conta a fase da vida 
         { role: "user", content: message },
       ]);
     } catch (err) {
-      // Falha de rede / API OpenAI: remove a mensagem do usuário do banco
-      // para que ele possa reenviar sem perder a tentativa
-      await supabase
-        .from("limpeza_messages")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("role", "user")
-        .eq("content", message)
-        .order("created_at", { ascending: false })
-        .limit(1);
+      // Falha de rede / API OpenAI: remove a mensagem do usuário (por ID,
+      // não por content — evita apagar mensagens antigas com texto idêntico)
+      if (userMsgId) {
+        await supabase.from("limpeza_messages").delete().eq("id", userMsgId);
+      }
       return NextResponse.json(
         { error: "Tivemos um problema de conexão com nossos santos. Tente novamente em alguns segundos." },
         { status: 502 }

@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ATB_SYSTEM_PROMPT, deepseekStream } from "@/lib/deepseek";
 import { MESSAGE_LIMITS_MONTH, THROTTLE_SECONDS, currentMonthKey } from "@/lib/plans";
 import { sanitizeInput, rateLimit, getClientIp } from "@/lib/security";
+import { reconcileChatCredits } from "@/lib/reconcileCredits";
 import type { Plan } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -56,6 +57,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: sanity.reason }, { status: 400 });
     }
     const message = sanity.value;
+
+    // Reconcilia créditos órfãos antes de ler o saldo. Cobre o gap entre
+    // o cliente clicar no success_url do Kiwify (instantâneo) e o webhook
+    // server-to-server creditar a conta (pode atrasar).
+    const admin = createAdminClient();
+    await reconcileChatCredits(admin, user.id, user.email || "");
 
     const { data: profile } = await supabase
       .from("users")
@@ -115,7 +122,7 @@ export async function POST(req: Request) {
 
     // NÃO incrementamos cota agora — só cobramos se a IA realmente responder.
     // Isso evita "queimar" mensagem do usuário em caso de 502 da DeepSeek.
-    const admin = createAdminClient();
+    // `admin` já foi inicializado acima pra reconciliar créditos.
 
     const { data: history } = await supabase
       .from("chat_messages")
@@ -126,7 +133,14 @@ export async function POST(req: Request) {
 
     const prior = (history || []).reverse().map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
 
-    await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: message });
+    // Insere a msg do user e captura o ID retornado para rollback preciso
+    // (filtrar por content podia apagar mensagens antigas com texto idêntico).
+    const { data: userMsgRow } = await supabase
+      .from("chat_messages")
+      .insert({ user_id: user.id, role: "user", content: message })
+      .select("id")
+      .single();
+    const userMsgId = userMsgRow?.id as string | undefined;
 
     let upstream: Response;
     try {
@@ -138,22 +152,16 @@ export async function POST(req: Request) {
     } catch {
       // Falha de rede / DeepSeek antes de qualquer chunk — rollback da
       // mensagem do usuário e nenhum incremento de cota.
-      await supabase
-        .from("chat_messages")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("role", "user")
-        .eq("content", message);
+      if (userMsgId) {
+        await supabase.from("chat_messages").delete().eq("id", userMsgId);
+      }
       return NextResponse.json({ error: "Erro na consulta" }, { status: 502 });
     }
 
     if (!upstream.ok || !upstream.body) {
-      await supabase
-        .from("chat_messages")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("role", "user")
-        .eq("content", message);
+      if (userMsgId) {
+        await supabase.from("chat_messages").delete().eq("id", userMsgId);
+      }
       return NextResponse.json({ error: "Erro na consulta" }, { status: 502 });
     }
 
@@ -199,14 +207,11 @@ export async function POST(req: Request) {
             await supabase.from("chat_messages").insert({
               user_id: user.id, role: "assistant", content: full,
             });
-            // Decremento: créditos avulsos têm prioridade sobre cota mensal.
-            // Se cliente comprou pergunta1/3/7 (credits > 0), gasta 1 crédito
-            // em vez de incrementar messages_month.
+            // Decremento atômico via RPC: evita race condition quando 2 requests
+            // paralelas leem balance=N e ambas escrevem N-1. RPC faz `set X = X - 1`
+            // que é atômico no Postgres.
             if (usingCredits) {
-              await admin
-                .from("users")
-                .update({ chat_credits_balance: creditsBalance - 1 })
-                .eq("id", user.id);
+              await admin.rpc("decrement_chat_credit", { p_user_id: user.id });
             } else {
               await admin
                 .from("users")
@@ -217,13 +222,10 @@ export async function POST(req: Request) {
                 .eq("id", user.id);
             }
           } else {
-            // Stream abriu mas não veio conteúdo — rollback
-            await supabase
-              .from("chat_messages")
-              .delete()
-              .eq("user_id", user.id)
-              .eq("role", "user")
-              .eq("content", message);
+            // Stream abriu mas não veio conteúdo — rollback por ID
+            if (userMsgId) {
+              await supabase.from("chat_messages").delete().eq("id", userMsgId);
+            }
           }
           controller.close();
         }
@@ -242,6 +244,10 @@ export async function GET() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  // Reconcilia créditos órfãos (cobre webhook atrasado pós-Kiwify)
+  const admin = createAdminClient();
+  await reconcileChatCredits(admin, user.id, user.email || "");
 
   const { data } = await supabase
     .from("chat_messages")

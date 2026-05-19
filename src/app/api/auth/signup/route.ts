@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateEmail, rateLimit, getClientIp } from "@/lib/security";
+import { reconcileChatCredits } from "@/lib/reconcileCredits";
 import { logInfo, logWarn } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -108,43 +109,16 @@ export async function POST(req: Request) {
           .eq("id", data.user.id);
       }
 
-      // Credita "perguntas avulsas" compradas ANTES do signup (funil de entrada):
-      // soma todos os credits de purchases pergunta1/3/7 desse email.
-      const { data: perguntaPurchases } = await adminClient
-        .from("purchases")
-        .select("plan")
-        .eq("email", normalizedEmail)
-        .in("plan", ["pergunta1", "pergunta3", "pergunta7"]);
-
-      if (perguntaPurchases && perguntaPurchases.length > 0) {
-        let credits = 0;
-        for (const p of perguntaPurchases) {
-          if (p.plan === "pergunta1") credits += 1;
-          else if (p.plan === "pergunta3") credits += 3;
-          else if (p.plan === "pergunta7") credits += 7;
-        }
-        if (credits > 0) {
-          const { error: creditErr } = await adminClient
-            .from("users")
-            .update({
-              chat_credits_balance: credits,
-              chat_credits_total_purchased: credits,
-            })
-            .eq("id", data.user.id);
-          if (creditErr) {
-            logWarn("signup", "reconciliation failed", {
-              email: normalizedEmail,
-              credits,
-              error: creditErr.message,
-            });
-          } else {
-            logInfo("signup", "reconciled pergunta credits", {
-              email: normalizedEmail,
-              credits,
-              purchases_count: perguntaPurchases.length,
-            });
-          }
-        }
+      // Credita "perguntas avulsas" compradas ANTES do signup (funil de entrada).
+      // Helper centralizado (idempotente) — mesma função é chamada em /api/chat
+      // e /dashboard pra cobrir race com webhook atrasado.
+      const recon = await reconcileChatCredits(adminClient, data.user.id, normalizedEmail);
+      if (recon.creditedNow > 0) {
+        logInfo("signup", "reconciled pergunta credits", {
+          email: normalizedEmail,
+          credited: recon.creditedNow,
+          totalPurchased: recon.totalPurchased,
+        });
       }
     } catch (e) {
       // Falha silenciosa — não quebra signup, mas registra

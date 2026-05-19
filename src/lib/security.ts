@@ -37,18 +37,6 @@ const BLOCKED_DOMAINS = new Set([
   "za.com","zehnminutenmail.de","zippymail.info","zostmail.com",
 ]);
 
-// Proveedores de email legítimos e comuns no Brasil — whitelist
-const ALLOWED_DOMAINS = new Set([
-  "gmail.com","googlemail.com",
-  "hotmail.com","hotmail.com.br","outlook.com","outlook.com.br","live.com","live.com.br",
-  "yahoo.com","yahoo.com.br",
-  "icloud.com","me.com","mac.com",
-  "uol.com.br","bol.com.br","terra.com.br","ig.com.br","globo.com","r7.com",
-  "oi.com.br","tim.com.br","claro.com.br","vivo.com.br",
-  "protonmail.com","pm.me","tutanota.com",
-  "msn.com","aol.com",
-]);
-
 export function validateEmail(email: string): { ok: boolean; reason?: string } {
   const lower = email.toLowerCase().trim();
 
@@ -58,15 +46,11 @@ export function validateEmail(email: string): { ok: boolean; reason?: string } {
 
   const domain = lower.split("@")[1];
 
-  // Bloqueia domínios descartáveis conhecidos
+  // Bloqueia apenas domínios descartáveis. Whitelist anterior rejeitava emails
+  // corporativos/regionais legítimos — cliente pagava no Kiwify (que não roda
+  // este check) e depois não conseguia criar conta pra acessar o que comprou.
   if (BLOCKED_DOMAINS.has(domain)) {
     return { ok: false, reason: "Use um email real para criar sua conta." };
-  }
-
-  // Só permite domínios conhecidos — rejeita emails corporativos/universitários desconhecidos
-  // para o MVP focado em consumidor final brasileiro
-  if (!ALLOWED_DOMAINS.has(domain)) {
-    return { ok: false, reason: "Por favor use um email Gmail, Hotmail, Yahoo, iCloud ou similar." };
   }
 
   return { ok: true };
@@ -167,16 +151,19 @@ export function sanitizeInput(text: string, maxLength: number): { ok: boolean; v
     return { ok: false, value: "", reason: `Mensagem muito longa. Máximo ${maxLength} caracteres.` };
   }
 
-  // Detecta tentativas de prompt injection
+  // Detecta tentativas de prompt injection.
+  // Padrões exigem "a/an" + papel após verbo de role-assignment pra evitar
+  // falsos positivos em frases naturais ("eu pretendo ser forte", "pretend
+  // everything is fine", "she acts as if...").
   const injectionPatterns = [
     /ignore\s+(all\s+)?(previous|above|prior)\s+instructions?/i,
-    /forget\s+(all\s+)?(previous|above|prior)/i,
-    /you\s+are\s+now\s+(a|an)\s+/i,
-    /act\s+as\s+(a|an)\s+/i,
-    /pretend\s+(you\s+are|to\s+be)/i,
+    /forget\s+(all\s+)?(previous|above|prior)\s+instructions?/i,
+    /you\s+are\s+now\s+(a|an)\s+\w+/i,
+    /act\s+as\s+(a|an)\s+\w+/i,
+    /pretend\s+(you'?re|you\s+are|to\s+be)\s+(a|an)\s+\w+/i,
     /new\s+instructions?\s*:/i,
     /system\s*prompt/i,
-    /\bDAN\b/,
+    /\bDAN\s+mode\b/i,
     /jailbreak/i,
     /<\s*script/i,
     /javascript\s*:/i,

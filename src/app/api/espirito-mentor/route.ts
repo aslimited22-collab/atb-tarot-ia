@@ -77,11 +77,27 @@ export async function POST(req: Request) {
       }
     }
 
+    // Limita 3 mensagens POR COMPRA (não lifetime). Cliente que comprou 2x
+    // tem direito a 6 mensagens — conta apenas as enviadas desde a última compra.
+    const { data: lastPurchase } = await supabase
+      .from("purchases")
+      .select("created_at")
+      .eq("email", userEmail)
+      .eq("plan", "espirito")
+      .neq("event", "order.refunded")
+      .neq("event", "order_refunded")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const sessionStartIso = lastPurchase?.created_at || "1970-01-01T00:00:00Z";
+
     const { count } = await supabase
       .from("espirito_messages")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
-      .eq("role", "user");
+      .eq("role", "user")
+      .gte("created_at", sessionStartIso);
 
     const used = count || 0;
     if (used >= MAX_MESSAGES) {
@@ -138,7 +154,12 @@ export async function POST(req: Request) {
 
 Use o nome dela e o nome da pessoa do outro lado (${profile.who_to_talk || "guia mentor"}) na mensagem. Traga a mensagem desse espírito específico, com voz dele/dela, em primeira pessoa. Não repita os dados literalmente, apenas use como contexto.`;
 
-    await supabase.from("espirito_messages").insert({ user_id: user.id, role: "user", content: message });
+    const { data: userMsgRow } = await supabase
+      .from("espirito_messages")
+      .insert({ user_id: user.id, role: "user", content: message })
+      .select("id")
+      .single();
+    const userMsgId = userMsgRow?.id as string | undefined;
 
     let upstream: Response;
     try {
@@ -149,13 +170,10 @@ Use o nome dela e o nome da pessoa do outro lado (${profile.who_to_talk || "guia
         { role: "user", content: message },
       ]);
     } catch {
-      // Rollback se OpenAI falhar
-      await supabase
-        .from("espirito_messages")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("role", "user")
-        .eq("content", message);
+      // Rollback por ID (filtrar por content podia apagar mensagens antigas iguais)
+      if (userMsgId) {
+        await supabase.from("espirito_messages").delete().eq("id", userMsgId);
+      }
       return NextResponse.json({ error: "Erro na conexão espiritual. Tente novamente." }, { status: 502 });
     }
 
@@ -229,10 +247,24 @@ export async function GET(req: Request) {
   const userEmail = (user.email || "").toLowerCase();
   const purchased = await hasPurchased(supabase, userEmail);
 
+  // Janela da sessão atual = desde a última compra (3 msgs por compra)
+  const { data: lastPurchase } = await supabase
+    .from("purchases")
+    .select("created_at")
+    .eq("email", userEmail)
+    .eq("plan", "espirito")
+    .neq("event", "order.refunded")
+    .neq("event", "order_refunded")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const sessionStartIso = lastPurchase?.created_at || "1970-01-01T00:00:00Z";
+
   const { data: messages } = await supabase
     .from("espirito_messages")
     .select("id, role, content, created_at")
     .eq("user_id", user.id)
+    .gte("created_at", sessionStartIso)
     .order("created_at", { ascending: true })
     .limit(50);
 
