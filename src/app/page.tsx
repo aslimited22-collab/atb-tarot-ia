@@ -479,19 +479,40 @@ export default function Home() {
               <a href="/api/checkout/basic" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("checkout.cta.access")}</a>
             </div>
 
-            <div className="card-gold" style={{ padding: "36px 28px", display: "flex", flexDirection: "column" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, background: S.gold, color: "#120025", borderRadius: 999, padding: "5px 16px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em" }}>{t("plans.premium.badge")}</div>
-              <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.madameAriel")}</h3>
+            {/* SUPER NUMEROLOGIA — produto reposicionado pra 50+ apostadores */}
+            <div className="card-gold" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+              {/* Decoração: bolas douradas sutis no topo */}
+              <div style={{ position: "absolute", top: -20, right: -20, display: "flex", gap: 8, opacity: 0.18, pointerEvents: "none" }} aria-hidden="true">
+                {[42, 27, 13].map((n, i) => (
+                  <div key={i} style={{
+                    width: 64, height: 64, borderRadius: "50%",
+                    background: "radial-gradient(circle at 30% 30%, #f5c860, #c89a2a)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 800, color: "#1e0040",
+                  }}>{n}</div>
+                ))}
+              </div>
+
+              <div style={{ fontSize: 13, fontWeight: 700, background: S.gold, color: "#120025", borderRadius: 999, padding: "5px 16px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em" }}>{t("plans.premium.numerologia_badge")}</div>
+              <h3 className="serif" style={{ fontSize: "1.95rem", color: S.gold, marginBottom: 6, fontWeight: 700, lineHeight: 1.1 }}>
+                {t("plans.premium.numerologia_title")}
+              </h3>
+              <p style={{ fontSize: 15, color: S.text2, marginBottom: 16, fontWeight: 500, lineHeight: 1.45 }}>
+                {t("plans.premium.numerologia_subtitle")}
+              </p>
               <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 24, lineHeight: 1 }}>
                 {t("plans.premium_price")} <span style={{ fontSize: 18, fontWeight: 400, color: S.text2 }}>{t("price.perMonth")}</span>
               </div>
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", flex: 1 }}>
-                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f1")}</li>
-                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f2")}</li>
-                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.premium.f3")}</li>
-                <li style={{ color: S.text, fontSize: 18, lineHeight: 1.5 }}>{t("plans.premium.f4")}</li>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 18px", flex: 1 }}>
+                <li style={{ color: S.text, marginBottom: 12, fontSize: 17, fontWeight: 500, lineHeight: 1.5 }}>✦ {t("plans.premium.numerologia_f1")}</li>
+                <li style={{ color: S.text, marginBottom: 12, fontSize: 17, fontWeight: 500, lineHeight: 1.5 }}>✦ {t("plans.premium.numerologia_f2")}</li>
+                <li style={{ color: S.text, marginBottom: 12, fontSize: 17, fontWeight: 500, lineHeight: 1.5 }}>✦ {t("plans.premium.numerologia_f3")}</li>
+                <li style={{ color: S.text, fontSize: 17, lineHeight: 1.5 }}>✦ {t("plans.premium.numerologia_f4")}</li>
               </ul>
-              <a href="/api/checkout/premium" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("checkout.cta.startReading")}</a>
+              <a href="/api/checkout/premium" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("plans.premium.numerologia_cta")}</a>
+              <p style={{ fontSize: 12, color: S.muted, marginTop: 14, fontStyle: "italic", lineHeight: 1.5, textAlign: "center" }}>
+                {t("plans.premium.numerologia_disclaimer")}
+              </p>
             </div>
           </div>
         </div>
