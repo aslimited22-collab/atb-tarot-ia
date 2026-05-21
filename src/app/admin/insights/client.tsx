@@ -5,6 +5,17 @@ import KpiTile from "./components/KpiTile";
 import UsersTable from "./components/UsersTable";
 import Sparkline from "./components/Sparkline";
 
+async function triggerRecoveryEmails(): Promise<{ ok: boolean; sent?: number; skipped?: number; errors?: number; total?: number; error?: string }> {
+  try {
+    const res = await fetch("/api/cron/follow-up", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error || "unknown" };
+    return { ok: true, ...data };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "network" };
+  }
+}
+
 type Range = "7d" | "30d" | "all";
 
 function fmtBRL(value: number): string {
@@ -19,6 +30,23 @@ const APPLE_FONT = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 
 export default function InsightsClient(props: InsightsProps) {
   const [range, setRange] = useState<Range>("30d");
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoveryMsg, setRecoveryMsg] = useState<string | null>(null);
+
+  async function handleRecovery() {
+    if (recoveryLoading) return;
+    if (!confirm("Disparar emails de resgate pra todos os clientes que pagaram e ainda não acessaram (últimos 7 dias)?")) return;
+    setRecoveryLoading(true);
+    setRecoveryMsg("Enviando...");
+    const result = await triggerRecoveryEmails();
+    setRecoveryLoading(false);
+    if (!result.ok) {
+      setRecoveryMsg(`❌ Erro: ${result.error}`);
+      return;
+    }
+    setRecoveryMsg(`✅ ${result.sent} enviados · ${result.skipped} já acessaram · ${result.errors} falhas (${result.total} total)`);
+    setTimeout(() => setRecoveryMsg(null), 12000);
+  }
 
   const { kpis, spark7d, series30d, users, generatedAt } = props;
 
@@ -159,6 +187,30 @@ export default function InsightsClient(props: InsightsProps) {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Botão de resgate manual — dispara emails pra quem comprou mas não acessou */}
+          <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+            <button
+              onClick={handleRecovery}
+              disabled={recoveryLoading}
+              style={{
+                background: recoveryLoading ? "#cccccc" : "linear-gradient(135deg, #e8b84b, #c9950a)",
+                color: "#120025",
+                fontWeight: 700,
+                fontSize: 14,
+                padding: "10px 18px",
+                borderRadius: 10,
+                border: "none",
+                cursor: recoveryLoading ? "wait" : "pointer",
+                boxShadow: "0 2px 8px rgba(232,184,75,0.3)",
+              }}
+            >
+              {recoveryLoading ? "Enviando..." : "🔁 Disparar resgates pendentes"}
+            </button>
+            {recoveryMsg && (
+              <span style={{ fontSize: 13, color: "#1d1d1f", fontWeight: 500 }}>{recoveryMsg}</span>
+            )}
           </div>
         </div>
 
