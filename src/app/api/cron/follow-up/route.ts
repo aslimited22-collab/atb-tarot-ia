@@ -169,7 +169,7 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
           .eq("id", p.id);
         sent++;
       } else {
-        errors.push(`${p.email}: send failed`);
+        errors.push(`${p.email}: ${result.reason || "send failed"}`);
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
