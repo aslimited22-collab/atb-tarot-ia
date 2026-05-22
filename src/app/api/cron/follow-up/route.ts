@@ -80,9 +80,11 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
   const admin = createAdminClient();
   const siteUrl = getSiteUrl(req);
 
-  // Janela: purchases criadas entre 24h e 7d atrás, sem follow-up enviado
+  // Janela: purchases criadas entre 2h e 7d atrás, sem follow-up enviado
+  // (2h é o mínimo seguro pra deixar webhook processar; antes era 24h mas era tarde demais
+  // pra 60+ que desiste rápido e contacta WhatsApp confusa)
   const min = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-  const max = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const max = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
 
   const { data: pending, error } = await admin
     .from("purchases")

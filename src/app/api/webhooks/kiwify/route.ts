@@ -5,6 +5,7 @@ import { rateLimit, getClientIp } from "@/lib/security";
 import { deliverLimpezaOrder, sendCustomerEmailWithLog } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
 import { getSiteUrl } from "@/lib/site-url";
+import { findUserByFuzzyEmail } from "@/lib/user-matching";
 
 export const runtime = "nodejs";
 
@@ -362,7 +363,8 @@ export async function POST(req: Request) {
   const isLimpezaByValue = !limpezaProductId && valueBRL >= 95 && valueBRL <= 110;
 
   if ((event === "order.approved" || event === "order_approved") && (isLimpezaByProduct || isLimpezaByValue)) {
-    const { data: userRow } = await admin.from("users").select("id").eq("email", email.toLowerCase()).maybeSingle();
+    const matchLimpeza = await findUserByFuzzyEmail(admin, email, customerName);
+    const userRow = matchLimpeza.user;
     await admin.from("purchases").insert({
       email: email.toLowerCase(),
       name: customerName ?? null,
@@ -371,6 +373,7 @@ export async function POST(req: Request) {
       event: "limpeza_purchased",
       amount_cents: Math.round(valueBRL * 100),
       user_id: userRow?.id ?? null,
+      fuzzy_matched: matchLimpeza.fuzzy,
     });
 
     const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
@@ -470,7 +473,7 @@ export async function POST(req: Request) {
   const isEspiritoByValue = !espiritoProductId && valueBRL >= 420 && valueBRL <= 460;
 
   if ((event === "order.approved" || event === "order_approved") && (isEspiritoByProduct || isEspiritoByValue)) {
-    const { data: userRow } = await admin.from("users").select("id").eq("email", email.toLowerCase()).maybeSingle();
+    const matchEsp = await findUserByFuzzyEmail(admin, email, customerName);
     await admin.from("purchases").insert({
       email: email.toLowerCase(),
       name: customerName ?? null,
@@ -478,7 +481,8 @@ export async function POST(req: Request) {
       plan: "espirito",
       event: "espirito_purchased",
       amount_cents: Math.round(valueBRL * 100),
-      user_id: userRow?.id ?? null,
+      user_id: matchEsp.user?.id ?? null,
+      fuzzy_matched: matchEsp.fuzzy,
     });
 
     const espFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
@@ -579,6 +583,8 @@ export async function POST(req: Request) {
   const isVideoByValue = !videoProductId && valueBRL >= 470 && valueBRL <= 520;
 
   if ((event === "order.approved" || event === "order_approved") && (isVideoByProduct || isVideoByValue)) {
+    // Look up existing user com fuzzy match (resolve casos tipo josi@barkert.com.br ↔ barkert.josi@gmail.com)
+    const matchVid = await findUserByFuzzyEmail(admin, email, customerName);
     await admin.from("purchases").insert({
       email: email.toLowerCase(),
       name: customerName ?? null,
@@ -586,8 +592,83 @@ export async function POST(req: Request) {
       plan: "video_call",
       event: "video_call_purchased",
       amount_cents: Math.round(valueBRL * 100),
-      user_id: null,
+      user_id: matchVid.user?.id ?? null,
+      fuzzy_matched: matchVid.fuzzy,
     });
+
+    // Welcome email pro cliente (antes só existia email pro admin — cliente ficava sem nada após pagar R$497)
+    const vidFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
+    const vidAccessLink = orderId
+      ? `${getSiteUrl(req)}/obrigado-videochamada?order=${encodeURIComponent(orderId)}`
+      : `${getSiteUrl(req)}/obrigado-videochamada?email=${encodeURIComponent(email.toLowerCase())}`;
+
+    const vidCustomerHtml = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
+  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
+    <div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+      <div style="font-size:64px;margin-bottom:16px;">📹</div>
+      <h1 style="font-family:'Cormorant Garamond',Georgia,serif;color:#e8b84b;font-size:32px;margin:0 0 12px;line-height:1.15;">
+        Sua videochamada está confirmada
+      </h1>
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
+        Olá, <strong style="color:#f5c860;">${escapeHtml(vidFirstName)}</strong>!<br>
+        Recebemos seu pagamento da chamada de vídeo com ATB.
+      </p>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 28px;">
+        Aperte o botão abaixo pra ver os próximos passos e agendar:
+      </p>
+      <a href="${vidAccessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+        📅 Agendar minha videochamada
+      </a>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
+      <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;line-height:1.3;">
+        ⚠️ IMPORTANTE — USE ESTE EMAIL
+      </p>
+      <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;font-weight:500;">
+        Crie/entre na sua conta com o <strong style="color:#e8b84b;">mesmo email que você usou no pagamento:</strong><br/>
+        <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email.toLowerCase())}</strong><br/>
+        <span style="font-size:14px;color:#c4b5fd;">Se usar email diferente, seu acesso não aparece.</span>
+      </p>
+    </div>
+
+    <div style="background:rgba(232,184,75,0.08);border:1px solid rgba(232,184,75,0.3);border-radius:14px;padding:22px;margin-top:20px;">
+      <h2 style="color:#e8b84b;font-size:18px;margin:0 0 12px;font-family:Georgia,serif;">
+        ✦ Como vai ser
+      </h2>
+      <ol style="color:#fbf8ff;font-size:16px;line-height:1.75;padding-left:22px;margin:0;">
+        <li>Aperte o botão dourado acima</li>
+        <li>Veja os horários disponíveis</li>
+        <li>Escolha data e horário</li>
+        <li>Receba o link da sala de vídeo no email + WhatsApp</li>
+      </ol>
+    </div>
+
+    <div style="text-align:center;margin-top:28px;padding:20px;color:#9575cd;font-size:13px;line-height:1.6;font-style:italic;">
+      Já preparei tudo pra te receber em vídeo.<br>
+      Qualquer dúvida, responda este email ou chame no WhatsApp.<br>
+      Estamos aqui, minha querida alma. 💛
+    </div>
+
+    <div style="text-align:center;margin-top:20px;color:#9575cd;font-size:12px;">
+      Pedido: ${escapeHtml(orderId) || "N/A"} · ATB
+    </div>
+  </div>
+</body>
+</html>`;
+
+    await sendCustomerEmailWithLog({
+      scope: "webhook.kiwify.v1.video",
+      to: email.toLowerCase(),
+      subject: "📹 Sua videochamada com ATB está confirmada",
+      html: vidCustomerHtml,
+      refId: orderId,
+    });
+
     const videoAdmin = process.env.ADMIN_NOTIFY_EMAIL;
     if (videoAdmin) {
       await sendCustomerEmailWithLog({
@@ -598,7 +679,8 @@ export async function POST(req: Request) {
                <p><strong>Email:</strong> ${escapeHtml(email)}</p>
                <p><strong>Produto:</strong> Chamada de Vídeo com ATB</p>
                <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
-               <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>`,
+               <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>
+               <p>Email automático com link de agendamento já enviado para a cliente.</p>`,
         refId: orderId,
       });
     }
@@ -609,8 +691,14 @@ export async function POST(req: Request) {
     const plan = planFromValue(valueBRL);
     const update: Record<string, any> = { plan, kiwify_order_id: orderId ?? null };
     if (customerName && customerName.length <= 100) update.name = customerName;
-    await admin.from("users").update(update).eq("email", email.toLowerCase());
-    const { data: userRow } = await admin.from("users").select("id").eq("email", email.toLowerCase()).maybeSingle();
+    // Fuzzy match: se conta existe com email diferente, atualiza ela (não a do pagamento)
+    const matchSub = await findUserByFuzzyEmail(admin, email, customerName);
+    if (matchSub.user?.id) {
+      await admin.from("users").update(update).eq("id", matchSub.user.id);
+    } else {
+      await admin.from("users").update(update).eq("email", email.toLowerCase());
+    }
+    const userRow = matchSub.user;
     await admin.from("purchases").insert({
       email: email.toLowerCase(),
       name: customerName ?? null,
@@ -619,6 +707,7 @@ export async function POST(req: Request) {
       event,
       amount_cents: valueCents > 0 ? Math.round(valueCents > 1000 ? valueCents : valueCents * 100) : null,
       user_id: userRow?.id ?? null,
+      fuzzy_matched: matchSub.fuzzy,
     });
 
     // Welcome email pra Basic/Premium se cliente NÃO tinha conta ainda.

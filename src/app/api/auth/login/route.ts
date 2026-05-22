@@ -69,12 +69,30 @@ export async function POST(req: Request) {
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
+  // Tracking de tentativas falhas via cookie: depois de 3 falhas mostra hint
+  // "talvez você pagou com outro email?" (resolve caso comum 60+ — mismatch).
+  // Não expõe enumeration porque a contagem é por sessão, não por email.
+  const failedCookie = cookieStore.get("login_failed_count");
+  const currentFailed = failedCookie ? parseInt(failedCookie.value, 10) || 0 : 0;
+
   if (error || !data.session) {
-    logWarn("auth.login", "failed", { ip, email });
+    const newFailed = currentFailed + 1;
+    cookieStore.set("login_failed_count", String(newFailed), {
+      httpOnly: false, // client lê pra mostrar hint
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24, // 1 dia
+    });
+    logWarn("auth.login", "failed", { ip, email, failedCount: newFailed });
     // Mensagem genérica pra não permitir user enumeration
-    return NextResponse.json({ error: "Email ou senha incorretos." }, { status: 401 });
+    return NextResponse.json(
+      { error: "Email ou senha incorretos.", failedCount: newFailed },
+      { status: 401 }
+    );
   }
 
+  // Login OK — limpa o cookie de falhas
+  cookieStore.set("login_failed_count", "", { maxAge: 0, path: "/" });
   logInfo("auth.login", "success", { userId: data.user?.id });
   return NextResponse.json({ ok: true }, { status: 200 });
 }

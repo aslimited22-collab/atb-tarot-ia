@@ -12,6 +12,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading]   = useState(false);
   const [showPwd, setShowPwd]   = useState(false);
+  // Contagem de tentativas falhas — após 3 mostra hint "talvez outro email"
+  const [failedCount, setFailedCount] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,6 +28,7 @@ export default function LoginPage() {
       setLoading(false);
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: t("auth.login_error") }));
+        if (typeof data.failedCount === "number") setFailedCount(data.failedCount);
         if (res.status === 429) {
           return toast.error(data.error || "Muitas tentativas. Aguarde 1 hora.");
         }
@@ -85,6 +88,31 @@ export default function LoginPage() {
               {t("auth.email_warning_login_pre")}<strong style={{ color: "#e8b84b" }}>{t("auth.email_warning_login_strong")}</strong>{t("auth.email_warning_login_post")}
             </p>
           </div>
+
+          {/* Após 3 falhas: hint sobre email errado (caso comum 60+) */}
+          {failedCount >= 3 && (
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(255,99,99,0.20), rgba(232,184,75,0.10))",
+                border: "2px solid rgba(255,140,90,0.6)",
+                borderRadius: 14,
+                padding: "16px 18px",
+                marginBottom: 22,
+                display: "flex",
+                gap: 12,
+                alignItems: "flex-start",
+              }}
+              role="alert"
+            >
+              <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }} aria-hidden="true">🔎</span>
+              <p style={{ fontSize: 16, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}>
+                <strong style={{ color: "#ffb88c", display: "block", marginBottom: 4 }}>
+                  {t("auth.maybe_other_email_title")}
+                </strong>
+                {t("auth.maybe_other_email_body")}
+              </p>
+            </div>
+          )}
 
           {/* Email */}
           <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>

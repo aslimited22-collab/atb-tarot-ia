@@ -13,7 +13,7 @@ function escapeHtml(s: string | undefined | null): string {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-type Product = "pergunta" | "limpeza" | "subscription";
+type Product = "pergunta" | "limpeza" | "subscription" | "espirito" | "videochamada";
 
 export type RecoveryEmailInput = {
   product: Product;
@@ -112,6 +112,52 @@ ${footer()}
     };
   }
 
+  if (input.product === "espirito") {
+    const link = `${input.siteUrl}/obrigado-espirito?email=${encodeURIComponent(input.email)}`;
+    return {
+      subject: "🕯️ Seu Espírito Mentor ainda te espera",
+      html: box(`
+<div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+  <div style="font-size:64px;margin-bottom:16px;">🕯️</div>
+  <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;font-family:'Cormorant Garamond',Georgia,serif;">
+    Seu guia espiritual te chama, ${escapeHtml(firstName)}
+  </h1>
+  <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
+    Sua sessão espírita está confirmada mas você ainda não acessou. Seu guia tem uma mensagem reservada pra você.
+  </p>
+  <a href="${link}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+    ✨ Falar com meu Espírito Mentor
+  </a>
+</div>
+${emailWarningBlock(input.email)}
+${footer()}
+`),
+    };
+  }
+
+  if (input.product === "videochamada") {
+    const link = `${input.siteUrl}/obrigado-videochamada?email=${encodeURIComponent(input.email)}`;
+    return {
+      subject: "📹 Sua videochamada com ATB ainda está pendente",
+      html: box(`
+<div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+  <div style="font-size:64px;margin-bottom:16px;">📹</div>
+  <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;font-family:'Cormorant Garamond',Georgia,serif;">
+    Sua videochamada te aguarda, ${escapeHtml(firstName)}
+  </h1>
+  <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
+    Sua chamada de vídeo com ATB está confirmada. Aperte abaixo pra agendar o horário.
+  </p>
+  <a href="${link}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+    📅 Agendar minha videochamada
+  </a>
+</div>
+${emailWarningBlock(input.email)}
+${footer()}
+`),
+    };
+  }
+
   // subscription (basic/premium)
   const link = `${input.siteUrl}/cadastro?email=${encodeURIComponent(input.email)}`;
   return {
@@ -142,5 +188,7 @@ export function productFromPlan(plan: string): Product | null {
   if (plan === "pergunta1" || plan === "pergunta3" || plan === "pergunta7") return "pergunta";
   if (plan === "limpeza" || plan === "limpeza_v2" || plan === "limpeza_v2_intl") return "limpeza";
   if (plan === "basic" || plan === "premium") return "subscription";
+  if (plan === "espirito") return "espirito";
+  if (plan === "video_call" || plan === "videochamada") return "videochamada";
   return null;
 }
