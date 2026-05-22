@@ -26,6 +26,7 @@ export default async function ObrigadoPerguntaPage({
   // Email + nome podem vir do query ou via lookup de purchase
   let customerEmail = (searchParams?.email || "").toLowerCase().trim();
   let customerName = "";
+  let purchaseConfirmed = false;
 
   const orderRef = (searchParams?.order || searchParams?.order_id || searchParams?.session_id || "").trim();
   if (orderRef) {
@@ -38,11 +39,23 @@ export default async function ObrigadoPerguntaPage({
       .maybeSingle();
     if (purchase?.email && !customerEmail) customerEmail = purchase.email.toLowerCase();
     if (purchase?.name) customerName = purchase.name;
+    purchaseConfirmed = !!purchase;
+  }
+  // Se temos email direto (sem orderRef), checa se purchase já está no DB
+  else if (customerEmail) {
+    const admin = createAdminClient();
+    const { count } = await admin
+      .from("purchases")
+      .select("*", { count: "exact", head: true })
+      .eq("email", customerEmail)
+      .in("plan", ["pergunta1", "pergunta3", "pergunta7"])
+      .gte("created_at", new Date(Date.now() - 30 * 60 * 1000).toISOString());
+    purchaseConfirmed = (count ?? 0) > 0;
   }
 
-  // Cliente já logado → redireciona direto pro chat
+  // Cliente já logado → redireciona direto pro chat (skip spinner — webhook irrelevante)
   if (user) {
-    return <ObrigadoPerguntaClient mode="logged-with-credits" email={(user.email || "").toLowerCase()} name={customerName} />;
+    return <ObrigadoPerguntaClient mode="logged-with-credits" email={(user.email || "").toLowerCase()} name={customerName} purchaseConfirmed={true} />;
   }
 
   // Não logado — checa se já tem conta
@@ -56,16 +69,16 @@ export default async function ObrigadoPerguntaPage({
 
     if (existingUser) {
       // Tem conta mas não logada — precisa de senha (LoginForm)
-      return <ObrigadoPerguntaClient mode="account-exists" email={customerEmail} name={customerName} />;
+      return <ObrigadoPerguntaClient mode="account-exists" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} />;
     }
   }
 
   // Sem conta + temos email + nome da Kiwify → auto-cria e manda direto pro chat
   // (zero fricção pra 60+ que pagou e quer fazer a pergunta NA HORA)
   if (customerEmail && customerName) {
-    return <ObrigadoPerguntaClient mode="auto-create" email={customerEmail} name={customerName} />;
+    return <ObrigadoPerguntaClient mode="auto-create" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} />;
   }
 
   // Sem conta + falta info → fallback pro signup manual
-  return <ObrigadoPerguntaClient mode="needs-signup" email={customerEmail} name={customerName} />;
+  return <ObrigadoPerguntaClient mode="needs-signup" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} />;
 }

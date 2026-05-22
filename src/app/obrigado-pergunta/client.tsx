@@ -5,6 +5,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/I18nProvider";
+import PurchaseWaitSpinner from "@/components/PurchaseWaitSpinner";
 
 type Mode = "logged-with-credits" | "account-exists" | "needs-signup" | "auto-create";
 
@@ -21,10 +22,12 @@ export default function ObrigadoPerguntaClient({
   mode,
   email,
   name,
+  purchaseConfirmed,
 }: {
   mode: Mode;
   email: string;
   name?: string;
+  purchaseConfirmed?: boolean;
 }) {
   const { t } = useT();
 
@@ -37,6 +40,7 @@ export default function ObrigadoPerguntaClient({
         padding: "32px 16px 60px",
       }}
     >
+      <PurchaseWaitSpinner email={email || null} skip={purchaseConfirmed !== false}>
       <style>{`
         @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
@@ -79,6 +83,7 @@ export default function ObrigadoPerguntaClient({
         {mode === "needs-signup" && <SignupForm initialEmail={email} />}
         {mode === "auto-create" && <AutoCreate email={email} name={name || ""} />}
       </div>
+      </PurchaseWaitSpinner>
     </main>
   );
 }
