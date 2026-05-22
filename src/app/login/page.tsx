@@ -14,6 +14,35 @@ export default function LoginPage() {
   const [showPwd, setShowPwd]   = useState(false);
   // Contagem de tentativas falhas — após 3 mostra hint "talvez outro email"
   const [failedCount, setFailedCount] = useState(0);
+  // Magic-link state (passwordless — público 60+ esquece senha)
+  const [magicLoading, setMagicLoading] = useState(false);
+  const [magicSent, setMagicSent] = useState(false);
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || !email.includes("@")) {
+      return toast.error(t("auth.invalid_email"));
+    }
+    setMagicLoading(true);
+    try {
+      const res = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      });
+      setMagicLoading(false);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: t("auth.login_error") }));
+        return toast.error(data.error || t("auth.login_error"));
+      }
+      setMagicSent(true);
+      toast.success(t("auth.magic_sent_toast"));
+    } catch {
+      setMagicLoading(false);
+      toast.error(t("auth.login_error"));
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,7 +143,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Email */}
+          {/* Email — input compartilhado entre magic-link e senha */}
           <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>
             {t("auth.email_label")}
           </label>
@@ -128,85 +157,152 @@ export default function LoginPage() {
             required
             autoComplete="email"
             inputMode="email"
-            style={{ marginBottom: 24 }}
+            style={{ marginBottom: 20 }}
           />
 
-          {/* Senha */}
-          <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>
-            {t("auth.password_label")}
-          </label>
-          <div style={{ position: "relative", marginBottom: 16 }}>
-            <input
-              id="password"
-              className="input input-big"
-              type={showPwd ? "text" : "password"}
-              placeholder={t("auth.password_placeholder")}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              style={{ paddingRight: 110 }}
-            />
+          {/* MAGIC-LINK — caminho primário pra 60+ que esquece senha */}
+          {magicSent ? (
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(126,232,248,0.15), rgba(232,184,75,0.08))",
+                border: "2px solid rgba(126,232,248,0.5)",
+                borderRadius: 14,
+                padding: "20px 18px",
+                marginBottom: 18,
+                textAlign: "center",
+              }}
+              role="status"
+            >
+              <div style={{ fontSize: 42, marginBottom: 8 }} aria-hidden="true">📬</div>
+              <p style={{ fontSize: 18, color: "#7ee8f8", fontWeight: 700, margin: "0 0 8px" }}>
+                {t("auth.magic_sent_title")}
+              </p>
+              <p style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}>
+                {t("auth.magic_sent_body")}
+              </p>
+            </div>
+          ) : (
             <button
               type="button"
-              onClick={() => setShowPwd(!showPwd)}
-              aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
+              onClick={handleMagicLink}
+              disabled={magicLoading}
+              className="btn-gold btn-big"
               style={{
-                position: "absolute",
-                right: 6,
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "rgba(232,184,75,0.15)",
-                border: "1px solid rgba(232,184,75,0.4)",
-                color: "#e8b84b",
-                fontSize: 22,
-                fontWeight: 700,
-                width: 64,
-                height: 64,
-                padding: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 12,
-                cursor: "pointer",
+                width: "100%",
+                opacity: magicLoading ? 0.6 : 1,
+                cursor: magicLoading ? "wait" : "pointer",
+                border: "none",
+                marginBottom: 12,
               }}
             >
-              {showPwd ? "🙈" : "👁️"}
+              {magicLoading ? t("auth.magic_loading") : `✨ ${t("auth.magic_cta")}`}
             </button>
-          </div>
+          )}
 
-          <button
-            disabled={loading}
-            className="btn-gold btn-big"
-            style={{
-              width: "100%",
-              opacity: loading ? 0.6 : 1,
-              cursor: loading ? "not-allowed" : "pointer",
-              border: "none",
-              marginTop: 16,
-              marginBottom: 20,
-            }}
-          >
-            {loading ? t("auth.login_loading") : `✨ ${t("nav.signin")}`}
-          </button>
+          {/* Toggle: prefiro usar senha */}
+          {!magicSent && !showPasswordSection && (
+            <div style={{ textAlign: "center", marginBottom: 14 }}>
+              <button
+                type="button"
+                onClick={() => setShowPasswordSection(true)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#c4b5fd",
+                  fontSize: 16,
+                  fontWeight: 600,
+                  textDecoration: "underline",
+                  padding: "10px 16px",
+                  minHeight: 48,
+                  cursor: "pointer",
+                }}
+              >
+                {t("auth.use_password_instead")}
+              </button>
+            </div>
+          )}
 
-          {/* Esqueci a senha */}
-          <div style={{ textAlign: "center", marginBottom: 8 }}>
-            <Link
-              href="/esqueci-senha"
-              style={{
-                display: "inline-block",
-                color: "#c4b5fd",
-                fontSize: 18,
-                fontWeight: 600,
-                textDecoration: "underline",
-                padding: "12px 18px",
-                minHeight: 48,
-              }}
-            >
-              {t("auth.forgot_password")}
-            </Link>
-          </div>
+          {/* Senha — colapsada por padrão; público que prefere usar continua tendo opção */}
+          {showPasswordSection && (
+            <>
+              <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10, marginTop: 12 }}>
+                {t("auth.password_label")}
+              </label>
+              <div style={{ position: "relative", marginBottom: 16 }}>
+                <input
+                  id="password"
+                  className="input input-big"
+                  type={showPwd ? "text" : "password"}
+                  placeholder={t("auth.password_placeholder")}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  style={{ paddingRight: 110 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(!showPwd)}
+                  aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
+                  style={{
+                    position: "absolute",
+                    right: 6,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "rgba(232,184,75,0.15)",
+                    border: "1px solid rgba(232,184,75,0.4)",
+                    color: "#e8b84b",
+                    fontSize: 22,
+                    fontWeight: 700,
+                    width: 64,
+                    height: 64,
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 12,
+                    cursor: "pointer",
+                  }}
+                >
+                  {showPwd ? "🙈" : "👁️"}
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-gold btn-big"
+                style={{
+                  width: "100%",
+                  opacity: loading ? 0.6 : 1,
+                  cursor: loading ? "not-allowed" : "pointer",
+                  border: "none",
+                  marginTop: 4,
+                  marginBottom: 20,
+                  background: "rgba(232,184,75,0.7)",
+                }}
+              >
+                {loading ? t("auth.login_loading") : `🔐 ${t("nav.signin")}`}
+              </button>
+
+              {/* Esqueci a senha */}
+              <div style={{ textAlign: "center", marginBottom: 8 }}>
+                <Link
+                  href="/esqueci-senha"
+                  style={{
+                    display: "inline-block",
+                    color: "#c4b5fd",
+                    fontSize: 18,
+                    fontWeight: 600,
+                    textDecoration: "underline",
+                    padding: "12px 18px",
+                    minHeight: 48,
+                  }}
+                >
+                  {t("auth.forgot_password")}
+                </Link>
+              </div>
+            </>
+          )}
 
           {/* Link cadastro — botão grande estilo botão pra 45+ */}
           <div style={{ textAlign: "center", padding: "20px 0 0", borderTop: "1px solid rgba(196,181,253,0.18)", marginTop: 4 }}>
