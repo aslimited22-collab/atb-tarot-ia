@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/Sidebar";
+import OnboardingTour from "@/components/OnboardingTour";
 import type { Plan } from "@/lib/types";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -18,6 +19,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="min-h-screen md:flex" style={{ background: "#120025" }}>
       <Sidebar email={email} plan={plan} />
       <div className="flex-1 min-w-0">{children}</div>
+      {/* Tour da primeira visita — mostra apenas se localStorage onboarding_done ≠ '1' */}
+      <OnboardingTour />
     </div>
   );
 }
