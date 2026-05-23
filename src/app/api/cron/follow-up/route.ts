@@ -148,12 +148,29 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
         }
       }
 
-      // Cliente NÃO acessou — envia email de resgate
+      // Detecta locale do user (se conta existe) — caso contrário PT default
+      let userLocale: "pt" | "en" | "es" = "pt";
+      const userIdForLocale = p.user_id ?? (await admin
+        .from("users")
+        .select("id, locale")
+        .eq("email", p.email.toLowerCase())
+        .maybeSingle()).data?.id;
+      if (userIdForLocale) {
+        const { data: ul } = await admin
+          .from("users")
+          .select("locale")
+          .eq("id", userIdForLocale)
+          .maybeSingle();
+        if (ul?.locale === "en" || ul?.locale === "es") userLocale = ul.locale;
+      }
+
+      // Cliente NÃO acessou — envia email de resgate (na lingua do user)
       const { subject, html } = buildRecoveryEmail({
         product: productType,
         email: p.email,
         name: p.name,
         siteUrl,
+        locale: userLocale,
       });
 
       const result = await sendCustomerEmailWithLog({

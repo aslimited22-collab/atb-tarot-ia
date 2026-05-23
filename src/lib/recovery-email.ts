@@ -14,12 +14,15 @@ function escapeHtml(s: string | undefined | null): string {
 }
 
 type Product = "pergunta" | "limpeza" | "subscription" | "espirito" | "videochamada";
+type Locale = "pt" | "en" | "es";
 
 export type RecoveryEmailInput = {
   product: Product;
   email: string;
   name: string | null;
   siteUrl: string; // ex: https://atbtartot.com
+  /** Default "pt". Suporta "en" e "es" pros clientes intl. */
+  locale?: Locale;
 };
 
 export type RecoveryEmailTemplate = {
@@ -27,11 +30,12 @@ export type RecoveryEmailTemplate = {
   html: string;
 };
 
-function box(content: string): string {
+function box(content: string, lang: Locale = "pt"): string {
   // Estilo padronizado dos emails (mesmo das webhooks Kiwify)
+  const htmlLang = lang === "pt" ? "pt-BR" : lang;
   return `
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="${htmlLang}">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
   <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
@@ -41,143 +45,224 @@ function box(content: string): string {
 </html>`;
 }
 
-function emailWarningBlock(email: string): string {
+function emailWarningBlock(email: string, locale: Locale = "pt"): string {
+  const copy = {
+    pt: {
+      title: "⚠️ IMPORTANTE — USE ESTE EMAIL",
+      body: "Crie/entre na sua conta com o",
+      strong: "mesmo email do pagamento:",
+      note: "Se usar email diferente, seu acesso não aparece.",
+    },
+    en: {
+      title: "⚠️ IMPORTANT — USE THIS EMAIL",
+      body: "Create or sign in with the",
+      strong: "same email you used at checkout:",
+      note: "Using a different email means your access won't appear.",
+    },
+    es: {
+      title: "⚠️ IMPORTANTE — USA ESTE EMAIL",
+      body: "Crea o entra en tu cuenta con el",
+      strong: "mismo email del pago:",
+      note: "Si usas otro email, tu acceso no aparece.",
+    },
+  }[locale];
   return `
 <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
   <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;line-height:1.3;">
-    ⚠️ IMPORTANTE — USE ESTE EMAIL
+    ${copy.title}
   </p>
   <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;font-weight:500;">
-    Crie/entre na sua conta com o <strong style="color:#e8b84b;">mesmo email do pagamento:</strong><br/>
+    ${copy.body} <strong style="color:#e8b84b;">${copy.strong}</strong><br/>
     <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email)}</strong><br/>
-    <span style="font-size:14px;color:#c4b5fd;">Se usar email diferente, seu acesso não aparece.</span>
+    <span style="font-size:14px;color:#c4b5fd;">${copy.note}</span>
   </p>
 </div>`;
 }
 
-function footer(): string {
+function footer(locale: Locale = "pt"): string {
+  const copy = {
+    pt: { line1: "Estamos aqui, minha querida alma. 💛", line2: "Qualquer dúvida, responda este email." },
+    en: { line1: "We're here, dear soul. 💛", line2: "Any questions, just reply to this email." },
+    es: { line1: "Estamos aquí, querida alma. 💛", line2: "Cualquier duda, responde este email." },
+  }[locale];
   return `
 <div style="text-align:center;margin-top:28px;padding:20px;color:#9575cd;font-size:13px;line-height:1.6;font-style:italic;">
-  Estamos aqui, minha querida alma. 💛<br/>
-  Qualquer dúvida, responda este email.
+  ${copy.line1}<br/>
+  ${copy.line2}
 </div>`;
 }
 
-export function buildRecoveryEmail(input: RecoveryEmailInput): RecoveryEmailTemplate {
-  const firstName = input.name ? input.name.split(" ")[0] : "querida alma";
+/** Default fallback name por locale */
+function defaultName(locale: Locale): string {
+  return { pt: "querida alma", en: "dear soul", es: "querida alma" }[locale];
+}
 
-  if (input.product === "pergunta") {
-    const link = `${input.siteUrl}/obrigado-pergunta?email=${encodeURIComponent(input.email)}`;
-    return {
+// Copy table: product × locale. Adicionar nova locale = adicionar entradas aqui.
+// PT é o source-of-truth; EN/ES traduzidas pra clientes intl.
+const TEMPLATES: Record<Product, Record<Locale, {
+  subject: string;
+  h1: (name: string) => string;
+  body: string;
+  cta: string;
+  emoji: string;
+  path: string;
+}>> = {
+  pergunta: {
+    pt: {
       subject: "✨ Sua pergunta com ATB ainda te espera",
-      html: box(`
-<div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
-  <div style="font-size:64px;margin-bottom:16px;">🔮</div>
-  <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;font-family:'Cormorant Garamond',Georgia,serif;">
-    Sua pergunta ainda te espera, ${escapeHtml(firstName)}
-  </h1>
-  <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
-    Notamos que você ainda não fez sua pergunta espiritual com a ATB. Está tudo pronto pra você — leva só 30 segundos.
-  </p>
-  <a href="${link}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
-    ✨ Fazer minha pergunta agora
-  </a>
-</div>
-${emailWarningBlock(input.email)}
-${footer()}
-`),
-    };
-  }
-
-  if (input.product === "limpeza") {
-    const link = `${input.siteUrl}/obrigado-limpeza?email=${encodeURIComponent(input.email)}`;
-    return {
+      h1: (n) => `Sua pergunta ainda te espera, ${n}`,
+      body: "Notamos que você ainda não fez sua pergunta espiritual com a ATB. Está tudo pronto pra você — leva só 30 segundos.",
+      cta: "✨ Fazer minha pergunta agora",
+      emoji: "🔮",
+      path: "/obrigado-pergunta",
+    },
+    en: {
+      subject: "✨ Your question with ATB is still waiting",
+      h1: (n) => `Your question is waiting, ${n}`,
+      body: "We noticed you haven't asked your spiritual question yet. Everything's ready — it only takes 30 seconds.",
+      cta: "✨ Ask my question now",
+      emoji: "🔮",
+      path: "/obrigado-pergunta",
+    },
+    es: {
+      subject: "✨ Tu pregunta con ATB sigue esperándote",
+      h1: (n) => `Tu pregunta te espera, ${n}`,
+      body: "Notamos que aún no has hecho tu pregunta espiritual con ATB. Todo está listo — solo toma 30 segundos.",
+      cta: "✨ Hacer mi pregunta ahora",
+      emoji: "🔮",
+      path: "/obrigado-pergunta",
+    },
+  },
+  limpeza: {
+    pt: {
       subject: "🕊️ Sua Limpeza Espiritual está pronta — falta só você acessar",
-      html: box(`
-<div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
-  <div style="font-size:64px;margin-bottom:16px;">🕊️</div>
-  <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;font-family:'Cormorant Garamond',Georgia,serif;">
-    Sua Limpeza te espera, ${escapeHtml(firstName)}
-  </h1>
-  <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
-    Sua leitura sagrada foi preparada pelos Santos. Falta só você criar a conta e receber.
-  </p>
-  <a href="${link}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
-    ✨ Acessar minha Limpeza
-  </a>
-</div>
-${emailWarningBlock(input.email)}
-${footer()}
-`),
-    };
-  }
-
-  if (input.product === "espirito") {
-    const link = `${input.siteUrl}/obrigado-espirito?email=${encodeURIComponent(input.email)}`;
-    return {
+      h1: (n) => `Sua Limpeza te espera, ${n}`,
+      body: "Sua leitura sagrada foi preparada pelos Santos. Falta só você criar a conta e receber.",
+      cta: "✨ Acessar minha Limpeza",
+      emoji: "🕊️",
+      path: "/obrigado-limpeza",
+    },
+    en: {
+      subject: "🕊️ Your Spiritual Cleansing is ready — just sign in to receive",
+      h1: (n) => `Your Cleansing is waiting, ${n}`,
+      body: "Your sacred reading has been prepared. Just create your account and receive it.",
+      cta: "✨ Access my Cleansing",
+      emoji: "🕊️",
+      path: "/obrigado-limpeza",
+    },
+    es: {
+      subject: "🕊️ Tu Limpieza Espiritual está lista — entra para recibirla",
+      h1: (n) => `Tu Limpieza te espera, ${n}`,
+      body: "Tu lectura sagrada ha sido preparada. Solo falta crear tu cuenta y recibirla.",
+      cta: "✨ Acceder a mi Limpieza",
+      emoji: "🕊️",
+      path: "/obrigado-limpeza",
+    },
+  },
+  espirito: {
+    pt: {
       subject: "🕯️ Seu Espírito Mentor ainda te espera",
-      html: box(`
-<div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
-  <div style="font-size:64px;margin-bottom:16px;">🕯️</div>
-  <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;font-family:'Cormorant Garamond',Georgia,serif;">
-    Seu guia espiritual te chama, ${escapeHtml(firstName)}
-  </h1>
-  <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
-    Sua sessão espírita está confirmada mas você ainda não acessou. Seu guia tem uma mensagem reservada pra você.
-  </p>
-  <a href="${link}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
-    ✨ Falar com meu Espírito Mentor
-  </a>
-</div>
-${emailWarningBlock(input.email)}
-${footer()}
-`),
-    };
-  }
-
-  if (input.product === "videochamada") {
-    const link = `${input.siteUrl}/obrigado-videochamada?email=${encodeURIComponent(input.email)}`;
-    return {
+      h1: (n) => `Seu guia espiritual te chama, ${n}`,
+      body: "Sua sessão espírita está confirmada mas você ainda não acessou. Seu guia tem uma mensagem reservada pra você.",
+      cta: "✨ Falar com meu Espírito Mentor",
+      emoji: "🕯️",
+      path: "/obrigado-espirito",
+    },
+    en: {
+      subject: "🕯️ Your Spirit Mentor is still waiting",
+      h1: (n) => `Your spirit guide is calling you, ${n}`,
+      body: "Your spirit session is confirmed but you haven't accessed it yet. Your guide has a message reserved for you.",
+      cta: "✨ Talk to my Spirit Mentor",
+      emoji: "🕯️",
+      path: "/obrigado-espirito",
+    },
+    es: {
+      subject: "🕯️ Tu Espíritu Guía sigue esperándote",
+      h1: (n) => `Tu guía espiritual te llama, ${n}`,
+      body: "Tu sesión espiritista está confirmada pero aún no has accedido. Tu guía tiene un mensaje reservado para ti.",
+      cta: "✨ Hablar con mi Espíritu Guía",
+      emoji: "🕯️",
+      path: "/obrigado-espirito",
+    },
+  },
+  videochamada: {
+    pt: {
       subject: "📹 Sua videochamada com ATB ainda está pendente",
-      html: box(`
-<div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
-  <div style="font-size:64px;margin-bottom:16px;">📹</div>
-  <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;font-family:'Cormorant Garamond',Georgia,serif;">
-    Sua videochamada te aguarda, ${escapeHtml(firstName)}
-  </h1>
-  <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
-    Sua chamada de vídeo com ATB está confirmada. Aperte abaixo pra agendar o horário.
-  </p>
-  <a href="${link}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
-    📅 Agendar minha videochamada
-  </a>
-</div>
-${emailWarningBlock(input.email)}
-${footer()}
-`),
-    };
-  }
+      h1: (n) => `Sua videochamada te aguarda, ${n}`,
+      body: "Sua chamada de vídeo com ATB está confirmada. Aperte abaixo pra agendar o horário.",
+      cta: "📅 Agendar minha videochamada",
+      emoji: "📹",
+      path: "/obrigado-videochamada",
+    },
+    en: {
+      subject: "📹 Your video call with ATB is still pending",
+      h1: (n) => `Your video call is waiting, ${n}`,
+      body: "Your video call with ATB is confirmed. Click below to schedule your time.",
+      cta: "📅 Schedule my video call",
+      emoji: "📹",
+      path: "/obrigado-videochamada",
+    },
+    es: {
+      subject: "📹 Tu videollamada con ATB sigue pendiente",
+      h1: (n) => `Tu videollamada te espera, ${n}`,
+      body: "Tu videollamada con ATB está confirmada. Haz clic abajo para agendar tu horario.",
+      cta: "📅 Agendar mi videollamada",
+      emoji: "📹",
+      path: "/obrigado-videochamada",
+    },
+  },
+  subscription: {
+    pt: {
+      subject: "🔮 Crie sua conta no ATB pra acessar seu plano",
+      h1: (n) => `Falta só criar sua conta, ${n}`,
+      body: "Sua assinatura ATB está ativa, mas você ainda não criou conta. Aperte o botão dourado abaixo — leva 30 segundos.",
+      cta: "✨ Criar minha conta agora",
+      emoji: "🔮",
+      path: "/cadastro",
+    },
+    en: {
+      subject: "🔮 Create your ATB account to access your plan",
+      h1: (n) => `Just create your account, ${n}`,
+      body: "Your ATB subscription is active, but you haven't created an account yet. Click the gold button below — takes 30 seconds.",
+      cta: "✨ Create my account now",
+      emoji: "🔮",
+      path: "/cadastro",
+    },
+    es: {
+      subject: "🔮 Crea tu cuenta ATB para acceder a tu plan",
+      h1: (n) => `Solo falta crear tu cuenta, ${n}`,
+      body: "Tu suscripción ATB está activa, pero aún no creaste cuenta. Haz clic en el botón dorado abajo — toma 30 segundos.",
+      cta: "✨ Crear mi cuenta ahora",
+      emoji: "🔮",
+      path: "/cadastro",
+    },
+  },
+};
 
-  // subscription (basic/premium)
-  const link = `${input.siteUrl}/cadastro?email=${encodeURIComponent(input.email)}`;
+export function buildRecoveryEmail(input: RecoveryEmailInput): RecoveryEmailTemplate {
+  const locale: Locale = input.locale === "en" || input.locale === "es" ? input.locale : "pt";
+  const firstName = input.name ? input.name.split(" ")[0] : defaultName(locale);
+  const tmpl = TEMPLATES[input.product][locale];
+  const link = `${input.siteUrl}${tmpl.path}?email=${encodeURIComponent(input.email)}`;
+
   return {
-    subject: "🔮 Crie sua conta no ATB pra acessar seu plano",
+    subject: tmpl.subject,
     html: box(`
 <div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
-  <div style="font-size:64px;margin-bottom:16px;">🔮</div>
+  <div style="font-size:64px;margin-bottom:16px;">${tmpl.emoji}</div>
   <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;font-family:'Cormorant Garamond',Georgia,serif;">
-    Falta só criar sua conta, ${escapeHtml(firstName)}
+    ${tmpl.h1(escapeHtml(firstName))}
   </h1>
   <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
-    Sua assinatura ATB está ativa, mas você ainda não criou conta. Aperte o botão dourado abaixo — leva 30 segundos.
+    ${tmpl.body}
   </p>
   <a href="${link}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
-    ✨ Criar minha conta agora
+    ${tmpl.cta}
   </a>
 </div>
-${emailWarningBlock(input.email)}
-${footer()}
-`),
+${emailWarningBlock(input.email, locale)}
+${footer(locale)}
+`, locale),
   };
 }
 
