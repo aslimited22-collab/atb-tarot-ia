@@ -49,6 +49,18 @@ export type InsightsProps = {
     messagesTotal: number;
     refundRatePct: number;
   };
+  recoveryKpis: {
+    /** % de purchases dos últimos 7d que TÊM atividade subsequente em chat/limpeza/espirito */
+    accessRate7dPct: number;
+    /** Total de purchases dos últimos 7d */
+    purchases7d: number;
+    /** Recovery emails enviados (cron.follow-up) últimos 7d */
+    recoverySent7d: number;
+    /** Fuzzy matches realizados últimos 7d */
+    fuzzyMatches7d: number;
+    /** Emails na fila (pending no email_outbox) */
+    emailQueuePending: number;
+  };
   spark7d: {
     revenue: number[];
     orders: number[];
@@ -195,6 +207,53 @@ export default async function InsightsPage() {
     messages: series30d.slice(-7).map((p) => p.messages),
   };
 
+  // ─── Recovery KPIs ───────────────────────────────────────
+  // Métricas pra medir se sprints 1+2 reduziram a taxa de não-acesso (51% baseline)
+  const purchases7d = (salesPurchases ?? []).filter((p) => p.created_at >= iso7d);
+  const accessedUsers = new Set<string>();
+  for (const m of chatMsgs ?? []) {
+    if (m.user_id) accessedUsers.add(m.user_id);
+  }
+  // Também conta limpeza/espirito como "acessou"
+  const [{ data: limpezaMsgs }, { data: espiritoMsgs }] = await Promise.all([
+    admin.from("limpeza_messages").select("user_id"),
+    admin.from("espirito_messages").select("user_id"),
+  ]);
+  for (const m of limpezaMsgs ?? []) if (m.user_id) accessedUsers.add(m.user_id);
+  for (const m of espiritoMsgs ?? []) if (m.user_id) accessedUsers.add(m.user_id);
+
+  const purchases7dWithAccess = purchases7d.filter((p) => {
+    const uid = p.user_id ?? (p.email ? userByEmail.get(p.email.toLowerCase()) : null);
+    return uid && accessedUsers.has(uid);
+  });
+  const accessRate7dPct = purchases7d.length > 0
+    ? (purchases7dWithAccess.length / purchases7d.length) * 100
+    : 0;
+
+  // Recovery emails enviados últimos 7d (cron.follow-up scope)
+  const [
+    { count: recoverySent7d },
+    { count: fuzzyMatches7d },
+    { count: emailQueuePending },
+  ] = await Promise.all([
+    admin
+      .from("email_outbox")
+      .select("*", { count: "exact", head: true })
+      .like("scope", "cron.follow-up%")
+      .gte("created_at", iso7d)
+      .not("sent_at", "is", null),
+    admin
+      .from("purchases")
+      .select("*", { count: "exact", head: true })
+      .eq("fuzzy_matched", true)
+      .gte("created_at", iso7d),
+    admin
+      .from("email_outbox")
+      .select("*", { count: "exact", head: true })
+      .is("sent_at", null)
+      .lt("attempts", 6),
+  ]);
+
   const props: InsightsProps = {
     generatedAt: now.toISOString(),
     kpis: {
@@ -206,6 +265,13 @@ export default async function InsightsPage() {
       creditsTotalPurchased,
       messagesTotal,
       refundRatePct,
+    },
+    recoveryKpis: {
+      accessRate7dPct,
+      purchases7d: purchases7d.length,
+      recoverySent7d: recoverySent7d ?? 0,
+      fuzzyMatches7d: fuzzyMatches7d ?? 0,
+      emailQueuePending: emailQueuePending ?? 0,
     },
     spark7d,
     series30d,

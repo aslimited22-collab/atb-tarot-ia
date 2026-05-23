@@ -81,6 +81,40 @@ export default function UsersTable({ users }: { users: UserRow[] }) {
     });
   }
 
+  /**
+   * Cliente "órfão" = comprou mas nunca acessou (mensagens = 0 + gastou > 0).
+   * Template pra copiar + colar no WhatsApp com instrução clara de login.
+   */
+  function buildWhatsAppText(u: UserRow): string {
+    const firstName = (u.name?.trim().split(/\s+/)[0]) || "querida alma";
+    return `Oi ${firstName}!
+
+Notei que você comprou no ATB mas ainda não acessou. Pra entrar na sua conta:
+
+1. Acesse: atbtartot.com/login
+2. Use o email do pagamento: ${u.email}
+3. Clique em "Entrar sem senha" — você recebe um link mágico no email
+
+Qualquer dúvida, é só me chamar aqui no WhatsApp.
+
+ATB ✨`;
+  }
+
+  async function copyWhatsApp(u: UserRow) {
+    try {
+      await navigator.clipboard.writeText(buildWhatsAppText(u));
+      // Feedback visual minimalista (sem libs)
+      const el = document.getElementById(`wa-btn-${u.id}`);
+      if (el) {
+        const original = el.textContent;
+        el.textContent = "✓ Copiado!";
+        setTimeout(() => { if (el) el.textContent = original; }, 1500);
+      }
+    } catch {
+      alert("Não foi possível copiar — copie manualmente:\n\n" + buildWhatsAppText(u));
+    }
+  }
+
   const th: React.CSSProperties = {
     padding: "14px 16px",
     textAlign: "left",
@@ -182,12 +216,13 @@ export default function UsersTable({ users }: { users: UserRow[] }) {
                 Gasto{sortMark("totalSpentCents")}
               </th>
               <th style={th} onClick={() => toggleSort("createdAt")}>Cadastro{sortMark("createdAt")}</th>
+              <th style={{ ...th, textAlign: "center" }}>Resgate</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ ...td, textAlign: "center", color: "#86868b", padding: "48px" }}>
+                <td colSpan={9} style={{ ...td, textAlign: "center", color: "#86868b", padding: "48px" }}>
                   Nenhum usuário encontrado
                 </td>
               </tr>
@@ -249,6 +284,31 @@ export default function UsersTable({ users }: { users: UserRow[] }) {
                     </td>
                     <td style={{ ...td, color: "#86868b", fontSize: 13 }}>
                       {fmtRelative(u.createdAt)}
+                    </td>
+                    <td style={{ ...td, textAlign: "center" }}>
+                      {/* Só mostra botão de resgate pra clientes ÓRFÃOS (compraram mas nunca acessaram) */}
+                      {u.totalSpentCents > 0 && u.messagesSent === 0 ? (
+                        <button
+                          id={`wa-btn-${u.id}`}
+                          onClick={() => copyWhatsApp(u)}
+                          title="Copiar mensagem WhatsApp pronta com instruções de login"
+                          style={{
+                            background: "linear-gradient(135deg, #25D366, #128C7E)",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 8,
+                            padding: "6px 12px",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          📋 WhatsApp
+                        </button>
+                      ) : (
+                        <span style={{ color: "#c4c4c8", fontSize: 11 }}>—</span>
+                      )}
                     </td>
                   </tr>
                 );

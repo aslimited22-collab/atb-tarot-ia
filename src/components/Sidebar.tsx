@@ -6,14 +6,15 @@ import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Plan } from "@/lib/types";
 
+// Cada link tem `hintKey` opcional pra title= (tooltip 60+) — ex: "Falar com ATB no chat"
 const LINK_DEFS = [
-  { href: "/dashboard",                    key: "side.home",         icon: "🏠", min: "free"    as Plan },
-  { href: "/dashboard/chat",               key: "side.chat",         icon: "💬", min: "free"    as Plan },
-  { href: "/dashboard/oracle",             key: "side.oracle",       icon: "🔮", min: "free"    as Plan },
-  { href: "/dashboard/journal",            key: "side.journal",      icon: "📖", min: "basic"   as Plan },
-  { href: "/dashboard/addiction",          key: "side.addiction",    icon: "🕯️", min: "premium" as Plan },
-  { href: "/dashboard/numerologia",        key: "side.numerology",   icon: "🍀", min: "premium" as Plan },
-  { href: "/dashboard/limpeza-espiritual", key: "side.limpeza",      icon: "🕊️", min: "free"    as Plan },
+  { href: "/dashboard",                    key: "side.home",         hintKey: "side.home_hint",         icon: "🏠", min: "free"    as Plan },
+  { href: "/dashboard/chat",               key: "side.chat",         hintKey: "side.chat_hint",         icon: "💬", min: "free"    as Plan },
+  { href: "/dashboard/oracle",             key: "side.oracle",       hintKey: "side.oracle_hint",       icon: "🔮", min: "free"    as Plan },
+  { href: "/dashboard/journal",            key: "side.journal",      hintKey: "side.journal_hint",      icon: "📖", min: "basic"   as Plan },
+  { href: "/dashboard/addiction",          key: "side.addiction",    hintKey: "side.addiction_hint",    icon: "🕯️", min: "premium" as Plan },
+  { href: "/dashboard/numerologia",        key: "side.numerology",   hintKey: "side.numerology_hint",   icon: "🍀", min: "premium" as Plan },
+  { href: "/dashboard/limpeza-espiritual", key: "side.limpeza",      hintKey: "side.limpeza_hint",      icon: "🕊️", min: "free"    as Plan },
 ] as const;
 const ORDER: Record<Plan,number> = { free:0, basic:1, premium:2 };
 const SIDE_BG = "#1a0035";
@@ -32,7 +33,11 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
   }
 
   const initial = (email[0] || "?").toUpperCase();
-  const LINKS = LINK_DEFS.map((l) => ({ ...l, label: t(l.key as any) }));
+  const LINKS = LINK_DEFS.map((l) => ({
+    ...l,
+    label: t(l.key as any),
+    hint: t(l.hintKey as any) || t(l.key as any),
+  }));
 
   const nav = (
     <div style={{ display:"flex", flexDirection:"column", height:"100%" }}>
@@ -53,7 +58,10 @@ export function Sidebar({ email, plan }: { email: string; plan: Plan }) {
           const locked = ORDER[plan] < ORDER[l.min];
           const active = pathname === l.href;
           return (
-            <Link key={l.href} href={l.href} onClick={() => setOpen(false)} style={{
+            <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
+              title={l.hint}
+              aria-label={l.hint}
+              style={{
               display:"flex", alignItems:"center", gap:16,
               padding:"18px 20px",
               background: active ? "rgba(232,184,75,0.18)" : "transparent",

@@ -48,7 +48,7 @@ export default function InsightsClient(props: InsightsProps) {
     setTimeout(() => setRecoveryMsg(null), 12000);
   }
 
-  const { kpis, spark7d, series30d, users, generatedAt } = props;
+  const { kpis, recoveryKpis, spark7d, series30d, users, generatedAt } = props;
 
   const rangeStats = useMemo(() => {
     if (range === "7d") {
@@ -255,6 +255,41 @@ export default function InsightsClient(props: InsightsProps) {
               label="Taxa de reembolso"
               value={`${kpis.refundRatePct.toFixed(1)}%`}
               sublabel="Cancelamentos / vendas"
+            />
+          </div>
+        </section>
+
+        {/* Recovery & UX 60+ — mede impacto dos sprints 1+2 (baseline 49% acesso) */}
+        <section style={{ marginBottom: 32 }}>
+          <h2 style={{ fontSize: 19, color: "#1d1d1f", fontWeight: 600, letterSpacing: "-0.02em", margin: "0 0 14px" }}>
+            Recovery & UX 60+ · últimos 7 dias
+          </h2>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 16,
+            }}
+          >
+            <KpiTile
+              label="🎯 Taxa de acesso pós-compra"
+              value={`${recoveryKpis.accessRate7dPct.toFixed(1)}%`}
+              sublabel={`${recoveryKpis.purchases7d} compras · baseline 49%`}
+            />
+            <KpiTile
+              label="📬 Recovery emails enviados"
+              value={fmtInt(recoveryKpis.recoverySent7d)}
+              sublabel="Follow-up automático 4h+"
+            />
+            <KpiTile
+              label="🔗 Fuzzy matches"
+              value={fmtInt(recoveryKpis.fuzzyMatches7d)}
+              sublabel="Mismatch email resolvido auto"
+            />
+            <KpiTile
+              label="📤 Emails na fila"
+              value={fmtInt(recoveryKpis.emailQueuePending)}
+              sublabel={recoveryKpis.emailQueuePending > 0 ? "🔁 aguardando retry" : "✅ vazia"}
             />
           </div>
         </section>
