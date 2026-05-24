@@ -97,11 +97,18 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
 
   if (error) {
     logError("cron.follow-up", "query failed", { error: error.message });
-    return NextResponse.json({ error: "db error" }, { status: 500 });
+    return NextResponse.json({ error: "db error", message: error.message, hint: (error as { hint?: string }).hint, details: (error as { details?: string }).details }, { status: 500 });
   }
 
   if (!pending || pending.length === 0) {
-    return NextResponse.json({ ok: true, sent: 0, message: "no pending follow-ups" });
+    // Debug query alternativa pra ver se há órfãos sem o filtro .in()
+    const { data: dbgCount } = await admin
+      .from("purchases")
+      .select("id", { count: "exact", head: true })
+      .is("follow_up_sent_at", null)
+      .gte("created_at", min)
+      .lte("created_at", max);
+    return NextResponse.json({ ok: true, sent: 0, message: "no pending follow-ups", debug: { min, max, withoutEventFilter: dbgCount, saleEventsCount: SALE_EVENTS.length } });
   }
 
   let sent = 0;
