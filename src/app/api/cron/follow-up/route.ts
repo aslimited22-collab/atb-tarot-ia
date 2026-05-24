@@ -148,20 +148,18 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
         }
       }
 
-      // Detecta locale do user (se conta existe) — caso contrário PT default
+      // Detecta locale do user (se conta existe) — fail-safe pra "pt" se schema/coluna inacessivel
       let userLocale: "pt" | "en" | "es" = "pt";
-      const userIdForLocale = p.user_id ?? (await admin
-        .from("users")
-        .select("id, locale")
-        .eq("email", p.email.toLowerCase())
-        .maybeSingle()).data?.id;
-      if (userIdForLocale) {
+      try {
         const { data: ul } = await admin
           .from("users")
           .select("locale")
-          .eq("id", userIdForLocale)
+          .eq("email", p.email.toLowerCase())
           .maybeSingle();
-        if (ul?.locale === "en" || ul?.locale === "es") userLocale = ul.locale;
+        if (ul && (ul as { locale?: string }).locale === "en") userLocale = "en";
+        else if (ul && (ul as { locale?: string }).locale === "es") userLocale = "es";
+      } catch {
+        // Coluna locale pode nao existir em deploys antigos; mantém "pt" default
       }
 
       // Cliente NÃO acessou — envia email de resgate (na lingua do user)
