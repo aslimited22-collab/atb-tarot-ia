@@ -715,8 +715,8 @@ export async function POST(req: Request) {
     if (!userRow) {
       const subFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
       const subAccessLink = `${getSiteUrl(req)}/cadastro?email=${encodeURIComponent(email.toLowerCase())}`;
-      const subProductName = plan === "premium" ? "Super Numerologia (Premium)" : "Basic";
-      const subPriceLabel = plan === "premium" ? "R$ 250/mês" : "R$ 29/mês";
+      const subProductName = plan === "premium" ? "Consulta Completa com ATB" : "Basic";
+      const subPriceLabel = plan === "premium" ? "R$ 197/mês" : "R$ 29/mês";
 
       const subCustomerHtml = `
 <!DOCTYPE html>
