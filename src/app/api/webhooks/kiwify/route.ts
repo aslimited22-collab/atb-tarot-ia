@@ -711,7 +711,7 @@ export async function POST(req: Request) {
     });
 
     // Welcome email pra Basic/Premium se cliente NÃO tinha conta ainda.
-    // Sem isso, cliente paga R$29 ou R$250/mês e fica sem saber como acessar.
+    // Sem isso, cliente paga R$29 ou R$197/mês e fica sem saber como acessar.
     if (!userRow) {
       const subFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
       const subAccessLink = `${getSiteUrl(req)}/cadastro?email=${encodeURIComponent(email.toLowerCase())}`;

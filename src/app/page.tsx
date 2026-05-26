@@ -479,7 +479,7 @@ export default function Home() {
               <a href="/api/checkout/basic" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("checkout.cta.access")}</a>
             </div>
 
-            {/* SUPER NUMEROLOGIA — produto reposicionado pra 50+ apostadores */}
+            {/* CONSULTA COMPLETA — Premium R$197 (consulta + numerologia + tratamento espiritual) */}
             <div className="card-gold" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
               {/* Decoração: bolas douradas sutis no topo */}
               <div style={{ position: "absolute", top: -20, right: -20, display: "flex", gap: 8, opacity: 0.18, pointerEvents: "none" }} aria-hidden="true">

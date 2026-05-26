@@ -43,7 +43,7 @@ export function dailyLuckyNumbers(userId: string, date: Date = new Date()): numb
 
 /**
  * Combinações espirituais maiores — gera 3 conjuntos diferentes pra
- * "Super Numerologia". Cada um usa seed derivada de user+dia mas com
+ * Consulta Completa. Cada um usa seed derivada de user+dia mas com
  * sufixo diferente pra evitar overlap entre combinações.
  */
 export function luckyCombinations(

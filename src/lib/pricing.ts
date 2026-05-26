@@ -24,10 +24,10 @@ export type CheckoutMode = "subscription" | "payment";
 // cliente intl percebe o mesmo valor psicológico que o BR.
 export const PLAN_PRICES: Record<PlanId, Record<Currency, number>> = {
   premium: {
-    brl: 25000, // R$250,00/mês
-    usd: 25000, // $250.00/month
-    eur: 25000, // €250,00/mês
-    jpy: 25000, // ¥25000/月
+    brl: 19700, // R$197,00/mês
+    usd: 19700, // $197.00/month
+    eur: 19700, // €197,00/mês
+    jpy: 19700, // ¥19700/月
   },
   basic: {
     brl: 2900, // R$29,00/mês
@@ -120,7 +120,7 @@ export function kiwifyUrlFor(plan: PlanId): string | undefined {
  */
 export function planDisplayName(plan: PlanId): string {
   return {
-    premium: "ATB Tarot — Premium (Consulta com ATB)",
+    premium: "ATB Tarot — Consulta Completa com ATB",
     basic: "ATB Tarot — Basic",
     videochamada: "ATB — Vídeo Chamada ao Vivo",
     limpeza: "ATB — Limpeza Espiritual Personalizada",

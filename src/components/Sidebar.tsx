@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Plan } from "@/lib/types";
 
-// Cada link tem `hintKey` opcional pra title= (tooltip 60+) — ex: "Falar com ATB no chat"
+// Cada link tem `hintKey` opcional pra title= (tooltip 60+) — ex: "Converse com ATB"
 const LINK_DEFS = [
   { href: "/dashboard",                    key: "side.home",         hintKey: "side.home_hint",         icon: "🏠", min: "free"    as Plan },
   { href: "/dashboard/chat",               key: "side.chat",         hintKey: "side.chat_hint",         icon: "💬", min: "free"    as Plan },
