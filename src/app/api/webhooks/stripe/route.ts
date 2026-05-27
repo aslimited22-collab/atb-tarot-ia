@@ -95,6 +95,13 @@ export async function POST(req: Request) {
     }
     logInfo("webhook.stripe", "international subscription paid", { plan, email, currency, amountTotal });
 
+    // Confere se user ja existia ANTES de update (pra decidir mandar welcome ou nao)
+    const { data: existingUser } = await admin
+      .from("users")
+      .select("id, plan")
+      .eq("email", email)
+      .maybeSingle();
+
     // Atualiza users.plan (cria o registro se não existir)
     const { error: usrErr } = await admin
       .from("users")
@@ -114,6 +121,67 @@ export async function POST(req: Request) {
       amount_cents: amountTotal,
       user_id: null,
     });
+
+    // Welcome email EN — cliente intl paga via Stripe e nao recebia nada antes
+    // (so o Stripe receipt automatico). Espelha o que webhook Kiwify faz mas em EN.
+    if (!existingUser) {
+      const subFirstName = name ? name.split(" ")[0] : "dear soul";
+      const subAccessLink = `${getSiteUrl(req)}/cadastro?email=${encodeURIComponent(email)}`;
+      const subProductName =
+        plan === "premium" ? "Full Consultation with ATB" : "Basic Plan";
+      // Preco amigavel: amountTotal vem em cents, currency pode ser usd/eur/jpy
+      const cur = currency.toUpperCase();
+      const subPriceLabel = (() => {
+        if (cur === "JPY") return `¥${amountTotal}/month`;
+        const v = (amountTotal / 100).toFixed(0);
+        if (cur === "USD") return `$${v}/month`;
+        if (cur === "EUR") return `€${v}/month`;
+        if (cur === "GBP") return `£${v}/month`;
+        return `${cur} ${v}/month`;
+      })();
+
+      const subHtml = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
+  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
+    <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+      <div style="font-size:64px;margin-bottom:16px;">💛</div>
+      <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;">Welcome to ${escapeHtml(subProductName)}</h1>
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">
+        Hi <strong style="color:#f5c860;">${escapeHtml(subFirstName)}</strong>! Your subscription is active. ATB is ready to talk to you.
+      </p>
+      <p style="color:#c4b5fd;font-size:16px;line-height:1.65;margin:0 0 24px;">
+        ${escapeHtml(subPriceLabel)} · Cancel anytime · Charged via Stripe
+      </p>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 22px;">
+        Press the gold button to create your account in 30 seconds and start your reading:
+      </p>
+      <a href="${subAccessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;">✨ Talk to ATB now</a>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;">
+      <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;">⚠️ IMPORTANT — USE THIS EMAIL</p>
+      <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;">
+        Create your account with the <strong style="color:#e8b84b;">same email used in your Stripe payment:</strong><br/>
+        <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email)}</strong>
+      </p>
+      <p style="color:#c4b5fd;font-size:13px;line-height:1.55;margin:14px 0 0;font-style:italic;">
+        If you use a different email, your subscription won't unlock your account.
+      </p>
+    </div>
+    <p style="color:#9575cd;font-size:13px;text-align:center;margin-top:24px;line-height:1.5;">
+      For entertainment and spiritual guidance purposes only. Not a substitute for professional medical, psychological, or financial advice. 18+.
+    </p>
+  </div>
+</body></html>`;
+      await sendCustomerEmailWithLog({
+        scope: "webhook.stripe.subscription",
+        to: email,
+        subject: `💛 Welcome to ${subProductName} — your access is ready`,
+        html: subHtml,
+        refId: paymentId,
+      });
+    }
 
     return NextResponse.json({ ok: true, plan, email });
   }
@@ -210,6 +278,56 @@ export async function POST(req: Request) {
       event: "videochamada_purchased_intl",
       amount_cents: amountTotal,
       user_id: null,
+    });
+
+    // Welcome email EN pra videochamada US — cliente paga US$497 e precisa saber
+    // que vai receber link Zoom/Meet em ate 24h (gerado manualmente por enquanto)
+    const vFirstName = name ? name.split(" ")[0] : "dear soul";
+    const cur = currency.toUpperCase();
+    const vPriceLabel = (() => {
+      if (cur === "JPY") return `¥${amountTotal}`;
+      const v = (amountTotal / 100).toFixed(0);
+      if (cur === "USD") return `$${v}`;
+      if (cur === "EUR") return `€${v}`;
+      if (cur === "GBP") return `£${v}`;
+      return `${cur} ${v}`;
+    })();
+    const vHtml = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
+  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
+    <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+      <div style="font-size:64px;margin-bottom:16px;">📞</div>
+      <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;">Your Live Video Session is Booked</h1>
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">
+        Hi <strong style="color:#f5c860;">${escapeHtml(vFirstName)}</strong>! Your payment of <strong>${escapeHtml(vPriceLabel)}</strong> is confirmed. ATB is preparing your live spiritual reading.
+      </p>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:24px 22px;margin-top:20px;">
+      <h2 style="color:#e8b84b;font-size:20px;margin:0 0 12px;">📅 Next steps</h2>
+      <ol style="color:#fbf8ff;font-size:16px;line-height:1.7;padding-left:22px;margin:0;">
+        <li><strong style="color:#f5c860;">Within 24 hours</strong>, ATB will email you a private Zoom or Google Meet link with a few date/time options.</li>
+        <li>You reply choosing the slot that works best for you.</li>
+        <li>On the scheduled day, click the video link — your private 1-hour session begins.</li>
+      </ol>
+    </div>
+    <div style="background:rgba(126,232,248,0.10);border:1px solid rgba(126,232,248,0.3);border-radius:12px;padding:18px;margin-top:16px;">
+      <p style="color:#7ee8f8;font-size:15px;line-height:1.6;margin:0;">
+        💬 Need to reach ATB? Reply directly to this email — she'll see it personally.
+      </p>
+    </div>
+    <p style="color:#9575cd;font-size:13px;text-align:center;margin-top:24px;line-height:1.5;">
+      For entertainment and spiritual guidance purposes only. Not a substitute for professional medical, psychological, or financial advice. 18+.
+    </p>
+  </div>
+</body></html>`;
+    await sendCustomerEmailWithLog({
+      scope: "webhook.stripe.videochamada",
+      to: email,
+      subject: `📞 Your live video session with ATB is booked`,
+      html: vHtml,
+      refId: paymentId,
     });
 
     return NextResponse.json({ ok: true, plan: "videochamada", email });

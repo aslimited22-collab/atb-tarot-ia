@@ -16,12 +16,11 @@ const THEME_VALUES = [
   { v: "tristeza_coracao", icon: "😔" },
 ] as const;
 
-const SIGNS = [
-  { v: "aries", l: "Áries" }, { v: "touro", l: "Touro" }, { v: "gemeos", l: "Gêmeos" },
-  { v: "cancer", l: "Câncer" }, { v: "leao", l: "Leão" }, { v: "virgem", l: "Virgem" },
-  { v: "libra", l: "Libra" }, { v: "escorpiao", l: "Escorpião" }, { v: "sagitario", l: "Sagitário" },
-  { v: "capricornio", l: "Capricórnio" }, { v: "aquario", l: "Aquário" }, { v: "peixes", l: "Peixes" },
-];
+// Valores internos sao em PT mas labels sao traduzidas via i18n (v2.sign.*)
+const SIGN_VALUES = [
+  "aries", "touro", "gemeos", "cancer", "leao", "virgem",
+  "libra", "escorpiao", "sagitario", "capricornio", "aquario", "peixes",
+] as const;
 
 export function LimpezaForm() {
   const router = useRouter();
@@ -144,7 +143,7 @@ export function LimpezaForm() {
         id="phone"
         type="tel"
         className="input input-big"
-        placeholder="(47) 99999-1234"
+        placeholder={t("v2.form.phone_placeholder")}
         value={phone}
         onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
         autoComplete="tel"
@@ -154,12 +153,12 @@ export function LimpezaForm() {
         style={{ marginBottom: 6 }}
       />
       <p id="phone-hint" style={{ fontSize: 20, color: "#c4b5fd", marginBottom: 6, lineHeight: 1.55 }}>
-        Coloque seu WhatsApp com DDD, exemplo: (47) 99999-1234
+        {t("v2.form.phone_hint")}
       </p>
       {phone && !toE164BR(phone).e164 && (
         <p id="phone-err" role="alert" style={{ fontSize: 16, color: "#ff8a8a", fontWeight: 600, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
           <span aria-hidden="true">⚠️</span>
-          Confira o número — algo parece faltando.
+          {t("v2.form.phone_invalid")}
         </p>
       )}
       <div style={{ marginBottom: 18 }} />
@@ -197,8 +196,8 @@ export function LimpezaForm() {
             style={{ appearance: "auto" }}
           >
             <option value="">—</option>
-            {SIGNS.map((s) => (
-              <option key={s.v} value={s.v}>{s.l}</option>
+            {SIGN_VALUES.map((v) => (
+              <option key={v} value={v}>{t(`v2.sign.${v}` as any)}</option>
             ))}
           </select>
         </div>
