@@ -23,6 +23,12 @@ export type RecoveryEmailInput = {
   siteUrl: string; // ex: https://atbtartot.com
   /** Default "pt". Suporta "en" e "es" pros clientes intl. */
   locale?: Locale;
+  /**
+   * Magic-link 1-clique (Supabase OTP `action_link`). Quando presente, vira
+   * o CTA principal — 60+ entra sem digitar senha. Sem ele, fallback pro
+   * link estático que abre /obrigado-pergunta com email pre-preenchido.
+   */
+  magicLink?: string;
 };
 
 export type RecoveryEmailTemplate = {
@@ -243,7 +249,19 @@ export function buildRecoveryEmail(input: RecoveryEmailInput): RecoveryEmailTemp
   const locale: Locale = input.locale === "en" || input.locale === "es" ? input.locale : "pt";
   const firstName = input.name ? input.name.split(" ")[0] : defaultName(locale);
   const tmpl = TEMPLATES[input.product][locale];
-  const link = `${input.siteUrl}${tmpl.path}?email=${encodeURIComponent(input.email)}`;
+  // Magic-link entra como CTA primario (1-clique, sem senha). Fallback: link estatico.
+  const link = input.magicLink
+    ?? `${input.siteUrl}${tmpl.path}?email=${encodeURIComponent(input.email)}`;
+  const hasMagicLink = !!input.magicLink;
+
+  // Copy "Entrar com 1 toque" quando temos magic-link, senao usa o cta padrao do template
+  const ctaLabel = hasMagicLink
+    ? { pt: "✨ Entrar agora com 1 toque", en: "✨ Enter now with 1 tap", es: "✨ Entrar ahora con 1 toque" }[locale]
+    : tmpl.cta;
+  // Subhead que orienta o cliente 60+ que nao precisa digitar nada
+  const noPasswordNote = hasMagicLink
+    ? { pt: "Apertou o botão dourado, entrou direto. Sem senha, sem formulário.", en: "Just tap the gold button — straight in. No password, no form.", es: "Toca el botón dorado y entras. Sin contraseña, sin formulario." }[locale]
+    : "";
 
   return {
     subject: tmpl.subject,
@@ -257,10 +275,11 @@ export function buildRecoveryEmail(input: RecoveryEmailInput): RecoveryEmailTemp
     ${tmpl.body}
   </p>
   <a href="${link}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
-    ${tmpl.cta}
+    ${ctaLabel}
   </a>
+  ${noPasswordNote ? `<p style="color:#c4b5fd;font-size:14px;margin:18px 0 0;line-height:1.5;">${noPasswordNote}</p>` : ""}
 </div>
-${emailWarningBlock(input.email, locale)}
+${hasMagicLink ? "" : emailWarningBlock(input.email, locale)}
 ${footer(locale)}
 `, locale),
   };

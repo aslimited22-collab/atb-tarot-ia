@@ -1,12 +1,13 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useT } from "@/lib/i18n/I18nProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useT();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +19,17 @@ export default function LoginPage() {
   const [magicLoading, setMagicLoading] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
+
+  // Magic-link expirou? Mostra mensagem amigavel + pre-preenche email se vier na URL
+  useEffect(() => {
+    const error = searchParams?.get("error");
+    const urlEmail = searchParams?.get("email");
+    if (urlEmail && !email) setEmail(urlEmail.toLowerCase().trim());
+    if (error === "expired") {
+      toast.error(t("auth.magic_expired"));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();

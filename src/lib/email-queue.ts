@@ -123,7 +123,7 @@ async function tryDeliver(admin: AdminClient, id: string): Promise<boolean> {
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "ATB <atb@atbtartot.com>";
     const result = await resend.emails.send({
       from: fromEmail,
       to: row.to_email,

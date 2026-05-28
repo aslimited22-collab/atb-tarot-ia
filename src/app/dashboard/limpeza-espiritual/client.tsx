@@ -9,6 +9,24 @@ import { useT } from "@/lib/i18n/I18nProvider";
 
 type Msg = { id?: string; role: string; content: string };
 
+// Mesma lógica do /dashboard/chat: simula digitação humana com pausas em
+// pontuação. ATB precisa "respirar" entre as palavras em vez de cuspir
+// texto de uma vez (sem isso parece IA cuspindo, não pessoa falando).
+const CHAR_DELAY = 38;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+async function typeOut(text: string, onChar: (s: string) => void) {
+  let out = "";
+  for (let i = 0; i < text.length; i++) {
+    out += text[i];
+    onChar(out);
+    const ch = text[i];
+    const pause = (ch === "." || ch === "," || ch === "?" || ch === "!") ? CHAR_DELAY * 6
+      : (ch === " " && Math.random() < 0.08) ? CHAR_DELAY * 4
+      : CHAR_DELAY + Math.floor(Math.random() * 20);
+    await sleep(pause);
+  }
+}
+
 // Prompts ficam em PT — vão direto para a IA (DeepSeek/OpenAI) que recebe
 // system prompt em PT. Traduzir aqui quebraria a personalidade da ATB.
 const CARD_DEFS = [
@@ -125,6 +143,9 @@ export default function LimpezaClient({
         return;
       }
 
+      // Acumula resposta inteira primeiro (sem mostrar). Depois, faz typeOut
+      // pra simular digitação caractere a caractere — ATB respira entre
+      // pontos e vírgulas, como uma médium falando ao telefone.
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       let acc = "";
@@ -132,8 +153,8 @@ export default function LimpezaClient({
         const { done, value } = await reader.read();
         if (done) break;
         acc += decoder.decode(value, { stream: true });
-        setStreaming(acc);
       }
+      await typeOut(acc, setStreaming);
       setMessages((m) => [...m, { role: "assistant", content: acc }]);
       setStreaming("");
       setRemaining((r) => Math.max(0, r - 1));

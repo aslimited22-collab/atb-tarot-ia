@@ -279,14 +279,28 @@ export async function POST(req: Request) {
         user_id: userRow?.id ?? null,
       });
 
-      // ⚠️ EMAIL DE BOAS-VINDAS — sem isso, cliente paga, recebe só o recibo
-      // da Kiwify e não sabe que precisa criar conta. Vários clientes ficaram
-      // perdidos sem acessar o chat.
+      // ⚠️ EMAIL DE BOAS-VINDAS COM MAGIC-LINK — sem senha, sem formulario.
+      // Cliente 60+ aperta o botao e cai LOGADO direto no chat.
+      // Senha auto-gerada do AutoCreate quebrava acesso quando sessao caia.
       const pergFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
-      const pergAccessLink = orderId
-        ? `${getSiteUrl(req)}/obrigado-pergunta?order=${encodeURIComponent(orderId)}`
-        : `${getSiteUrl(req)}/obrigado-pergunta?email=${encodeURIComponent(email.toLowerCase())}`;
       const creditsLabel = credits === 1 ? "1 pergunta" : `${credits} perguntas`;
+
+      // Gera magic-link via Supabase Admin API. Cria user se nao existir.
+      let magicUrl = `${getSiteUrl(req)}/obrigado-pergunta?email=${encodeURIComponent(email.toLowerCase())}`;
+      try {
+        const { data: linkData } = await admin.auth.admin.generateLink({
+          type: "magiclink",
+          email: email.toLowerCase(),
+          options: {
+            redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/chat?welcome=pergunta")}`,
+          },
+        });
+        const actionLink = (linkData as { properties?: { action_link?: string } } | null)
+          ?.properties?.action_link;
+        if (actionLink) magicUrl = actionLink;
+      } catch (e) {
+        logWarn("webhook.kiwify.pergunta", "magic-link gen failed", { email, error: String(e) });
+      }
 
       const pergCustomerHtml = `
 <!DOCTYPE html>
@@ -303,40 +317,31 @@ export async function POST(req: Request) {
         Olá, <strong style="color:#f5c860;">${escapeHtml(pergFirstName)}</strong>!<br>
         Pagamento confirmado. ATB já está pronta pra te responder.
       </p>
-      <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 28px;">
-        Aperte o botão dourado abaixo para criar sua conta em 30 segundos:
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 28px;font-weight:600;">
+        Aperte o botão dourado abaixo. Você entra direto no chat para fazer sua pergunta.<br>
+        <strong style="color:#e8b84b;">Não precisa criar senha.</strong>
       </p>
-      <a href="${pergAccessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
-        ✨ Fazer minha pergunta agora
+      <a href="${magicUrl}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:22px;padding:22px 38px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+        ✨ Entrar agora com 1 toque
       </a>
-    </div>
-
-    <!-- ⚠️ Aviso CRÍTICO — email da conta = email do pagamento -->
-    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
-      <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;line-height:1.3;">
-        ⚠️ IMPORTANTE — USE ESTE EMAIL
-      </p>
-      <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;font-weight:500;">
-        Crie sua conta com o <strong style="color:#e8b84b;">mesmo email que você usou no pagamento:</strong><br/>
-        <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email.toLowerCase())}</strong><br/>
-        <span style="font-size:14px;color:#c4b5fd;">Se usar email diferente, sua pergunta não vai aparecer.</span>
+      <p style="color:#c4b5fd;font-size:14px;margin:18px 0 0;line-height:1.5;">
+        Este botão te conecta direto. Se já tinha conta, entrou; se não tinha, ATB criou agora pra você.
       </p>
     </div>
 
-    <div style="background:rgba(232,184,75,0.08);border:1px solid rgba(232,184,75,0.3);border-radius:14px;padding:22px;margin-top:20px;">
-      <h2 style="color:#e8b84b;font-size:18px;margin:0 0 12px;font-family:Georgia,serif;">
-        ✦ Como fazer agora
-      </h2>
-      <ol style="color:#fbf8ff;font-size:16px;line-height:1.75;padding-left:22px;margin:0;">
-        <li>Aperte o botão "Fazer minha pergunta agora"</li>
-        <li>Crie sua conta (nome + senha, usa o mesmo email acima)</li>
-        <li>Conte para ATB o que quer perguntar</li>
-        <li>Receba a resposta espiritual em segundos</li>
-      </ol>
+    <div style="background:rgba(126,232,248,0.08);border:1.5px solid rgba(126,232,248,0.3);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
+      <p style="color:#7ee8f8;font-size:16px;font-weight:700;margin:0 0 8px;">💡 Se o botão não funcionar</p>
+      <p style="color:#fbf8ff;font-size:15px;line-height:1.6;margin:0;font-weight:500;">
+        Copie este link e cole no seu navegador:<br>
+        <span style="color:#c4b5fd;font-size:12px;word-break:break-all;">${escapeHtml(magicUrl)}</span>
+      </p>
+      <p style="color:#c4b5fd;font-size:14px;line-height:1.6;margin:12px 0 0;">
+        Se preferir, responda este email — eu, ATB, recebo direto.
+      </p>
     </div>
 
-    <div style="text-align:center;margin-top:28px;padding:20px;color:#9575cd;font-size:13px;line-height:1.6;font-style:italic;">
-      Estamos aqui, minha querida alma. 💛
+    <div style="text-align:center;margin-top:28px;padding:20px;color:#9575cd;font-size:14px;line-height:1.6;font-style:italic;">
+      Estamos aqui, minha querida alma.
     </div>
 
     <div style="text-align:center;margin-top:20px;color:#9575cd;font-size:12px;">
@@ -349,7 +354,7 @@ export async function POST(req: Request) {
       await sendCustomerEmailWithLog({
         scope: "webhook.kiwify.pergunta",
         to: email.toLowerCase(),
-        subject: `✨ Sua ${creditsLabel} com ATB está liberada`,
+        subject: `✨ Sua ${creditsLabel} com ATB está liberada — entre com 1 toque`,
         html: pergCustomerHtml,
         refId: orderId,
       });

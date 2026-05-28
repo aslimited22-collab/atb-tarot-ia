@@ -1,22 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/I18nProvider";
 import PurchaseWaitSpinner from "@/components/PurchaseWaitSpinner";
 
-type Mode = "logged-with-credits" | "account-exists" | "needs-signup" | "auto-create";
-
-function genPassword(): string {
-  // Senha auto-gerada: 16 chars, sempre tem letra+número+símbolo
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-  let pwd = "";
-  const a = crypto.getRandomValues(new Uint32Array(14));
-  for (let i = 0; i < 14; i++) pwd += chars[a[i] % chars.length];
-  return pwd + "@9";
-}
+type Mode = "logged-with-credits" | "account-exists" | "needs-signup" | "check-email";
 
 export default function ObrigadoPerguntaClient({
   mode,
@@ -79,97 +69,82 @@ export default function ObrigadoPerguntaClient({
         </p>
 
         {mode === "logged-with-credits" && <AlreadyLogged />}
+        {mode === "check-email" && <CheckEmail email={email} />}
         {mode === "account-exists" && <LoginForm email={email} />}
         {mode === "needs-signup" && <SignupForm initialEmail={email} />}
-        {mode === "auto-create" && <AutoCreate email={email} name={name || ""} />}
       </div>
       </PurchaseWaitSpinner>
     </main>
   );
 }
 
-function AutoCreate({ email, name }: { email: string; name: string }) {
-  const router = useRouter();
+// Cliente acabou de pagar. Webhook ja disparou welcome email com magic-link.
+// Aqui mostramos "verifique seu email" + botao reenviar caso nao tenha chegado.
+function CheckEmail({ email }: { email: string }) {
   const { t } = useT();
-  const [status, setStatus] = useState<"creating" | "logging-in" | "ready" | "fallback">("creating");
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function run() {
-      try {
-        const password = genPassword();
-
-        // 1. Cria conta no servidor (idempotente — se já existe, retorna ok)
-        const signupRes = await fetch("/api/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, name }),
-        });
-
-        if (cancelled) return;
-
-        // Resposta sempre 200 ok da nossa /api/auth/signup (anti-enumeration)
-        if (!signupRes.ok) {
-          setStatus("fallback");
-          return;
-        }
-
-        // 2. Auto-login
-        setStatus("logging-in");
-        const supabase = createClient();
-        const { error: loginError } = await supabase.auth.signInWithPassword({
-          email: email.toLowerCase().trim(),
-          password,
-        });
-
-        if (cancelled) return;
-
-        if (loginError) {
-          // Conta provavelmente já existia com outra senha — fallback pro form de login
-          setStatus("fallback");
-          return;
-        }
-
-        // 3. Direto pro chat
-        setStatus("ready");
-        router.push("/dashboard/chat?welcome=pergunta&new=1");
-        router.refresh();
-      } catch {
-        if (!cancelled) setStatus("fallback");
+  async function resend() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, next: "/dashboard/chat?welcome=pergunta" }),
+      });
+      if (!res.ok) {
+        toast.error(t("thanks_pergunta.resend_error"));
+        setLoading(false);
+        return;
       }
+      setSent(true);
+      toast.success(t("thanks_pergunta.resend_ok"));
+    } catch {
+      toast.error(t("thanks_pergunta.resend_error"));
+    } finally {
+      setLoading(false);
     }
-
-    run();
-    return () => { cancelled = true; };
-  }, [email, name, router]);
-
-  if (status === "fallback") {
-    return <SignupForm initialEmail={email} />;
   }
 
-  const msg =
-    status === "creating" ? t("thanks_pergunta.h1") :
-    status === "logging-in" ? t("thanks_pergunta.h1") :
-    t("thanks_pergunta.cta");
-
   return (
-    <div className="fade-up" style={{ padding: "40px 20px", textAlign: "center" }}>
-      <div style={{
-        display: "inline-flex",
-        gap: 10,
-        marginBottom: 24,
-      }}>
-        <span className="typing-dot" />
-        <span className="typing-dot" />
-        <span className="typing-dot" />
+    <div className="card fade-up" style={{ padding: "36px 28px", textAlign: "center" }}>
+      <div style={{ fontSize: 56, marginBottom: 14 }} aria-hidden="true">✉</div>
+      <h2 className="serif" style={{ fontSize: "1.7rem", color: "#e8b84b", marginBottom: 10, fontWeight: 700, lineHeight: 1.2 }}>
+        {t("thanks_pergunta.check_email_h1")}
+      </h2>
+      <p style={{ fontSize: 19, color: "#fbf8ff", lineHeight: 1.6, marginBottom: 16, fontWeight: 500 }}>
+        {t("thanks_pergunta.check_email_desc")}
+      </p>
+      <div
+        style={{
+          background: "rgba(232,184,75,0.12)",
+          border: "1.5px solid rgba(232,184,75,0.45)",
+          borderRadius: 12,
+          padding: "14px 18px",
+          marginBottom: 20,
+        }}
+      >
+        <p style={{ fontSize: 17, color: "#f5c860", margin: 0, fontWeight: 700, wordBreak: "break-all" }}>
+          {email}
+        </p>
       </div>
-      <p style={{ fontSize: 20, color: "#fbf8ff", fontWeight: 600, margin: 0, lineHeight: 1.5 }}>
-        {msg}
+      <p style={{ fontSize: 16, color: "#c4b5fd", lineHeight: 1.55, marginBottom: 24 }}>
+        {t("thanks_pergunta.check_email_hint")}
       </p>
-      <p style={{ fontSize: 15, color: "#c4b5fd", marginTop: 14, lineHeight: 1.55 }}>
-        {email}
-      </p>
+      <button
+        onClick={resend}
+        disabled={loading || sent}
+        className="btn-gold btn-big"
+        style={{
+          width: "100%",
+          opacity: loading || sent ? 0.55 : 1,
+          cursor: loading || sent ? "not-allowed" : "pointer",
+          border: "none",
+        }}
+      >
+        {sent ? t("thanks_pergunta.resend_sent") : loading ? t("thanks_pergunta.resend_loading") : t("thanks_pergunta.resend_cta")}
+      </button>
     </div>
   );
 }
@@ -203,6 +178,8 @@ function LoginForm({ email }: { email: string }) {
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [magicLoading, setMagicLoading] = useState(false);
+  const [magicSent, setMagicSent] = useState(false);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -219,69 +196,138 @@ function LoginForm({ email }: { email: string }) {
     router.refresh();
   }
 
+  async function sendMagic() {
+    setMagicLoading(true);
+    try {
+      const res = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, next: "/dashboard/chat?welcome=pergunta" }),
+      });
+      if (!res.ok) {
+        toast.error(t("thanks_pergunta.resend_error"));
+        setMagicLoading(false);
+        return;
+      }
+      setMagicSent(true);
+      toast.success(t("thanks_pergunta.resend_ok"));
+    } catch {
+      toast.error(t("thanks_pergunta.resend_error"));
+    } finally {
+      setMagicLoading(false);
+    }
+  }
+
   return (
-    <form onSubmit={handleLogin} className="card fade-up" style={{ padding: "32px 26px", textAlign: "left" }}>
-      <label style={{ display: "block", color: "#fbf8ff", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-        {t("auth.email_label")}
-      </label>
-      <input className="input input-big" type="email" value={email} disabled style={{ marginBottom: 22, opacity: 0.85 }} />
-
-      <label style={{ display: "block", color: "#fbf8ff", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-        {t("auth.password_label")}
-      </label>
-      <div style={{ position: "relative", marginBottom: 24 }}>
-        <input
-          className="input input-big"
-          type={showPwd ? "text" : "password"}
-          placeholder={t("auth.password_placeholder")}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          autoFocus
-          autoComplete="current-password"
-          style={{ paddingRight: 110 }}
-        />
-        <button
-          type="button"
-          onClick={() => setShowPwd(!showPwd)}
-          aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
-          style={{
-            position: "absolute",
-            right: 6,
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "rgba(232,184,75,0.15)",
-            border: "1px solid rgba(232,184,75,0.4)",
-            color: "#e8b84b",
-            fontSize: 22,
-            fontWeight: 700,
-            width: 64,
-            height: 64,
-            padding: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 12,
-            cursor: "pointer",
-          }}
-        >
-          {showPwd ? "🙈" : "👁️"}
-        </button>
-      </div>
-
-      <button
-        disabled={loading || !password}
-        className="btn-gold btn-big"
+    <div className="fade-up" style={{ textAlign: "left" }}>
+      {/* Magic-link primario (zero senha) */}
+      <div
         style={{
-          width: "100%",
-          opacity: loading || !password ? 0.55 : 1,
-          cursor: loading || !password ? "not-allowed" : "pointer",
-          border: "none",
+          background: "rgba(232,184,75,0.08)",
+          border: "2px solid rgba(232,184,75,0.5)",
+          borderRadius: 16,
+          padding: "24px 22px",
+          marginBottom: 18,
+          textAlign: "center",
         }}
       >
-        {loading ? t("auth.login_loading") : t("auth.login_cta")}
-      </button>
-    </form>
+        <div style={{ fontSize: 36, marginBottom: 10 }} aria-hidden="true">✉</div>
+        <p style={{ fontSize: 19, color: "#fbf8ff", lineHeight: 1.55, margin: "0 0 18px", fontWeight: 600 }}>
+          {t("thanks_pergunta.magic_link_intro")}
+        </p>
+        <button
+          onClick={sendMagic}
+          disabled={magicLoading || magicSent}
+          className="btn-gold btn-big"
+          style={{
+            width: "100%",
+            opacity: magicLoading || magicSent ? 0.55 : 1,
+            cursor: magicLoading || magicSent ? "not-allowed" : "pointer",
+            border: "none",
+          }}
+        >
+          {magicSent ? t("thanks_pergunta.resend_sent") : magicLoading ? t("thanks_pergunta.resend_loading") : t("thanks_pergunta.magic_link_cta")}
+        </button>
+        <p style={{ fontSize: 14, color: "#c4b5fd", margin: "12px 0 0", lineHeight: 1.5 }}>
+          {t("thanks_pergunta.magic_link_hint")}
+        </p>
+      </div>
+
+      {/* Divisor "ou" */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0 18px", color: "#9575cd", fontSize: 14 }}>
+        <div style={{ flex: 1, height: 1, background: "rgba(196,181,253,0.25)" }} />
+        <span>{t("auth.or")}</span>
+        <div style={{ flex: 1, height: 1, background: "rgba(196,181,253,0.25)" }} />
+      </div>
+
+      {/* Fallback: login com senha */}
+      <form onSubmit={handleLogin} className="card" style={{ padding: "26px 22px", textAlign: "left" }}>
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 8 }}>
+          {t("auth.email_label")}
+        </label>
+        <input className="input input-big" type="email" value={email} disabled style={{ marginBottom: 18, opacity: 0.85 }} />
+
+        <label style={{ display: "block", color: "#fbf8ff", fontSize: 17, fontWeight: 700, marginBottom: 8 }}>
+          {t("auth.password_label")}
+        </label>
+        <div style={{ position: "relative", marginBottom: 20 }}>
+          <input
+            className="input input-big"
+            type={showPwd ? "text" : "password"}
+            placeholder={t("auth.password_placeholder")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            style={{ paddingRight: 110 }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPwd(!showPwd)}
+            aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
+            style={{
+              position: "absolute",
+              right: 6,
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "rgba(232,184,75,0.15)",
+              border: "1px solid rgba(232,184,75,0.4)",
+              color: "#e8b84b",
+              fontSize: 22,
+              fontWeight: 700,
+              width: 64,
+              height: 56,
+              padding: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 12,
+              cursor: "pointer",
+            }}
+          >
+            {showPwd ? "🙈" : "👁️"}
+          </button>
+        </div>
+
+        <button
+          disabled={loading || !password}
+          style={{
+            width: "100%",
+            padding: "16px",
+            borderRadius: 14,
+            border: "2px solid rgba(232,184,75,0.5)",
+            background: "transparent",
+            color: "#e8b84b",
+            fontSize: 17,
+            fontWeight: 600,
+            cursor: loading || !password ? "not-allowed" : "pointer",
+            opacity: loading || !password ? 0.55 : 1,
+          }}
+        >
+          {loading ? t("auth.login_loading") : t("auth.login_cta")}
+        </button>
+      </form>
+    </div>
   );
 }
 

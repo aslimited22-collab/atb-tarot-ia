@@ -28,6 +28,18 @@ export async function GET(req: Request) {
     const { error, data } = await supabase.auth.verifyOtp({ type, token_hash });
     if (!error && data.session) {
       logInfo("auth.callback", "otp verified", { userId: data.user?.id, type });
+      // Reconcilia créditos de pergunta avulsa que ficaram órfãs.
+      // Idempotente: se webhook já creditou, watermark evita duplicar.
+      // Cobre cliente que comprou pergunta1/3/7 antes de existir conta.
+      if (data.user?.id && data.user.email) {
+        try {
+          const { reconcileChatCredits } = await import("@/lib/reconcileCredits");
+          const { createAdminClient } = await import("@/lib/supabase/admin");
+          await reconcileChatCredits(createAdminClient(), data.user.id, data.user.email);
+        } catch (e) {
+          logWarn("auth.callback", "reconcile failed", { error: String(e) });
+        }
+      }
       return NextResponse.redirect(new URL(next, url.origin));
     }
     logWarn("auth.callback", "otp invalid", { error: error?.message, type });

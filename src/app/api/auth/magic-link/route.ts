@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { email?: string };
+  let body: { email?: string; next?: string };
   try {
     body = await req.json();
   } catch {
@@ -40,6 +40,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid email" }, { status: 400 });
   }
 
+  // Whitelist de paths pra evitar open redirect.
+  // Default: /dashboard. Aceito quando vem de obrigado-pergunta: /dashboard/chat?welcome=pergunta.
+  const safeNext = ((): string => {
+    const candidate = body.next || "/dashboard";
+    if (!candidate.startsWith("/dashboard")) return "/dashboard";
+    return candidate;
+  })();
+
   const supabase = createClient();
   const baseUrl = getSiteUrl(req);
 
@@ -48,7 +56,7 @@ export async function POST(req: Request) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${baseUrl}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${baseUrl}/auth/callback?next=${encodeURIComponent(safeNext)}`,
       shouldCreateUser: true,
     },
   });

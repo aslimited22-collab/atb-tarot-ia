@@ -80,11 +80,12 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
   const admin = createAdminClient();
   const siteUrl = getSiteUrl(req);
 
-  // Janela: purchases criadas entre 2h e 7d atrás, sem follow-up enviado
-  // (2h é o mínimo seguro pra deixar webhook processar; antes era 24h mas era tarde demais
-  // pra 60+ que desiste rápido e contacta WhatsApp confusa)
-  const min = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-  const max = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
+  // Janela: purchases criadas entre 1h e 30d atrás, sem follow-up enviado.
+  // 1h dá o webhook processar; 30d pega clientes 60+ que abandonaram o carrinho
+  // por semanas (paguei mas nunca usei) — fluxo de pergunta avulsa é o pior
+  // ofensor porque a senha auto-gerada quebrava sessão depois de 1 dia.
+  const min = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+  const max = new Date(Date.now() - 1 * 3600 * 1000).toISOString();
 
   const { data: pending, error } = await admin
     .from("purchases")
@@ -169,6 +170,26 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
         // Coluna locale pode nao existir em deploys antigos; mantém "pt" default
       }
 
+      // Gera magic-link 1-clique pra remover qualquer fricção de senha (60+ esquece).
+      // Pra pergunta avulsa direciona pro chat; outros produtos vão pro dashboard.
+      let magicLink: string | undefined;
+      try {
+        const nextPath = productType === "pergunta"
+          ? "/dashboard/chat?welcome=pergunta"
+          : "/dashboard";
+        const { data: linkData } = await admin.auth.admin.generateLink({
+          type: "magiclink",
+          email: p.email.toLowerCase(),
+          options: {
+            redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+          },
+        });
+        magicLink = (linkData as { properties?: { action_link?: string } } | null)
+          ?.properties?.action_link;
+      } catch (e) {
+        logWarn("cron.follow-up", "magic-link gen failed", { email: p.email, error: String(e) });
+      }
+
       // Cliente NÃO acessou — envia email de resgate (na lingua do user)
       const { subject, html } = buildRecoveryEmail({
         product: productType,
@@ -176,6 +197,7 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
         name: p.name,
         siteUrl,
         locale: userLocale,
+        magicLink,
       });
 
       const result = await sendCustomerEmailWithLog({

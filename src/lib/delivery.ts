@@ -134,7 +134,7 @@ export async function deliverLimpezaOrder(input: DeliverInput): Promise<DeliverR
   if (process.env.RESEND_API_KEY && input.email) {
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
-      const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+      const fromEmail = process.env.RESEND_FROM_EMAIL || "ATB <atb@atbtartot.com>";
       const firstName = ((input.name || "").split(" ")[0] || "querida alma").trim();
       const isPt = !input.locale || input.locale.startsWith("pt");
 

@@ -12,8 +12,13 @@ export const dynamic = "force-dynamic";
  *
  * 3 estados possíveis:
  *  - `logged-with-credits`: já tem conta + créditos creditados → CTA pra /dashboard/chat
- *  - `account-exists`: não logado, email tem conta → form login
- *  - `needs-signup`: não logado, sem conta → form signup (cria conta + concede créditos das purchases pendentes)
+ *  - `check-email`: cliente caiu aqui mas o email com magic-link foi enviado pelo webhook → mostra "Verifique seu email"
+ *  - `account-exists`: não logado, email tem conta → magic-link primário + form login fallback
+ *  - `needs-signup`: não logado, sem conta + sem email → fallback raro (signup manual)
+ *
+ * NOTA: o AutoCreate com senha auto-gerada foi removido. Senha que cliente nunca via
+ * era o principal bloqueio pra 60+ que perdia sessão (refresh, mudou pra celular).
+ * Agora o webhook Kiwify gera magic-link no welcome email — cliente entra em 1 toque.
  */
 export default async function ObrigadoPerguntaPage({
   searchParams,
@@ -73,12 +78,12 @@ export default async function ObrigadoPerguntaPage({
     }
   }
 
-  // Sem conta + temos email + nome da Kiwify → auto-cria e manda direto pro chat
-  // (zero fricção pra 60+ que pagou e quer fazer a pergunta NA HORA)
-  if (customerEmail && customerName) {
-    return <ObrigadoPerguntaClient mode="auto-create" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} />;
+  // Sem conta + temos email da Kiwify → cliente vai entrar pelo magic-link do email.
+  // Não criamos conta com senha aleatória aqui. Mostra tela "Verifique seu email".
+  if (customerEmail) {
+    return <ObrigadoPerguntaClient mode="check-email" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} />;
   }
 
-  // Sem conta + falta info → fallback pro signup manual
+  // Sem email — fallback raro (cliente chegou aqui direto via URL sem params)
   return <ObrigadoPerguntaClient mode="needs-signup" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} />;
 }

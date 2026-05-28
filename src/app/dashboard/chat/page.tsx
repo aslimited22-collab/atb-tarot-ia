@@ -47,7 +47,6 @@ export default function ChatPage() {
   const [loading, setLoading]   = useState(true);
   const [sending, setSending]   = useState(false);
   const [remaining, setRemaining] = useState<number>(-1);
-  const [name, setName]         = useState("Alma");
   const [plan, setPlan]         = useState("free");
   const [usingCredits, setUsingCredits] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -63,7 +62,6 @@ export default function ChatPage() {
     fetch("/api/chat").then((r) => r.json()).then((d) => {
       setMessages(d.messages || []);
       setRemaining(d.remaining ?? -1);
-      if (d.name) setName(d.name);
       if (d.plan) setPlan(d.plan);
       if (typeof d.usingCredits === "boolean") setUsingCredits(d.usingCredits);
       // Upsell: free sem créditos OU acabou de gastar todos os créditos avulsos
@@ -99,13 +97,10 @@ export default function ChatPage() {
     if (!text || sending) return;
     setInput(""); setSending(true); setShowUpgrade(false);
 
+    // Push user msg + assistant typing bubble. ATB começa a falar via streaming —
+    // sem pre-rolagem hardcoded "Olá Querida Alma" + 7s de pausa (era robótico).
+    // O system prompt já varia naturalmente a abertura.
     setMessages((m) => [...m, { role:"user", content:text }, { role:"assistant", content:"", typing:true }]);
-    await sleep(7000);
-    setMessages((m) => {
-      const c = [...m];
-      c[c.length-1] = { role:"assistant", content:`Olá, Querida Alma, ${name}` };
-      return [...c, { role:"assistant", content:"", typing:true }];
-    });
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 90_000);
@@ -119,13 +114,13 @@ export default function ChatPage() {
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: t("chat.toast.send_error") }));
         toast.error(err.error || t("chat.toast.send_error"));
-        setMessages((m) => m.slice(0,-3));
+        setMessages((m) => m.slice(0,-2));
         return;
       }
       const reader = res.body?.getReader();
       if (!reader) {
         toast.error(t("chat.toast.invalid_response"));
-        setMessages((m) => m.slice(0,-3));
+        setMessages((m) => m.slice(0,-2));
         return;
       }
       const decoder = new TextDecoder();
@@ -144,7 +139,7 @@ export default function ChatPage() {
     } catch (e: unknown) {
       const msg = e instanceof Error && e.name === "AbortError" ? t("chat.toast.timeout") : t("chat.toast.network");
       toast.error(msg);
-      setMessages((m) => m.slice(0,-3));
+      setMessages((m) => m.slice(0,-2));
     } finally {
       clearTimeout(timer);
       setSending(false);

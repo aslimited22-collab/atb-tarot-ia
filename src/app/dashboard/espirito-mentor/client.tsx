@@ -9,6 +9,23 @@ import { useT } from "@/lib/i18n/I18nProvider";
 
 type Msg = { id?: string; role: string; content: string };
 
+// Mesma lógica do /dashboard/chat e /limpeza: typing simulation pra ATB
+// "respirar" entre palavras como uma médium falando ao telefone.
+const CHAR_DELAY = 38;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+async function typeOut(text: string, onChar: (s: string) => void) {
+  let out = "";
+  for (let i = 0; i < text.length; i++) {
+    out += text[i];
+    onChar(out);
+    const ch = text[i];
+    const pause = (ch === "." || ch === "," || ch === "?" || ch === "!") ? CHAR_DELAY * 6
+      : (ch === " " && Math.random() < 0.08) ? CHAR_DELAY * 4
+      : CHAR_DELAY + Math.floor(Math.random() * 20);
+    await sleep(pause);
+  }
+}
+
 const MENTOR_DEFS = [
   { icon: "👼", nameKey: "espirito_dash.mentor1_name", powerKey: "espirito_dash.mentor1_power" },
   { icon: "🪶", nameKey: "espirito_dash.mentor2_name", powerKey: "espirito_dash.mentor2_power" },
@@ -88,6 +105,7 @@ export default function EspiritoMentorClient({
         return;
       }
 
+      // Acumula resposta inteira, depois typeOut pra simular digitação humana.
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       let acc = "";
@@ -95,8 +113,8 @@ export default function EspiritoMentorClient({
         const { done, value } = await reader.read();
         if (done) break;
         acc += decoder.decode(value, { stream: true });
-        setStreaming(acc);
       }
+      await typeOut(acc, setStreaming);
       setMessages((m) => [...m, { role: "assistant", content: acc }]);
       setStreaming("");
       setRemaining((r) => Math.max(0, r - 1));
