@@ -1,11 +1,21 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useT } from "@/lib/i18n/I18nProvider";
 
+// Wrapper porque useSearchParams precisa de Suspense em pages renderizadas
+// estaticamente (Next 14). Sem Suspense, build falha em /login no prerender.
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useT();
