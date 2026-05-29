@@ -90,7 +90,7 @@ export default function EsqueciSenhaPage() {
               className="input input-big"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
+              placeholder={t("auth.thanks_email_placeholder")}
               required
               autoComplete="email"
               inputMode="email"
