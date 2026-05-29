@@ -2,8 +2,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 export default function EsqueciSenhaPage() {
+  const { t } = useT();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -20,14 +22,14 @@ export default function EsqueciSenhaPage() {
       setLoading(false);
       if (!res.ok && res.status === 429) {
         const data = await res.json();
-        return toast.error(data.error || "Muitos pedidos. Aguarde uma hora.");
+        return toast.error(data.error || t("forgot.toast_rate"));
       }
       // SEMPRE mostra sucesso (mesmo se e-mail não existe — evita enumeration)
       setSent(true);
-      toast.success("Verifique seu e-mail ✨");
+      toast.success(t("forgot.toast_sent"));
     } catch {
       setLoading(false);
-      toast.error("Erro de rede");
+      toast.error(t("forgot.toast_network"));
     }
   }
 
@@ -46,10 +48,10 @@ export default function EsqueciSenhaPage() {
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ fontSize: 84, marginBottom: 16 }} aria-hidden="true">🔑</div>
           <h1 className="serif" style={{ fontSize: "clamp(2.4rem, 6vw, 3rem)", color: "#f5f0ff", lineHeight: 1.1, marginBottom: 12, fontWeight: 700 }}>
-            Esqueci minha senha
+            {t("forgot.h1")}
           </h1>
           <p style={{ color: "#fbf8ff", fontSize: 21, lineHeight: 1.55, fontWeight: 500 }}>
-            Digite seu e-mail. Você receberá um link para criar uma nova senha.
+            {t("forgot.desc")}
           </p>
         </div>
 
@@ -57,10 +59,10 @@ export default function EsqueciSenhaPage() {
           <div className="card" style={{ padding: "40px 32px", textAlign: "center" }}>
             <div style={{ fontSize: 80, marginBottom: 18 }} aria-hidden="true">💌</div>
             <h2 className="serif" style={{ fontSize: "1.7rem", color: "#e8b84b", marginBottom: 14, fontWeight: 700 }}>
-              Verifique seu e-mail
+              {t("forgot.sent_h1")}
             </h2>
             <p style={{ fontSize: 19, color: "#fbf8ff", lineHeight: 1.65, fontWeight: 500, marginBottom: 24 }}>
-              Se este e-mail estiver cadastrado, você receberá um link em alguns minutos. Confira também sua caixa de spam.
+              {t("forgot.sent_desc")}
             </p>
             <Link
               href="/login"
@@ -74,13 +76,13 @@ export default function EsqueciSenhaPage() {
                 border: "none",
               }}
             >
-              ← Voltar ao login
+              {t("forgot.back_login")}
             </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="card" style={{ padding: "40px 32px" }}>
             <label htmlFor="email" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>
-              Seu e-mail
+              {t("forgot.email_label")}
             </label>
             <input
               id="email"
@@ -106,7 +108,7 @@ export default function EsqueciSenhaPage() {
                 marginBottom: 18,
               }}
             >
-              {loading ? "Enviando..." : "✨ Enviar link de recuperação"}
+              {loading ? t("forgot.sending") : t("forgot.submit")}
             </button>
 
             <div style={{ textAlign: "center", marginTop: 18, paddingTop: 18, borderTop: "1px solid rgba(196,181,253,0.18)" }}>
@@ -122,7 +124,7 @@ export default function EsqueciSenhaPage() {
                   minHeight: 48,
                 }}
               >
-                ← Voltar ao login
+                {t("forgot.back_login")}
               </Link>
             </div>
           </form>

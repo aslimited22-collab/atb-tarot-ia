@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 export default function RedefinirSenhaPage() {
   const router = useRouter();
+  const { t } = useT();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -35,21 +37,21 @@ export default function RedefinirSenhaPage() {
       const { error } = await supabase.auth.updateUser({ password });
       setLoading(false);
       if (error) {
-        return toast.error(error.message || "Erro ao atualizar senha");
+        return toast.error(error.message || t("reset.toast_error"));
       }
-      toast.success("Senha atualizada ✨");
+      toast.success(t("reset.toast_success"));
       router.push("/dashboard");
       router.refresh();
     } catch {
       setLoading(false);
-      toast.error("Erro de rede");
+      toast.error(t("forgot.toast_network"));
     }
   }
 
   if (validSession === null) {
     return (
       <main style={{ background: "radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 70%)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
-        <div style={{ color: "#fbf8ff", fontSize: 19 }}>Carregando...</div>
+        <div style={{ color: "#fbf8ff", fontSize: 19 }}>{t("reset.loading")}</div>
       </main>
     );
   }
@@ -61,17 +63,17 @@ export default function RedefinirSenhaPage() {
           <div className="card" style={{ padding: "40px 32px", textAlign: "center" }}>
             <div style={{ fontSize: 72, marginBottom: 18 }} aria-hidden="true">⚠️</div>
             <h1 className="serif" style={{ fontSize: "1.8rem", color: "#fca5a5", marginBottom: 14, fontWeight: 700 }}>
-              Link expirado ou inválido
+              {t("reset.invalid_h1")}
             </h1>
             <p style={{ fontSize: 19, color: "#fbf8ff", lineHeight: 1.65, fontWeight: 500, marginBottom: 26 }}>
-              O link de recuperação pode ter expirado ou já foi usado. Solicite um novo abaixo.
+              {t("reset.invalid_desc")}
             </p>
             <Link
               href="/esqueci-senha"
               className="btn-gold btn-big"
               style={{ display: "block", textAlign: "center", textDecoration: "none", fontSize: 19, fontWeight: 800, border: "none" }}
             >
-              Solicitar novo link
+              {t("reset.request_new")}
             </Link>
           </div>
         </div>
@@ -85,16 +87,16 @@ export default function RedefinirSenhaPage() {
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ fontSize: 84, marginBottom: 16 }} aria-hidden="true">🔐</div>
           <h1 className="serif" style={{ fontSize: "clamp(2.4rem, 6vw, 3rem)", color: "#f5f0ff", lineHeight: 1.1, marginBottom: 12, fontWeight: 700 }}>
-            Nova senha
+            {t("reset.h1")}
           </h1>
           <p style={{ color: "#fbf8ff", fontSize: 21, lineHeight: 1.55, fontWeight: 500 }}>
-            Crie uma nova senha segura. Mínimo 8 caracteres.
+            {t("reset.desc")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="card" style={{ padding: "40px 32px" }}>
           <label htmlFor="password" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>
-            Nova senha
+            {t("reset.new_label")}
           </label>
           <div style={{ position: "relative", marginBottom: 14 }}>
             <input
@@ -103,7 +105,7 @@ export default function RedefinirSenhaPage() {
               className="input input-big"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo 8 caracteres"
+              placeholder={t("reset.new_ph")}
               required
               minLength={8}
               autoComplete="new-password"
@@ -112,7 +114,7 @@ export default function RedefinirSenhaPage() {
             <button
               type="button"
               onClick={() => setShowPwd(!showPwd)}
-              aria-label={showPwd ? "Esconder senha" : "Mostrar senha"}
+              aria-label={showPwd ? t("auth.password_hide_aria") : t("auth.password_show_aria")}
               style={{
                 position: "absolute",
                 right: 6,
@@ -136,7 +138,7 @@ export default function RedefinirSenhaPage() {
           </div>
 
           <label htmlFor="confirm" style={{ display: "block", color: "#fbf8ff", fontSize: 21, fontWeight: 700, marginBottom: 10 }}>
-            Confirme a nova senha
+            {t("reset.confirm_label")}
           </label>
           <input
             id="confirm"
@@ -144,14 +146,14 @@ export default function RedefinirSenhaPage() {
             className="input input-big"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Digite a senha de novo"
+            placeholder={t("reset.confirm_ph")}
             required
             minLength={8}
             style={{ marginBottom: 8 }}
           />
           {confirmPassword && !passwordsMatch && (
             <p role="alert" style={{ color: "#ff8a8a", fontSize: 17, marginBottom: 12, marginTop: 4, fontWeight: 600 }}>
-              <span aria-hidden="true">⚠️</span> As senhas não são iguais
+              <span aria-hidden="true">⚠️</span> {t("reset.mismatch")}
             </p>
           )}
 
@@ -166,7 +168,7 @@ export default function RedefinirSenhaPage() {
               marginTop: 18,
             }}
           >
-            {loading ? "Atualizando..." : "✨ Salvar nova senha"}
+            {loading ? t("reset.saving") : t("reset.submit")}
           </button>
         </form>
       </div>

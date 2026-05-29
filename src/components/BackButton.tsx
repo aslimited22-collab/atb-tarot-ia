@@ -1,6 +1,13 @@
+"use client";
 import Link from "next/link";
+import { useT } from "@/lib/i18n/I18nProvider";
 
-export function BackButton({ href = "/dashboard", label = "Voltar para o Painel" }: { href?: string; label?: string }) {
+// label opcional — se não passado, usa a tradução padrão "Voltar para o Painel"
+// no idioma do cliente. É client component (useT) mas pode ser usado dentro
+// de server components normalmente (hidrata no cliente, igual o resto da UI i18n).
+export function BackButton({ href = "/dashboard", label }: { href?: string; label?: string }) {
+  const { t } = useT();
+  const text = label ?? t("nav.back_panel");
   return (
     <Link
       href={href}
@@ -22,7 +29,7 @@ export function BackButton({ href = "/dashboard", label = "Voltar para o Painel"
       }}
     >
       <span style={{ fontSize: 20 }}>←</span>
-      <span>{label}</span>
+      <span>{text}</span>
     </Link>
   );
 }
