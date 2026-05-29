@@ -171,12 +171,14 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
       }
 
       // Gera magic-link 1-clique pra remover qualquer fricção de senha (60+ esquece).
-      // Pra pergunta avulsa direciona pro chat; outros produtos vão pro dashboard.
+      // Cada produto leva DIRETO pra sua tela (não pro dashboard genérico).
       let magicLink: string | undefined;
       try {
-        const nextPath = productType === "pergunta"
-          ? "/dashboard/chat?welcome=pergunta"
-          : "/dashboard";
+        const nextPath =
+          productType === "pergunta" ? "/dashboard/chat?welcome=pergunta" :
+          productType === "limpeza"  ? "/dashboard/limpeza-espiritual" :
+          productType === "espirito" ? "/dashboard/espirito-mentor" :
+          "/dashboard";
         const { data: linkData } = await admin.auth.admin.generateLink({
           type: "magiclink",
           email: p.email.toLowerCase(),

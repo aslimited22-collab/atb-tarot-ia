@@ -249,6 +249,90 @@ function LoggedWaiting() {
   );
 }
 
+// Magic-link 1-clique pra Limpeza — entra direto sem senha (público 60+).
+// Reutiliza as i18n keys genéricas de thanks_pergunta.magic_link_*/resend_*.
+function MagicLinkBox({ email }: { email: string }) {
+  const { t } = useT();
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function sendMagic() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, next: "/dashboard/limpeza-espiritual" }),
+      });
+      if (!res.ok) {
+        toast.error(t("thanks_pergunta.resend_error"));
+        setLoading(false);
+        return;
+      }
+      setSent(true);
+      toast.success(t("thanks_pergunta.resend_ok"));
+    } catch {
+      toast.error(t("thanks_pergunta.resend_error"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        background: "rgba(232,184,75,0.08)",
+        border: "2px solid rgba(232,184,75,0.5)",
+        borderRadius: 16,
+        padding: "24px 22px",
+        marginBottom: 18,
+        textAlign: "center",
+      }}
+    >
+      <div style={{ fontSize: 36, marginBottom: 10 }} aria-hidden="true">✉</div>
+      <p style={{ fontSize: 19, color: "#fbf8ff", lineHeight: 1.55, margin: "0 0 18px", fontWeight: 600 }}>
+        {t("thanks_pergunta.magic_link_intro")}
+      </p>
+      {sent ? (
+        <div
+          style={{
+            background: "rgba(232,184,75,0.15)",
+            border: "2px solid #e8b84b",
+            borderRadius: 12,
+            padding: "16px 18px",
+            textAlign: "left",
+          }}
+        >
+          <p style={{ fontSize: 17, fontWeight: 800, color: "#e8b84b", margin: "0 0 6px", textAlign: "center" }}>
+            ✉ {t("thanks_pergunta.resend_sent")}
+          </p>
+          <p
+            style={{ fontSize: 15, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}
+            dangerouslySetInnerHTML={{ __html: t("thanks_pergunta.resend_sent_card_body") }}
+          />
+        </div>
+      ) : (
+        <button
+          onClick={sendMagic}
+          disabled={loading}
+          className="btn-gold btn-big"
+          style={{
+            width: "100%",
+            opacity: loading ? 0.55 : 1,
+            cursor: loading ? "not-allowed" : "pointer",
+            border: "none",
+          }}
+        >
+          {loading ? t("thanks_pergunta.resend_loading") : t("thanks_pergunta.magic_link_cta")}
+        </button>
+      )}
+      <p style={{ fontSize: 14, color: "#c4b5fd", margin: "12px 0 0", lineHeight: 1.5 }}>
+        {t("thanks_pergunta.magic_link_hint")}
+      </p>
+    </div>
+  );
+}
+
 function AccountExists({ email, orderId }: { email: string; orderId: string }) {
   const router = useRouter();
   const { t } = useT();
@@ -281,6 +365,15 @@ function AccountExists({ email, orderId }: { email: string; orderId: string }) {
       <p style={{ fontSize: "1.2rem", color: "#fbf8ff", lineHeight: 1.65, marginBottom: 26, fontWeight: 500 }}>
         {t("thanks.exists_desc")}
       </p>
+
+      {/* Magic-link primário — entra sem senha */}
+      <MagicLinkBox email={email} />
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0", color: "#9575cd", fontSize: 14 }}>
+        <div style={{ flex: 1, height: 1, background: "rgba(196,181,253,0.25)" }} />
+        <span>{t("auth.or")}</span>
+        <div style={{ flex: 1, height: 1, background: "rgba(196,181,253,0.25)" }} />
+      </div>
 
       <form onSubmit={handleLogin} className="card" style={{ padding: "32px 26px", textAlign: "left" }}>
         <label style={{ display: "block", color: "#fbf8ff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{t("auth.email_label")}</label>
@@ -410,6 +503,16 @@ function NeedsSignup({ initialEmail, orderId }: { initialEmail: string; orderId:
         {t("thanks.signup_desc_part2")}{" "}
         <strong style={{ color: "#f5c860" }}>{t("thanks.signup_desc_part3")}</strong>.
       </p>
+
+      {/* Magic-link primário — cria conta + entra em 1 toque, sem senha.
+          Usa o email do pagamento (initialEmail) pra evitar mismatch. */}
+      {initialEmail ? <MagicLinkBox email={initialEmail} /> : null}
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0", color: "#9575cd", fontSize: 14 }}>
+        <div style={{ flex: 1, height: 1, background: "rgba(196,181,253,0.25)" }} />
+        <span>{t("auth.or")}</span>
+        <div style={{ flex: 1, height: 1, background: "rgba(196,181,253,0.25)" }} />
+      </div>
 
       <div style={{ background: "rgba(232,184,75,0.08)", border: "1px solid rgba(232,184,75,0.3)", borderRadius: 14, padding: "16px 20px", marginBottom: 22, textAlign: "left" }}>
         <p style={{ fontSize: 20, color: "#fbf8ff", lineHeight: 1.55, margin: 0, fontWeight: 500 }}>

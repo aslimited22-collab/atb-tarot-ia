@@ -382,9 +382,25 @@ export async function POST(req: Request) {
     });
 
     const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
-    // Fluxo legado V1 (sem order UUID) — usa email no link. Os clientes novos
-    // (V2) já usam orderId via /api/limpeza/preview que cria o order primeiro.
-    const accessLink = `${getSiteUrl(req)}/obrigado-limpeza?email=${encodeURIComponent(email.toLowerCase())}`;
+
+    // MAGIC-LINK 1-CLIQUE — cliente entra direto na Limpeza sem criar senha.
+    // Antes pedíamos signup+senha e o público 60+ ficava preso. admin.generateLink
+    // cria a conta se não existir e gera o token OTP que loga no clique.
+    let magicUrl = `${getSiteUrl(req)}/obrigado-limpeza?email=${encodeURIComponent(email.toLowerCase())}`;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email: email.toLowerCase(),
+        options: {
+          redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/limpeza-espiritual")}`,
+        },
+      });
+      const actionLink = (linkData as { properties?: { action_link?: string } } | null)
+        ?.properties?.action_link;
+      if (actionLink) magicUrl = actionLink;
+    } catch (e) {
+      logWarn("webhook.kiwify.v1.limpeza", "magic-link gen failed", { email, error: String(e) });
+    }
 
     const customerHtml = `
 <!DOCTYPE html>
@@ -395,48 +411,39 @@ export async function POST(req: Request) {
     <div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.4);">
       <div style="font-size:64px;margin-bottom:16px;">🕊️</div>
       <h1 style="font-family:'Cormorant Garamond',Georgia,serif;color:#e8b84b;font-size:32px;margin:0 0 12px;line-height:1.15;">
-        Sua Limpeza foi recebida
+        Sua Limpeza está pronta
       </h1>
       <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
         Olá, <strong style="color:#f5c860;">${escapeHtml(firstName)}</strong>!<br>
         Sua compra foi confirmada e os santos já estão preparando sua limpeza sagrada.
       </p>
-      <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 28px;">
-        Aperte no botão dourado abaixo para começar agora. É bem fácil:
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 28px;font-weight:600;">
+        Aperte o botão dourado abaixo. Você entra direto na sua Limpeza.<br>
+        <strong style="color:#e8b84b;">Não precisa criar senha.</strong>
       </p>
-      <a href="${accessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
-        ✨ Acessar minha Limpeza
+      <a href="${magicUrl}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:22px;padding:22px 38px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+        ✨ Entrar agora com 1 toque
       </a>
-    </div>
-
-    <!-- ⚠️ Aviso CRÍTICO — email da conta = email do pagamento -->
-    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
-      <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;line-height:1.3;">
-        ⚠️ IMPORTANTE — USE ESTE EMAIL
-      </p>
-      <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;font-weight:500;">
-        Crie sua conta com o <strong style="color:#e8b84b;">mesmo email que você usou no pagamento:</strong><br/>
-        <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email.toLowerCase())}</strong><br/>
-        <span style="font-size:14px;color:#c4b5fd;">Se usar email diferente, sua compra não vai aparecer.</span>
+      <p style="color:#c4b5fd;font-size:14px;margin:18px 0 0;line-height:1.5;">
+        Este botão te conecta direto. Se já tinha conta, entrou; se não tinha, criamos agora pra você.
       </p>
     </div>
 
-    <div style="background:rgba(232,184,75,0.08);border:1px solid rgba(232,184,75,0.3);border-radius:14px;padding:22px;margin-top:20px;">
-      <h2 style="color:#e8b84b;font-size:18px;margin:0 0 12px;font-family:Georgia,serif;">
-        ✦ O que vai acontecer agora
-      </h2>
-      <ol style="color:#fbf8ff;font-size:16px;line-height:1.75;padding-left:22px;margin:0;">
-        <li>Aperte o botão "Acessar minha Limpeza"</li>
-        <li>Crie sua conta (é só nome, email e uma senha)</li>
-        <li>Conte para ATB o que está sentindo</li>
-        <li>Receba sua leitura sagrada com a força dos santos</li>
-      </ol>
+    <div style="background:rgba(126,232,248,0.08);border:1.5px solid rgba(126,232,248,0.3);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
+      <p style="color:#7ee8f8;font-size:16px;font-weight:700;margin:0 0 8px;">💡 Se o botão não funcionar</p>
+      <p style="color:#fbf8ff;font-size:15px;line-height:1.6;margin:0;font-weight:500;">
+        Copie este link e cole no seu navegador:<br>
+        <span style="color:#c4b5fd;font-size:12px;word-break:break-all;">${escapeHtml(magicUrl)}</span>
+      </p>
+      <p style="color:#c4b5fd;font-size:14px;line-height:1.6;margin:12px 0 0;">
+        Ou responda este email — eu, ATB, recebo direto.
+      </p>
     </div>
 
     <div style="text-align:center;margin-top:28px;padding:20px;color:#9575cd;font-size:13px;line-height:1.6;font-style:italic;">
       Que Nossa Senhora Aparecida te cubra com seu manto sagrado.<br>
       Que São Miguel te proteja com sua espada divina.<br>
-      Estamos com você, minha querida alma. 💛
+      Estamos com você, minha querida alma.
     </div>
 
     <div style="text-align:center;margin-top:20px;color:#9575cd;font-size:12px;">
@@ -449,7 +456,7 @@ export async function POST(req: Request) {
     await sendCustomerEmailWithLog({
       scope: "webhook.kiwify.v1.limpeza",
       to: email.toLowerCase(),
-      subject: "🕊️ Sua Limpeza Espiritual está pronta",
+      subject: "🕊️ Sua Limpeza está pronta — entre com 1 toque",
       html: customerHtml,
       refId: orderId,
     });
