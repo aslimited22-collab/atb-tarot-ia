@@ -80,11 +80,13 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
   const admin = createAdminClient();
   const siteUrl = getSiteUrl(req);
 
-  // Janela: purchases criadas entre 1h e 30d atrás, sem follow-up enviado.
-  // 1h dá o webhook processar; 30d pega clientes 60+ que abandonaram o carrinho
-  // por semanas (paguei mas nunca usei) — fluxo de pergunta avulsa é o pior
-  // ofensor porque a senha auto-gerada quebrava sessão depois de 1 dia.
-  const min = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+  // Janela: purchases criadas entre 1h e 365d atrás, sem follow-up enviado.
+  // 1h dá o webhook processar. Janela larga (365d) garante que NENHUM cliente
+  // que pagou e nunca acessou fique pra trás — o filtro `follow_up_sent_at IS
+  // NULL` impede re-spam de quem já recebeu resgate. Foi ampliada de 30d→365d
+  // ao descobrir que 100% dos compradores de limpeza (alguns >30d) nunca
+  // acessaram por causa da fricção de senha (corrigida com magic-link).
+  const min = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString();
   const max = new Date(Date.now() - 1 * 3600 * 1000).toISOString();
 
   const { data: pending, error } = await admin
