@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -29,6 +29,9 @@ function LoginContent() {
   const [magicLoading, setMagicLoading] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
+  // Card visivel quando magic-link expirou (60+ nao notava o toast)
+  const [showExpiredCard, setShowExpiredCard] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   // Magic-link expirou? Mostra mensagem amigavel + pre-preenche email se vier na URL
   useEffect(() => {
@@ -36,10 +39,18 @@ function LoginContent() {
     const urlEmail = searchParams?.get("email");
     if (urlEmail && !email) setEmail(urlEmail.toLowerCase().trim());
     if (error === "expired") {
+      setShowExpiredCard(true);
       toast.error(t("auth.magic_expired"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Auto-focus campo email quando o card de expirado aparece
+  useEffect(() => {
+    if (showExpiredCard) {
+      emailInputRef.current?.focus();
+    }
+  }, [showExpiredCard]);
 
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
@@ -115,6 +126,28 @@ function LoginContent() {
           </p>
         </div>
 
+        {/* Card grande dourado quando magic-link expirou — 60+ precisa entender claramente */}
+        {showExpiredCard && (
+          <div
+            role="alert"
+            style={{
+              background: "linear-gradient(135deg, #e8b84b 0%, #c9950a 100%)",
+              color: "#1e0040",
+              padding: "20px 22px",
+              marginBottom: 18,
+              borderRadius: 16,
+              boxShadow: "0 8px 24px rgba(232,184,75,0.45)",
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, lineHeight: 1.2 }}>
+              ⏰ {t("auth.magic_expired_h1")}
+            </h3>
+            <p style={{ margin: 0, fontSize: 17, lineHeight: 1.55, fontWeight: 500 }}>
+              {t("auth.magic_expired_body")}
+            </p>
+          </div>
+        )}
+
         {/* Formulário */}
         <form onSubmit={handleSubmit} className="card" style={{ padding: "40px 32px" }}>
           <h2 className="serif" style={{ fontSize: "1.9rem", color: "#e8b84b", marginBottom: 18, textAlign: "center", fontWeight: 700 }}>
@@ -171,11 +204,16 @@ function LoginContent() {
           </label>
           <input
             id="email"
+            ref={emailInputRef}
             className="input input-big"
             type="email"
             placeholder={t("auth.thanks_email_placeholder")}
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              // Sumir card de expirado assim que o user comeca a digitar
+              if (showExpiredCard) setShowExpiredCard(false);
+            }}
             required
             autoComplete="email"
             inputMode="email"

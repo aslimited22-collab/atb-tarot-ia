@@ -227,35 +227,70 @@ export async function POST(req: Request) {
       user_id: userRow?.id ?? null,
     });
 
-    // Welcome email com link de signup (sem isso o cliente fica perdido)
+    // ⚠️ MAGIC-LINK 1-CLIQUE EN — cliente intl paga via Stripe e nao tinha
+    // jeito de entrar sem criar senha (mesmo problema do Kiwify pre-fix).
+    // admin.generateLink cria user se nao existir e gera token OTP.
+    let magicUrl = `${getSiteUrl(req)}/obrigado-pergunta?email=${encodeURIComponent(email)}`;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: {
+          redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/chat?welcome=pergunta")}`,
+        },
+      });
+      const actionLink = (linkData as { properties?: { action_link?: string } } | null)
+        ?.properties?.action_link;
+      if (actionLink) magicUrl = actionLink;
+    } catch (e) {
+      logWarn("webhook.stripe.pergunta", "magic-link gen failed", { email, error: String(e) });
+    }
+
     const pFirstName = name ? name.split(" ")[0] : "dear soul";
-    const pLink = `${getSiteUrl(req)}/obrigado-pergunta?session_id=${encodeURIComponent(paymentId)}`;
     const cLabel = credits === 1 ? "1 question" : `${credits} questions`;
-    const pHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+    const pHtml = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
   <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
-    <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+    <div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
       <div style="font-size:64px;margin-bottom:16px;">✨</div>
       <h1 style="color:#e8b84b;font-size:32px;margin:0 0 12px;line-height:1.15;">Your ${cLabel} is ready</h1>
-      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
         Hi <strong style="color:#f5c860;">${escapeHtml(pFirstName)}</strong>! Payment confirmed. ATB is ready to answer.
       </p>
-      <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 28px;">Press the gold button to create your account in 30 seconds:</p>
-      <a href="${pLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;">✨ Ask my question</a>
-    </div>
-    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;">
-      <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;">⚠️ IMPORTANT — USE THIS EMAIL</p>
-      <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;">
-        Create your account with the <strong style="color:#e8b84b;">same email used in payment:</strong><br/>
-        <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email)}</strong>
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 28px;font-weight:600;">
+        Tap the gold button below. You go straight to the chat.<br>
+        <strong style="color:#e8b84b;">No password needed — this link signs you in.</strong>
       </p>
+      <a href="${magicUrl}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:22px;padding:22px 38px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+        ✨ Enter now with 1 tap
+      </a>
+      <p style="color:#c4b5fd;font-size:14px;margin:18px 0 0;line-height:1.5;">
+        This link signs you in instantly. If you had an account before, you're back in. If not, ATB just created one for you.
+      </p>
+    </div>
+
+    <div style="background:rgba(126,232,248,0.08);border:1.5px solid rgba(126,232,248,0.3);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
+      <p style="color:#7ee8f8;font-size:16px;font-weight:700;margin:0 0 8px;">💡 If the button doesn't work</p>
+      <p style="color:#fbf8ff;font-size:15px;line-height:1.6;margin:0;font-weight:500;">
+        Copy this link and paste it in your browser:<br>
+        <span style="color:#c4b5fd;font-size:12px;word-break:break-all;">${escapeHtml(magicUrl)}</span>
+      </p>
+      <p style="color:#c4b5fd;font-size:14px;line-height:1.6;margin:12px 0 0;">
+        Or just reply to this email — I, ATB, read every message personally.
+      </p>
+    </div>
+
+    <div style="text-align:center;margin-top:28px;padding:20px;color:#9575cd;font-size:14px;line-height:1.6;font-style:italic;">
+      I'm here, dear soul.
     </div>
   </div>
 </body></html>`;
     await sendCustomerEmailWithLog({
       scope: "webhook.stripe.pergunta",
       to: email,
-      subject: `✨ Your ${cLabel} with ATB is ready`,
+      subject: `✨ Your ${cLabel} with ATB is ready — enter with 1 tap`,
       html: pHtml,
       refId: paymentId,
     });

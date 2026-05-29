@@ -5,7 +5,8 @@
 // Pra público 60+ isso elimina a barreira #1 (senha esquecida).
 // Backward-compat: login por senha continua funcionando em /api/auth/login.
 //
-// Rate limited: 5 envios / IP / hora (mesma config do reset-password).
+// Rate limited: 10 envios / IP / hora — subido de 5 pra acomodar 60+
+// que recarrega pagina varias vezes ou aperta "Reenviar" multiplas.
 
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -19,8 +20,8 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   const ip = getClientIp(req);
 
-  // 5 requests / IP / hora — previne flood
-  const rl = await rateLimit(`magic-link:${ip}`, 5, 60 * 60 * 1000);
+  // 10 requests / IP / hora — defensivo mas tolerante pra 60+ que repete
+  const rl = await rateLimit(`magic-link:${ip}`, 10, 60 * 60 * 1000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Muitos pedidos. Aguarde antes de tentar de novo." },

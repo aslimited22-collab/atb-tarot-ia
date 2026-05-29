@@ -132,19 +132,58 @@ function CheckEmail({ email }: { email: string }) {
       <p style={{ fontSize: 16, color: "#c4b5fd", lineHeight: 1.55, marginBottom: 24 }}>
         {t("thanks_pergunta.check_email_hint")}
       </p>
-      <button
-        onClick={resend}
-        disabled={loading || sent}
-        className="btn-gold btn-big"
+      {!sent && (
+        <button
+          onClick={resend}
+          disabled={loading}
+          className="btn-gold btn-big"
+          style={{
+            width: "100%",
+            opacity: loading ? 0.55 : 1,
+            cursor: loading ? "not-allowed" : "pointer",
+            border: "none",
+          }}
+        >
+          {loading ? t("thanks_pergunta.resend_loading") : t("thanks_pergunta.resend_cta")}
+        </button>
+      )}
+      {sent && (
+        // Card grande dourado visivel — 60+ precisa entender que algo importante aconteceu
+        <div
+          className="card"
+          style={{
+            background: "rgba(232,184,75,0.15)",
+            border: "2px solid #e8b84b",
+            padding: "20px 22px",
+            marginTop: 4,
+            textAlign: "left",
+          }}
+        >
+          <p style={{ fontSize: 18, fontWeight: 800, color: "#e8b84b", margin: "0 0 8px", textAlign: "center" }}>
+            ✉ {t("thanks_pergunta.resend_sent")}
+          </p>
+          <p
+            style={{ fontSize: 16, color: "#fbf8ff", lineHeight: 1.6, margin: 0, fontWeight: 500 }}
+            dangerouslySetInnerHTML={{ __html: t("thanks_pergunta.resend_sent_card_body") }}
+          />
+        </div>
+      )}
+      {/* CTA secundario — pra cliente que JA clicou no link e voltou aqui */}
+      <a
+        href={`/login?email=${encodeURIComponent(email)}`}
         style={{
-          width: "100%",
-          opacity: loading || sent ? 0.55 : 1,
-          cursor: loading || sent ? "not-allowed" : "pointer",
-          border: "none",
+          display: "block",
+          marginTop: 18,
+          color: "#c4b5fd",
+          fontSize: 16,
+          fontWeight: 600,
+          textDecoration: "underline",
+          padding: "12px 14px",
+          minHeight: 44,
         }}
       >
-        {sent ? t("thanks_pergunta.resend_sent") : loading ? t("thanks_pergunta.resend_loading") : t("thanks_pergunta.resend_cta")}
-      </button>
+        {t("thanks_pergunta.already_clicked_cta")}
+      </a>
     </div>
   );
 }
