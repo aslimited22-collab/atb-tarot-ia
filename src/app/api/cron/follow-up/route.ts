@@ -63,40 +63,75 @@ async function checkAuth(req: Request): Promise<{ ok: true; source: "cron" | "ad
   return { ok: false, reason: "missing or invalid auth" };
 }
 
+type RecoveryProduct = "pergunta" | "limpeza" | "subscription" | "espirito" | "videochamada";
+
 async function userAccessedProduct(
   admin: ReturnType<typeof createAdminClient>,
-  userId: string
+  userId: string,
+  product: RecoveryProduct
 ): Promise<boolean> {
-  // Checa se user tem atividade em qualquer chat
-  const [{ count: chat }, { count: limpeza }, { count: espirito }] = await Promise.all([
-    admin.from("chat_messages").select("*", { count: "exact", head: true }).eq("user_id", userId),
-    admin.from("limpeza_messages").select("*", { count: "exact", head: true }).eq("user_id", userId),
-    admin.from("espirito_messages").select("*", { count: "exact", head: true }).eq("user_id", userId),
+  // Acesso é PRODUTO-ESPECÍFICO. Um comprador de Limpeza que apenas mexeu no
+  // chat grátis NÃO acessou a Limpeza — logo PRECISA receber o resgate. Antes
+  // esta função checava QUALQUER atividade (chat/limpeza/espirito juntos), o
+  // que fazia o cron PULAR compradores de limpeza/espirito que só usaram o chat
+  // geral: eles pagaram, nunca abriram o produto, mas não recebiam o email.
+  const countOf = async (table: string): Promise<number> => {
+    const { count } = await admin
+      .from(table)
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
+    return count ?? 0;
+  };
+  if (product === "limpeza") return (await countOf("limpeza_messages")) > 0;
+  if (product === "espirito") return (await countOf("espirito_messages")) > 0;
+  // pergunta e Consulta Completa (subscription) são entregues no chat geral
+  if (product === "pergunta" || product === "subscription") return (await countOf("chat_messages")) > 0;
+  // videochamada não tem tabela de mensagens — usa atividade geral como proxy
+  const [chat, limpeza, espirito] = await Promise.all([
+    countOf("chat_messages"),
+    countOf("limpeza_messages"),
+    countOf("espirito_messages"),
   ]);
-  return (chat ?? 0) > 0 || (limpeza ?? 0) > 0 || (espirito ?? 0) > 0;
+  return chat > 0 || limpeza > 0 || espirito > 0;
 }
 
-async function processFollowUps(req: Request): Promise<NextResponse> {
+async function processFollowUps(req: Request, opts?: { resendPlan?: string }): Promise<NextResponse> {
   const admin = createAdminClient();
   const siteUrl = getSiteUrl(req);
+  const resendPlan = opts?.resendPlan;
 
-  // Janela: purchases criadas entre 1h e 365d atrás, sem follow-up enviado.
+  // Janela normal: purchases criadas entre 1h e 365d atrás, sem follow-up enviado.
   // 1h dá o webhook processar. Janela larga (365d) garante que NENHUM cliente
   // que pagou e nunca acessou fique pra trás — o filtro `follow_up_sent_at IS
   // NULL` impede re-spam de quem já recebeu resgate. Foi ampliada de 30d→365d
   // ao descobrir que 100% dos compradores de limpeza (alguns >30d) nunca
   // acessaram por causa da fricção de senha (corrigida com magic-link).
+  //
+  // Modo RESEND (admin: ?resend=<plan>): re-dispara pra um produto específico
+  // IGNORANDO follow_up_sent_at. Necessário pra alcançar clientes que foram
+  // MARCADOS como resolvidos mas nunca receberam email de fato (ex: comprador
+  // de limpeza pulado pelo antigo bug de "acesso genérico"). A duplicação é
+  // evitada checando email_outbox por ref_id no loop abaixo.
   const min = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString();
   const max = new Date(Date.now() - 1 * 3600 * 1000).toISOString();
 
-  const { data: pending, error } = await admin
-    .from("purchases")
-    .select("id, email, name, plan, created_at, user_id")
-    .in("event", SALE_EVENTS)
-    .gte("created_at", min)
-    .lte("created_at", max)
-    .is("follow_up_sent_at", null)
-    .limit(100);
+  const cols = "id, email, name, plan, created_at, user_id";
+  const { data: pending, error } = resendPlan
+    ? await admin
+        .from("purchases")
+        .select(cols)
+        .in("event", SALE_EVENTS)
+        .lte("created_at", max)
+        .eq("plan", resendPlan)
+        .limit(300)
+    : await admin
+        .from("purchases")
+        .select(cols)
+        .in("event", SALE_EVENTS)
+        .lte("created_at", max)
+        .gte("created_at", min)
+        .is("follow_up_sent_at", null)
+        .limit(100);
 
   if (error) {
     logError("cron.follow-up", "query failed", { error: error.message });
@@ -126,9 +161,23 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
         continue;
       }
 
+      // Modo resend: se JÁ existe um email de resgate registrado pra esta
+      // compra (mesmo ref_id), pula — evita 2º email pra quem já recebeu.
+      if (resendPlan) {
+        const { count: already } = await admin
+          .from("email_outbox")
+          .select("*", { count: "exact", head: true })
+          .eq("ref_id", p.id)
+          .eq("scope", "cron.follow-up");
+        if ((already ?? 0) > 0) {
+          skipped++;
+          continue;
+        }
+      }
+
       // Check se cliente já acessou produto. Se sim, pula (não precisa de resgate).
       if (p.user_id) {
-        const accessed = await userAccessedProduct(admin, p.user_id);
+        const accessed = await userAccessedProduct(admin, p.user_id, productType);
         if (accessed) {
           // Marca como "follow-up resolvido" pra não checar de novo
           await admin
@@ -146,7 +195,7 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
           .eq("email", p.email.toLowerCase())
           .maybeSingle();
         if (maybeUser?.id) {
-          const accessed = await userAccessedProduct(admin, maybeUser.id);
+          const accessed = await userAccessedProduct(admin, maybeUser.id, productType);
           if (accessed) {
             await admin
               .from("purchases")
@@ -228,10 +277,11 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
     }
   }
 
-  logInfo("cron.follow-up", "batch complete", { sent, skipped, errors: errors.length, total: pending.length });
+  logInfo("cron.follow-up", "batch complete", { mode: resendPlan ? `resend:${resendPlan}` : "normal", sent, skipped, errors: errors.length, total: pending.length });
 
   return NextResponse.json({
     ok: true,
+    mode: resendPlan ? `resend:${resendPlan}` : "normal",
     sent,
     skipped,
     errors: errors.length,
@@ -240,12 +290,28 @@ async function processFollowUps(req: Request): Promise<NextResponse> {
   });
 }
 
+// Planos válidos pro modo resend (?resend=<plan>). Whitelist evita query
+// arbitrária; só re-dispara pra produtos conhecidos.
+const RESEND_WHITELIST = new Set([
+  "limpeza", "limpeza_v2", "limpeza_v2_intl",
+  "espirito", "pergunta1", "pergunta3", "pergunta7",
+  "basic", "premium", "video_call", "videochamada",
+]);
+
+function parseResendPlan(req: Request): string | undefined {
+  try {
+    const v = new URL(req.url).searchParams.get("resend");
+    if (v && RESEND_WHITELIST.has(v)) return v;
+  } catch {}
+  return undefined;
+}
+
 export async function POST(req: Request) {
   const auth = await checkAuth(req);
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  return processFollowUps(req);
+  return processFollowUps(req, { resendPlan: parseResendPlan(req) });
 }
 
 // Vercel Cron usa GET por padrão
@@ -254,5 +320,5 @@ export async function GET(req: Request) {
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  return processFollowUps(req);
+  return processFollowUps(req, { resendPlan: parseResendPlan(req) });
 }
