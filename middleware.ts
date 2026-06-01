@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { localeFromSignals } from "@/lib/i18n/locales";
 
 // User-Agents de bots, scrapers e ferramentas de ataque
 const BOT_PATTERNS = [
@@ -63,24 +64,19 @@ export async function middleware(request: NextRequest) {
   }
 
   // ============================================================
-  // i18n: detecção de locale via Accept-Language + cookie
-  // Salva o locale detectado em cookie 'atb_locale' para o I18nProvider
-  // hidratar sem flicker. O I18nProvider continua sendo a fonte
-  // principal (localStorage) — middleware só ajuda no primeiro carregamento.
+  // i18n: detecção de locale (BR-first). Regra: inglês SÓ por geo-IP de país
+  // anglófono — nunca pelo idioma do aparelho (brasileira com celular em
+  // inglês precisa ver PORTUGUÊS). Ver localeFromSignals em lib/i18n/locales.
+  //
+  // Escolha MANUAL (LangSwitcher) marca cookie 'atb_locale_set=1' e é
+  // respeitada. Sem esse marcador, RE-DETECTAMOS por geo a cada load — assim
+  // um cookie 'en' grudado por bug antigo se auto-corrige pra 'pt' no Brasil.
   // ============================================================
-  const SUPPORTED = ["pt", "en", "es", "de", "it", "ja"] as const;
-  const existing = request.cookies.get("atb_locale")?.value;
-  if (!existing) {
-    const acceptLang = (request.headers.get("accept-language") || "").toLowerCase();
-    const country = (request.headers.get("x-vercel-ip-country") || "").toUpperCase();
-
-    let detected: typeof SUPPORTED[number] = "pt";
-    if (country === "BR" || acceptLang.startsWith("pt")) detected = "pt";
-    else if (acceptLang.startsWith("es") || ["ES", "AR", "MX", "CO", "CL", "PE"].includes(country)) detected = "es";
-    else if (acceptLang.startsWith("de") || ["DE", "AT", "CH"].includes(country)) detected = "de";
-    else if (acceptLang.startsWith("it") || country === "IT") detected = "it";
-    else if (acceptLang.startsWith("ja") || country === "JP") detected = "ja";
-    else if (acceptLang.startsWith("en") || ["US", "GB", "CA", "AU", "NZ", "IE"].includes(country)) detected = "en";
+  const explicitChoice = request.cookies.get("atb_locale_set")?.value === "1";
+  if (!explicitChoice) {
+    const acceptLang = request.headers.get("accept-language") || "";
+    const country = request.headers.get("x-vercel-ip-country") || "";
+    const detected = localeFromSignals(country, acceptLang);
 
     const response = await updateSession(request);
     response.cookies.set("atb_locale", detected, {

@@ -3,32 +3,31 @@
 
 import { cookies, headers } from "next/headers";
 import { dict, type TKey, translate } from "./dict";
-import { LOCALES, type Locale, DEFAULT_LOCALE } from "./locales";
+import { LOCALES, type Locale, DEFAULT_LOCALE, localeFromSignals } from "./locales";
 
 /**
  * Detecta o locale do request server-side, na ordem:
- *  1. cookie `atb_locale` (setado pelo middleware ou switcher client)
- *  2. header `Accept-Language`
+ *  1. escolha MANUAL (cookie `atb_locale_set=1` + `atb_locale`) — respeitada
+ *  2. geo-IP + Accept-Language via localeFromSignals (mesma regra do middleware:
+ *     inglês só por geo, ambíguo → pt). Ignora cookie auto pra bater com o
+ *     middleware e auto-corrigir 'en' grudado.
  *  3. fallback `pt`
  */
 export function getServerLocale(): Locale {
   try {
     const c = cookies();
+    const explicit = c.get("atb_locale_set")?.value === "1";
     const cookieLocale = c.get("atb_locale")?.value;
-    if (cookieLocale && (LOCALES as readonly string[]).includes(cookieLocale)) {
+    if (explicit && cookieLocale && (LOCALES as readonly string[]).includes(cookieLocale)) {
       return cookieLocale as Locale;
     }
   } catch {}
 
   try {
     const h = headers();
-    const al = (h.get("accept-language") || "").toLowerCase();
-    if (al.startsWith("pt")) return "pt";
-    if (al.startsWith("es")) return "es";
-    if (al.startsWith("de")) return "de";
-    if (al.startsWith("it")) return "it";
-    if (al.startsWith("ja")) return "ja";
-    if (al.startsWith("en")) return "en";
+    const country = h.get("x-vercel-ip-country") || "";
+    const al = h.get("accept-language") || "";
+    return localeFromSignals(country, al);
   } catch {}
 
   return DEFAULT_LOCALE;
