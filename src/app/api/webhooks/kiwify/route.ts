@@ -6,6 +6,7 @@ import { deliverLimpezaOrder, sendCustomerEmailWithLog } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
 import { getSiteUrl } from "@/lib/site-url";
 import { findUserByFuzzyEmail } from "@/lib/user-matching";
+import { reconcileChatCredits } from "@/lib/reconcileCredits";
 
 export const runtime = "nodejs";
 
@@ -300,6 +301,20 @@ export async function POST(req: Request) {
         if (actionLink) magicUrl = actionLink;
       } catch (e) {
         logWarn("webhook.kiwify.pergunta", "magic-link gen failed", { email, error: String(e) });
+      }
+
+      // Credita JÁ na compra — NÃO espera o cliente clicar no magic-link.
+      // generateLink acima garante que o user existe; reconcile soma as
+      // purchases pergunta e aplica o saldo + linka a purchase ao user.
+      // Idempotente (watermark chat_credits_total_purchased). Sem isto, quem
+      // não clicava no link ficava com saldo 0 e o chat escondia o campo de
+      // digitar → cliente pagava e não conseguia fazer a pergunta.
+      try {
+        const { data: pu } = await admin
+          .from("users").select("id").eq("email", email.toLowerCase()).maybeSingle();
+        if (pu?.id) await reconcileChatCredits(admin, pu.id, email.toLowerCase());
+      } catch (e) {
+        logWarn("webhook.kiwify.pergunta", "reconcile credits failed", { email, error: String(e) });
       }
 
       const pergCustomerHtml = `

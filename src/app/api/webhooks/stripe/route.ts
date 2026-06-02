@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { reconcileChatCredits } from "@/lib/reconcileCredits";
 import { getStripe } from "@/lib/stripe";
 import { deliverLimpezaOrder, sendCustomerEmailWithLog } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
@@ -196,13 +197,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "missing email" }, { status: 400 });
     }
     const credits = plan === "pergunta1" ? 1 : plan === "pergunta3" ? 3 : 7;
-    logInfo("webhook.stripe", "pergunta avulsa paid intl", { plan, email, currency, amountTotal, credits });
+    // Email SEMPRE em minúsculas pras operações de DB — purchases/users são
+    // gravados/casados em lowercase (igual ao Kiwify e ao reconcileCredits).
+    // Sem isto, email com maiúscula gravava purchase que o reconcile não achava.
+    const emailLc = email.toLowerCase();
+    logInfo("webhook.stripe", "pergunta avulsa paid intl", { plan, email: emailLc, currency, amountTotal, credits });
 
     // Se já existe user, credita direto
     const { data: userRow } = await admin
       .from("users")
       .select("id, chat_credits_balance, chat_credits_total_purchased")
-      .eq("email", email)
+      .eq("email", emailLc)
       .maybeSingle();
 
     if (userRow) {
@@ -218,7 +223,7 @@ export async function POST(req: Request) {
     }
 
     await admin.from("purchases").insert({
-      email,
+      email: emailLc,
       name: name ?? null,
       kiwify_order_id: paymentId, // reusa coluna pra Stripe session id
       plan,
@@ -234,7 +239,7 @@ export async function POST(req: Request) {
     try {
       const { data: linkData } = await admin.auth.admin.generateLink({
         type: "magiclink",
-        email,
+        email: emailLc,
         options: {
           redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/chat?welcome=pergunta")}`,
         },
@@ -244,6 +249,18 @@ export async function POST(req: Request) {
       if (actionLink) magicUrl = actionLink;
     } catch (e) {
       logWarn("webhook.stripe.pergunta", "magic-link gen failed", { email, error: String(e) });
+    }
+
+    // Credita JÁ na compra — NÃO espera o cliente clicar no magic-link.
+    // generateLink acima garante que o user existe; reconcile aplica o saldo a
+    // partir das purchases pergunta. Idempotente. Sem isto, quem não clicava no
+    // link ficava com saldo 0 e o chat escondia o input → pagava e não perguntava.
+    try {
+      const { data: pu } = await admin
+        .from("users").select("id").eq("email", emailLc).maybeSingle();
+      if (pu?.id) await reconcileChatCredits(admin, pu.id, emailLc);
+    } catch (e) {
+      logWarn("webhook.stripe.pergunta", "reconcile credits failed", { email, error: String(e) });
     }
 
     const pFirstName = name ? name.split(" ")[0] : "dear soul";
