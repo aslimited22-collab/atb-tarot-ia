@@ -207,7 +207,10 @@ async function processFollowUps(req: Request, opts?: { resendPlan?: string }): P
         }
       }
 
-      // Detecta locale do user (se conta existe) — fail-safe pra "pt" se schema/coluna inacessivel
+      // Idioma do e-mail de resgate. O template só tem PT/EN/ES — então es→es,
+      // e QUALQUER não-pt (en/de/it/ja...) cai em INGLÊS, que o estrangeiro
+      // entende, em vez de português. Fail-safe: "pt". O locale do user é
+      // capturado no login (dashboard) e na compra Stripe (por moeda).
       let userLocale: "pt" | "en" | "es" = "pt";
       try {
         const { data: ul } = await admin
@@ -215,8 +218,9 @@ async function processFollowUps(req: Request, opts?: { resendPlan?: string }): P
           .select("locale")
           .eq("email", p.email.toLowerCase())
           .maybeSingle();
-        if (ul && (ul as { locale?: string }).locale === "en") userLocale = "en";
-        else if (ul && (ul as { locale?: string }).locale === "es") userLocale = "es";
+        const loc = (ul as { locale?: string } | null)?.locale || "";
+        if (loc === "es") userLocale = "es";
+        else if (loc && loc !== "pt") userLocale = "en";
       } catch {
         // Coluna locale pode nao existir em deploys antigos; mantém "pt" default
       }

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { reconcileChatCredits } from "@/lib/reconcileCredits";
+import { getServerLocale } from "@/lib/i18n/server";
 import { Sidebar } from "@/components/Sidebar";
 import OnboardingTour from "@/components/OnboardingTour";
 import type { Plan } from "@/lib/types";
@@ -11,17 +12,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Reconcilia créditos de pergunta avulsa em QUALQUER entrada autenticada do
-  // dashboard — não só no chat. Garante que quem pagou e logou (por qualquer
-  // caminho: magic-link, senha, recovery) já tenha o saldo aplicado, sem
-  // depender de abrir o chat. Idempotente; falha-soft pra não quebrar o layout.
+  const { data: profile } = await supabase
+    .from("users").select("plan, email, locale").eq("id", user.id).maybeSingle();
+
+  // Pós-login em QUALQUER página do dashboard:
+  //  1) Reconcilia créditos de pergunta avulsa (não depende de abrir o chat).
+  //  2) Captura o IDIOMA REAL do cliente (geo/escolha) no registro. Antes todos
+  //     ficavam 'pt' e estrangeiro recebia e-mail/resgate em português. Atualiza
+  //     só quando difere. Tudo idempotente e falha-soft pra não quebrar o layout.
   try {
     const admin = createAdminClient();
     await reconcileChatCredits(admin, user.id, user.email || "");
+    const detected = getServerLocale();
+    if (profile && (profile as { locale?: string }).locale !== detected) {
+      await admin.from("users").update({ locale: detected }).eq("id", user.id);
+    }
   } catch {}
-
-  const { data: profile } = await supabase
-    .from("users").select("plan, email").eq("id", user.id).maybeSingle();
 
   const plan: Plan = (profile?.plan as Plan) || "free";
   const email = profile?.email || user.email || "";

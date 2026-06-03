@@ -103,10 +103,13 @@ export async function POST(req: Request) {
       .eq("email", email)
       .maybeSingle();
 
-    // Atualiza users.plan (cria o registro se não existir)
+    // Atualiza users.plan + captura idioma pela moeda (intl→en, BR→deixa pt).
+    // Pro e-mail de resgate sair na língua certa mesmo antes do login.
+    const subPatch: { plan: string; locale?: string } = { plan };
+    if (currency !== "brl") subPatch.locale = "en";
     const { error: usrErr } = await admin
       .from("users")
-      .update({ plan })
+      .update(subPatch)
       .eq("email", email);
     if (usrErr) {
       logWarn("webhook.stripe", "users.plan update failed", { plan, email, error: usrErr.message });
@@ -258,7 +261,16 @@ export async function POST(req: Request) {
     try {
       const { data: pu } = await admin
         .from("users").select("id").eq("email", emailLc).maybeSingle();
-      if (pu?.id) await reconcileChatCredits(admin, pu.id, emailLc);
+      if (pu?.id) {
+        await reconcileChatCredits(admin, pu.id, emailLc);
+        // Captura o idioma pela MOEDA (pré-login): BRL→pt, demais→en. Assim o
+        // e-mail de resgate sai na língua certa mesmo se a cliente nunca logar.
+        // Só grava quando é internacional (en) — não mexe no 'pt' default do BR.
+        const curLoc = (currency || "").toLowerCase() === "brl" ? "pt" : "en";
+        if (curLoc !== "pt") {
+          await admin.from("users").update({ locale: curLoc }).eq("id", pu.id);
+        }
+      }
     } catch (e) {
       logWarn("webhook.stripe.pergunta", "reconcile credits failed", { email, error: String(e) });
     }
