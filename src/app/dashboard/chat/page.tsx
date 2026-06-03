@@ -6,9 +6,13 @@ import { ChatBubble } from "@/components/ChatBubble";
 import { Skeleton } from "@/components/Skeleton";
 import { useT } from "@/lib/i18n/I18nProvider";
 
-type Msg = { id?: string; role: "user" | "assistant"; content: string; typing?: boolean };
+type Msg = { id?: string; role: "user" | "assistant"; content: string; typing?: boolean; created_at?: string };
 const CHAR_DELAY = 38;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+function fmtTime(iso?: string): string {
+  const d = iso ? new Date(iso) : new Date();
+  try { return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch { return ""; }
+}
 
 function UpgradeCard({ basicUrl, premiumUrl, pergunta3Url, isCreditsExhausted }: { basicUrl: string; premiumUrl: string; pergunta3Url: string; isCreditsExhausted?: boolean }) {
   const { t } = useT();
@@ -100,17 +104,24 @@ export default function ChatPage() {
     // Push user msg + assistant typing bubble. ATB começa a falar via streaming —
     // sem pre-rolagem hardcoded "Olá Querida Alma" + 7s de pausa (era robótico).
     // O system prompt já varia naturalmente a abertura.
-    setMessages((m) => [...m, { role:"user", content:text }, { role:"assistant", content:"", typing:true }]);
+    setMessages((m) => [...m, { role:"user", content:text, created_at: new Date().toISOString() }, { role:"assistant", content:"", typing:true }]);
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 90_000);
+    // Pausa humana: ATB "lê e pensa". O indicador "digitando…" fica visível por
+    // um tempo mínimo (sobreposto à latência da API via Promise.all — não somado),
+    // pra resposta não parecer instantânea/robótica.
+    const minThink = sleep(900 + Math.random() * 1400);
     try {
-      const res = await fetch("/api/chat", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ message:text }),
-        signal: controller.signal,
-      });
+      const [res] = await Promise.all([
+        fetch("/api/chat", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({ message:text }),
+          signal: controller.signal,
+        }),
+        minThink,
+      ]);
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: t("chat.toast.send_error") }));
         toast.error(err.error || t("chat.toast.send_error"));
@@ -130,8 +141,9 @@ export default function ChatPage() {
         if (done) break;
         full += decoder.decode(value, { stream:true });
       }
-      setMessages((m) => { const c=[...m]; c[c.length-1]={ role:"assistant", content:"" }; return c; });
-      await typeOut(full, (d) => setMessages((m) => { const c=[...m]; c[c.length-1]={ role:"assistant", content:d }; return c; }));
+      const atbTime = new Date().toISOString();
+      setMessages((m) => { const c=[...m]; c[c.length-1]={ role:"assistant", content:"", created_at: atbTime }; return c; });
+      await typeOut(full, (d) => setMessages((m) => { const c=[...m]; c[c.length-1]={ role:"assistant", content:d, created_at: atbTime }; return c; }));
       setRemaining((r) => (r>0 ? r-1 : 0));
       // Mostra UpgradeCard só quando free SEM créditos (evita confundir 60+
       // que acabou de comprar pergunta avulsa e ainda tem créditos restantes).
@@ -147,6 +159,8 @@ export default function ChatPage() {
   }
 
   const canSend = plan !== "free" || remaining > 0;
+  // Índice da última mensagem do usuário — recebe o "visto agora" (recibo de leitura).
+  const lastUserIdx = messages.map((m) => m.role).lastIndexOf("user");
 
   return (
     <div style={{ display:"flex", flexDirection:"column", background:"#120025" }} className="h-[calc(100vh-57px)] md:h-screen">
@@ -180,6 +194,10 @@ export default function ChatPage() {
           </div>
         </div>
         <h1 className="serif" style={{ fontSize: "1.7rem", color: "#f5f0ff", fontWeight: 700, margin: 0 }}>{t("chat.header")}</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 5 }}>
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 7px #22c55e", display: "inline-block", flexShrink: 0 }} aria-hidden="true" />
+          <span style={{ fontSize: 14, color: "#86efac", fontWeight: 600 }}>{t("chat.online_now")}</span>
+        </div>
       </div>
 
       <div ref={scrollRef} style={{ flex:1, overflowY:"auto", padding:"16px" }}>
@@ -229,7 +247,14 @@ export default function ChatPage() {
           <>
             {messages.map((m,i) => (
               <div key={i}>
-                <ChatBubble role={m.role} content={m.content} typing={m.typing} />
+                <ChatBubble
+                  role={m.role}
+                  content={m.content}
+                  typing={m.typing}
+                  time={m.typing ? undefined : fmtTime(m.created_at)}
+                  typingLabel={m.typing ? t("chat.typing_label") : undefined}
+                  seenLabel={m.role === "user" && i === lastUserIdx && i < messages.length - 1 ? t("chat.seen_now") : undefined}
+                />
                 {m.role === "assistant" && !m.typing && m.content && i === messages.length - 1 && plan !== "free" && (
                   <div style={{ margin:"12px 0 4px 0", display:"flex", justifyContent:"flex-start" }}>
                     <a href={VIDEO_URL}

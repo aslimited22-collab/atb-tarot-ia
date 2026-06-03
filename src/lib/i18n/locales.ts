@@ -98,3 +98,24 @@ export function saveLocale(locale: Locale) {
     document.cookie = `atb_locale_set=1; path=/; max-age=${maxAge}; samesite=lax`;
   }
 }
+
+// Nome "humano" de cada idioma, pra instruir o LLM a responder na língua certa.
+const LANG_NAMES: Record<Locale, string> = {
+  pt: "Brazilian Portuguese (português brasileiro)",
+  en: "English",
+  es: "Spanish (español)",
+  de: "German (Deutsch)",
+  it: "Italian (italiano)",
+  ja: "Japanese (日本語)",
+};
+
+/**
+ * System message que força a ATB a responder no idioma do cliente, mantendo
+ * a persona. Para `pt` retorna "" (default — o prompt já é em português).
+ * Injetada como system message extra nas rotas de chat (chat/limpeza/espirito).
+ */
+export function languageDirective(locale: Locale): string {
+  if (locale === "pt") return "";
+  const name = LANG_NAMES[locale] || "English";
+  return `LANGUAGE OVERRIDE — HIGHEST PRIORITY: The person you are talking to speaks ${name}. Reply ENTIRELY and ONLY in ${name}, naturally and fluently, keeping your warm mediumistic voice, your spiritual persona, your guides and your signature expressions (translate them into ${name}). NEVER reply in Portuguese to this person. NEVER mention language, translation, or that you are adapting — just speak ${name} as if it were natural to you.`;
+}

@@ -2,10 +2,19 @@ export function ChatBubble({
   role,
   content,
   typing,
+  time,
+  typingLabel,
+  seenLabel,
 }: {
   role: "user" | "assistant";
   content: string;
   typing?: boolean;
+  /** Horário pré-formatado HH:MM (estilo app de mensagem). */
+  time?: string;
+  /** Rótulo "ATB está digitando…" mostrado junto dos pontinhos. */
+  typingLabel?: string;
+  /** "visto agora" — mostrado só na última mensagem do usuário (recibo de leitura). */
+  seenLabel?: string;
 }) {
   const isUser = role === "user";
   return (
@@ -22,15 +31,44 @@ export function ChatBubble({
         style={{ fontSize: "1.05rem", lineHeight: "1.65" }}
       >
         {typing ? (
-          <span className="inline-flex gap-1 items-end h-5">
-            <span className="typing-dot" />
-            <span className="typing-dot" />
-            <span className="typing-dot" />
+          <span className="inline-flex gap-2 items-center h-5">
+            {typingLabel && (
+              <span style={{ fontSize: "0.85rem", opacity: 0.75, fontStyle: "italic" }}>{typingLabel}</span>
+            )}
+            <span className="inline-flex gap-1 items-end">
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </span>
           </span>
         ) : (
-          content
+          <>
+            {content}
+            {time && (
+              <span
+                style={{
+                  display: "block",
+                  textAlign: "right",
+                  fontSize: "0.7rem",
+                  opacity: 0.6,
+                  marginTop: 4,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {time}
+                {isUser && (
+                  <span style={{ color: "#7ee8f8", marginLeft: 4 }} aria-hidden="true">✓✓</span>
+                )}
+              </span>
+            )}
+          </>
         )}
       </div>
+      {isUser && seenLabel && !typing && (
+        <span style={{ alignSelf: "flex-end", fontSize: "0.7rem", color: "#7ee8f8", marginLeft: 6, marginBottom: 2 }}>
+          {seenLabel}
+        </span>
+      )}
     </div>
   );
 }

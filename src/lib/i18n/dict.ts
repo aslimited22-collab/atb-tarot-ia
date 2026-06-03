@@ -535,6 +535,9 @@ export const dict = {
     // Chat (telas /dashboard/chat e /dashboard/oracle)
     "chat.back": "Painel",
     "chat.header": "💬 Converse com ATB",
+    "chat.online_now": "online agora",
+    "chat.typing_label": "ATB está digitando…",
+    "chat.seen_now": "Visto agora",
     "chat.empty_h1": "Olá, querida alma",
     "chat.empty_desc": "Pode me contar tudo. Estou aqui para te ouvir.",
     "chat.empty_hint": "Escreva sua pergunta no campo abaixo e aperte",
@@ -1445,6 +1448,9 @@ export const dict = {
     // Chat
     "chat.back": "Dashboard",
     "chat.header": "💬 Talk to ATB",
+    "chat.online_now": "online now",
+    "chat.typing_label": "ATB is typing…",
+    "chat.seen_now": "Seen just now",
     "chat.empty_h1": "Hello, dear soul",
     "chat.empty_desc": "You can tell me everything. I'm here to listen.",
     "chat.empty_hint": "Type your question below and tap",
@@ -2355,6 +2361,9 @@ export const dict = {
     // Chat
     "chat.back": "Panel",
     "chat.header": "💬 Habla con ATB",
+    "chat.online_now": "en línea ahora",
+    "chat.typing_label": "ATB está escribiendo…",
+    "chat.seen_now": "Visto ahora",
     "chat.empty_h1": "Hola, querida alma",
     "chat.empty_desc": "Puedes contármelo todo. Estoy aquí para escucharte.",
     "chat.empty_hint": "Escribe tu pregunta abajo y toca",
@@ -3265,6 +3274,9 @@ export const dict = {
     // Chat
     "chat.back": "Dashboard",
     "chat.header": "💬 Sprich mit ATB",
+    "chat.online_now": "jetzt online",
+    "chat.typing_label": "ATB schreibt…",
+    "chat.seen_now": "Gerade gesehen",
     "chat.empty_h1": "Hallo, liebe Seele",
     "chat.empty_desc": "Du kannst mir alles erzählen. Ich bin hier, um dir zuzuhören.",
     "chat.empty_hint": "Schreibe unten deine Frage und tippe auf",
@@ -4175,6 +4187,9 @@ export const dict = {
     // Chat
     "chat.back": "Pannello",
     "chat.header": "💬 Parla con ATB",
+    "chat.online_now": "online ora",
+    "chat.typing_label": "ATB sta scrivendo…",
+    "chat.seen_now": "Visto ora",
     "chat.empty_h1": "Ciao, cara anima",
     "chat.empty_desc": "Puoi raccontarmi tutto. Sono qui per ascoltarti.",
     "chat.empty_hint": "Scrivi la tua domanda qui sotto e tocca",
@@ -5085,6 +5100,9 @@ export const dict = {
     // チャット
     "chat.back": "ダッシュボード",
     "chat.header": "💬 ATBと話す",
+    "chat.online_now": "オンライン",
+    "chat.typing_label": "ATBが入力中…",
+    "chat.seen_now": "既読",
     "chat.empty_h1": "こんにちは、愛しい魂よ",
     "chat.empty_desc": "なんでも話してください。あなたのお話を聞きます。",
     "chat.empty_hint": "下に質問を書いてタップしてください:",

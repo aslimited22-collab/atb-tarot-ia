@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { LIMPEZA_GPT_SYSTEM_PROMPT, openaiStream } from "@/lib/openai";
 import { sanitizeInput, rateLimit, getClientIp } from "@/lib/security";
+import { getServerLocale } from "@/lib/i18n/server";
+import { languageDirective } from "@/lib/i18n/locales";
 
 export const runtime = "nodejs";
 
@@ -154,11 +156,15 @@ Use essas informações para chamá-la pelo nome, levar em conta a fase da vida 
       .single();
     const userMsgId = userMsgRow?.id as string | undefined;
 
+    // Idioma do cliente → ATB faz a limpeza na língua dele (persona intacta).
+    const langMsg = languageDirective(getServerLocale());
+
     let upstream: Response;
     try {
       upstream = await openaiStream([
         { role: "system", content: LIMPEZA_GPT_SYSTEM_PROMPT },
         { role: "system", content: profileContext },
+        ...(langMsg ? [{ role: "system" as const, content: langMsg }] : []),
         ...prior,
         { role: "user", content: message },
       ]);

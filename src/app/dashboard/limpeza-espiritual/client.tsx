@@ -128,12 +128,18 @@ export default function LimpezaClient({
     setInput("");
     setActiveCard(null);
 
+    // Pausa humana: ATB "lê e pensa" enquanto o indicador de digitação aparece
+    // (sobreposto à latência da API via Promise.all — não somado).
+    const minThink = sleep(1000 + Math.random() * 1500);
     try {
-      const res = await fetch("/api/limpeza", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed }),
-      });
+      const [res] = await Promise.all([
+        fetch("/api/limpeza", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: trimmed }),
+        }),
+        minThink,
+      ]);
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -200,6 +206,10 @@ export default function LimpezaClient({
           <strong style={{ color: "#f5c860" }}>{firstName}</strong>
           {t("limpeza_dash.chat_subtitle_part2")}
         </p>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 8 }}>
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 7px #22c55e", display: "inline-block" }} aria-hidden="true" />
+          <span style={{ fontSize: 14, color: "#86efac", fontWeight: 600 }}>{t("chat.online_now")}</span>
+        </div>
       </div>
 
       {/* Contador de mensagens */}

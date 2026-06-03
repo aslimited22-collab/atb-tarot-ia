@@ -5,6 +5,8 @@ import { ATB_SYSTEM_PROMPT, deepseekStream } from "@/lib/deepseek";
 import { MESSAGE_LIMITS_MONTH, THROTTLE_SECONDS, currentMonthKey } from "@/lib/plans";
 import { sanitizeInput, rateLimit, getClientIp } from "@/lib/security";
 import { reconcileChatCredits } from "@/lib/reconcileCredits";
+import { getServerLocale } from "@/lib/i18n/server";
+import { languageDirective } from "@/lib/i18n/locales";
 import type { Plan } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -142,10 +144,14 @@ export async function POST(req: Request) {
       .single();
     const userMsgId = userMsgRow?.id as string | undefined;
 
+    // Idioma do cliente → ATB responde na língua dele (persona intacta).
+    const langMsg = languageDirective(getServerLocale());
+
     let upstream: Response;
     try {
       upstream = await deepseekStream([
         { role: "system", content: ATB_SYSTEM_PROMPT },
+        ...(langMsg ? [{ role: "system" as const, content: langMsg }] : []),
         ...prior,
         { role: "user", content: message },
       ]);
