@@ -96,15 +96,32 @@ export async function POST(req: Request) {
     }
     logInfo("webhook.stripe", "international subscription paid", { plan, email, currency, amountTotal });
 
-    // Confere se user ja existia ANTES de update (pra decidir mandar welcome ou nao)
+    // Confere se user ja existia ANTES (pra decidir mandar welcome ou nao)
     const { data: existingUser } = await admin
       .from("users")
       .select("id, plan")
       .eq("email", email)
       .maybeSingle();
 
+    // Magic-link 1-toque: cria a conta (se nao existir) e loga DIRETO no chat.
+    // ORDEM CRITICA: gerar ANTES do update de plan. Senao, p/ assinante NOVO o
+    // user ainda nao existe na hora do update -> ficaria pago porem SEM plano e
+    // sem conta (foi o caso da cliente premium internacional que pagou e travou).
+    let subMagicUrl = `${getSiteUrl(req)}/cadastro?email=${encodeURIComponent(email)}`;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/chat")}` },
+      });
+      const actionLink = (linkData as { properties?: { action_link?: string } } | null)?.properties?.action_link;
+      if (actionLink) subMagicUrl = actionLink;
+    } catch (e) {
+      logWarn("webhook.stripe.subscription", "magic-link gen failed", { email, error: String(e) });
+    }
+
     // Atualiza users.plan + captura idioma pela moeda (intl→en, BR→deixa pt).
-    // Pro e-mail de resgate sair na língua certa mesmo antes do login.
+    // Agora o user existe com certeza (generateLink criou) -> o plano aplica.
     const subPatch: { plan: string; locale?: string } = { plan };
     if (currency !== "brl") subPatch.locale = "en";
     const { error: usrErr } = await admin
@@ -123,14 +140,13 @@ export async function POST(req: Request) {
       plan,
       event: `${plan}_purchased_intl`,
       amount_cents: amountTotal,
-      user_id: null,
+      user_id: existingUser?.id ?? null,
     });
 
     // Welcome email EN — cliente intl paga via Stripe e nao recebia nada antes
     // (so o Stripe receipt automatico). Espelha o que webhook Kiwify faz mas em EN.
     if (!existingUser) {
       const subFirstName = name ? name.split(" ")[0] : "dear soul";
-      const subAccessLink = `${getSiteUrl(req)}/cadastro?email=${encodeURIComponent(email)}`;
       const subProductName =
         plan === "premium" ? "Full Consultation with ATB" : "Basic Plan";
       // Preco amigavel: amountTotal vem em cents, currency pode ser usd/eur/jpy
@@ -159,9 +175,9 @@ export async function POST(req: Request) {
         ${escapeHtml(subPriceLabel)} · Cancel anytime · Charged via Stripe
       </p>
       <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 22px;">
-        Press the gold button to create your account in 30 seconds and start your reading:
+        Press the gold button below — you go straight in, no password needed:
       </p>
-      <a href="${subAccessLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;">✨ Talk to ATB now</a>
+      <a href="${subMagicUrl}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;">✨ Talk to ATB now</a>
     </div>
     <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;">
       <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;">⚠️ IMPORTANT — USE THIS EMAIL</p>
@@ -344,6 +360,22 @@ export async function POST(req: Request) {
       user_id: null,
     });
 
+    // Magic-link 1-toque: cria a conta e loga no painel. Assim o cliente intl
+    // tem conta + acesso (antes ficava so esperando o e-mail do Zoom). O painel
+    // /dashboard/videochamada nao existe — manda pro hub /dashboard.
+    let vMagicUrl = `${getSiteUrl(req)}/dashboard`;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard")}` },
+      });
+      const actionLink = (linkData as { properties?: { action_link?: string } } | null)?.properties?.action_link;
+      if (actionLink) vMagicUrl = actionLink;
+    } catch (e) {
+      logWarn("webhook.stripe.videochamada", "magic-link gen failed", { email, error: String(e) });
+    }
+
     // Welcome email EN pra videochamada US — cliente paga US$497 e precisa saber
     // que vai receber link Zoom/Meet em ate 24h (gerado manualmente por enquanto)
     const vFirstName = name ? name.split(" ")[0] : "dear soul";
@@ -375,6 +407,10 @@ export async function POST(req: Request) {
         <li>You reply choosing the slot that works best for you.</li>
         <li>On the scheduled day, click the video link — your private 1-hour session begins.</li>
       </ol>
+    </div>
+    <div style="text-align:center;margin-top:18px;">
+      <a href="${vMagicUrl}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:18px;padding:18px 32px;border-radius:14px;text-decoration:none;">✨ Access your account (1 tap)</a>
+      <p style="color:#c4b5fd;font-size:13px;margin:10px 0 0;">No password needed — this link signs you in.</p>
     </div>
     <div style="background:rgba(126,232,248,0.10);border:1px solid rgba(126,232,248,0.3);border-radius:12px;padding:18px;margin-top:16px;">
       <p style="color:#7ee8f8;font-size:15px;line-height:1.6;margin:0;">

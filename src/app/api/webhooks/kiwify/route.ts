@@ -513,10 +513,22 @@ export async function POST(req: Request) {
     });
 
     const espFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
-    // orderId em vez de email (LGPD: não vaza e-mail no navegador / referer)
-    const espAccessLink = orderId
+    // Magic-link 1-toque: cria a conta e loga DIRETO no Espírito Mentor, sem senha.
+    // Fallback: link por orderId (LGPD: não vaza e-mail no navegador / referer).
+    let espAccessLink = orderId
       ? `${getSiteUrl(req)}/obrigado-espirito?order=${encodeURIComponent(orderId)}`
       : `${getSiteUrl(req)}/obrigado-espirito?email=${encodeURIComponent(email.toLowerCase())}`;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email: email.toLowerCase(),
+        options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/espirito-mentor")}` },
+      });
+      const actionLink = (linkData as { properties?: { action_link?: string } } | null)?.properties?.action_link;
+      if (actionLink) espAccessLink = actionLink;
+    } catch (e) {
+      logWarn("webhook.kiwify.v1.espirito", "magic-link gen failed", { email, error: String(e) });
+    }
 
     const espCustomerHtml = `
 <!DOCTYPE html>
@@ -558,8 +570,7 @@ export async function POST(req: Request) {
         ✦ Como vai ser sua sessão
       </h2>
       <ol style="color:#fbf8ff;font-size:16px;line-height:1.75;padding-left:22px;margin:0;">
-        <li>Aperte o botão dourado acima</li>
-        <li>Crie sua conta (nome, email e senha)</li>
+        <li>Aperte o botão dourado acima — você entra direto, sem senha</li>
         <li>Conte para ATB quem você quer alcançar do outro lado</li>
         <li>Receba mensagem do seu guia espiritual</li>
       </ol>
@@ -625,9 +636,22 @@ export async function POST(req: Request) {
 
     // Welcome email pro cliente (antes só existia email pro admin — cliente ficava sem nada após pagar R$497)
     const vidFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
-    const vidAccessLink = orderId
+    // Magic-link 1-toque: cria a conta e loga no painel, sem senha. Fallback:
+    // link por orderId. (/dashboard/videochamada não existe → hub /dashboard.)
+    let vidAccessLink = orderId
       ? `${getSiteUrl(req)}/obrigado-videochamada?order=${encodeURIComponent(orderId)}`
       : `${getSiteUrl(req)}/obrigado-videochamada?email=${encodeURIComponent(email.toLowerCase())}`;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email: email.toLowerCase(),
+        options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard")}` },
+      });
+      const actionLink = (linkData as { properties?: { action_link?: string } } | null)?.properties?.action_link;
+      if (actionLink) vidAccessLink = actionLink;
+    } catch (e) {
+      logWarn("webhook.kiwify.v1.video", "magic-link gen failed", { email, error: String(e) });
+    }
 
     const vidCustomerHtml = `
 <!DOCTYPE html>
