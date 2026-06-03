@@ -119,3 +119,19 @@ export function languageDirective(locale: Locale): string {
   const name = LANG_NAMES[locale] || "English";
   return `LANGUAGE OVERRIDE — HIGHEST PRIORITY: The person you are talking to speaks ${name}. Reply ENTIRELY and ONLY in ${name}, naturally and fluently, keeping your warm mediumistic voice, your spiritual persona, your guides and your signature expressions (translate them into ${name}). NEVER reply in Portuguese to this person. NEVER mention language, translation, or that you are adapting — just speak ${name} as if it were natural to you.`;
 }
+
+/**
+ * Idioma do COMPRADOR a partir do país (geo-IP / endereço Stripe) + moeda.
+ * Usado nos webhooks pra gravar users.locale e escolher o idioma do e-mail.
+ * País conhecido → idioma dele. País presente mas desconhecido → inglês (não pt,
+ * pra não mandar português pra estrangeiro). Sem país → BRL=pt, demais=en.
+ */
+export function buyerLocale(country?: string | null, currency?: string | null): Locale {
+  const c = (country || "").toUpperCase();
+  if (c) {
+    const loc = localeFromSignals(c, "");
+    if (loc !== "pt" || c === "BR") return loc;
+    return "en"; // país presente, não-BR e não mapeado → inglês
+  }
+  return (currency || "").toLowerCase() === "brl" ? "pt" : "en";
+}

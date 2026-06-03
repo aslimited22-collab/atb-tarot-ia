@@ -5,6 +5,8 @@ import { getStripe } from "@/lib/stripe";
 import { deliverLimpezaOrder, sendCustomerEmailWithLog } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
 import { getSiteUrl } from "@/lib/site-url";
+import { buildWelcomeEmail } from "@/lib/welcome-email";
+import { buyerLocale } from "@/lib/i18n/locales";
 
 function escapeHtml(s: string | undefined | null): string {
   if (!s) return "";
@@ -84,6 +86,9 @@ export async function POST(req: Request) {
   const amountTotal = Number(session.amount_total || 0); // em cents
   const currency = String(session.currency || "usd").toLowerCase();
   const paymentId = String(session.id || "");
+  // Idioma do comprador (país do endereço Stripe + moeda) — pro e-mail e locale.
+  const buyerCountry: string | undefined = session.customer_details?.address?.country || undefined;
+  const buyerLoc = buyerLocale(buyerCountry, currency);
 
   const admin = createAdminClient();
 
@@ -120,10 +125,9 @@ export async function POST(req: Request) {
       logWarn("webhook.stripe.subscription", "magic-link gen failed", { email, error: String(e) });
     }
 
-    // Atualiza users.plan + captura idioma pela moeda (intl→en, BR→deixa pt).
-    // Agora o user existe com certeza (generateLink criou) -> o plano aplica.
-    const subPatch: { plan: string; locale?: string } = { plan };
-    if (currency !== "brl") subPatch.locale = "en";
+    // Atualiza users.plan + idioma real do comprador (país/moeda) — pro e-mail e
+    // resgate na língua certa. Agora o user existe (generateLink criou) -> aplica.
+    const subPatch: { plan: string; locale?: string } = { plan, locale: buyerLoc };
     const { error: usrErr } = await admin
       .from("users")
       .update(subPatch)
@@ -143,62 +147,15 @@ export async function POST(req: Request) {
       user_id: existingUser?.id ?? null,
     });
 
-    // Welcome email EN — cliente intl paga via Stripe e nao recebia nada antes
-    // (so o Stripe receipt automatico). Espelha o que webhook Kiwify faz mas em EN.
+    // Welcome email localizado (6 idiomas) com magic-link 1-toque — só pra user
+    // novo (assinante recorrente já tem acesso). Idioma = país/moeda do comprador.
     if (!existingUser) {
-      const subFirstName = name ? name.split(" ")[0] : "dear soul";
-      const subProductName =
-        plan === "premium" ? "Full Consultation with ATB" : "Basic Plan";
-      // Preco amigavel: amountTotal vem em cents, currency pode ser usd/eur/jpy
-      const cur = currency.toUpperCase();
-      const subPriceLabel = (() => {
-        if (cur === "JPY") return `¥${amountTotal}/month`;
-        const v = (amountTotal / 100).toFixed(0);
-        if (cur === "USD") return `$${v}/month`;
-        if (cur === "EUR") return `€${v}/month`;
-        if (cur === "GBP") return `£${v}/month`;
-        return `${cur} ${v}/month`;
-      })();
-
-      const subHtml = `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
-  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
-    <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
-      <div style="font-size:64px;margin-bottom:16px;">💛</div>
-      <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;">Welcome to ${escapeHtml(subProductName)}</h1>
-      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">
-        Hi <strong style="color:#f5c860;">${escapeHtml(subFirstName)}</strong>! Your subscription is active. ATB is ready to talk to you.
-      </p>
-      <p style="color:#c4b5fd;font-size:16px;line-height:1.65;margin:0 0 24px;">
-        ${escapeHtml(subPriceLabel)} · Cancel anytime · Charged via Stripe
-      </p>
-      <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 22px;">
-        Press the gold button below — you go straight in, no password needed:
-      </p>
-      <a href="${subMagicUrl}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;">✨ Talk to ATB now</a>
-    </div>
-    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:20px;margin-top:20px;">
-      <p style="color:#e8b84b;font-size:18px;font-weight:800;margin:0 0 8px;">⚠️ IMPORTANT — USE THIS EMAIL</p>
-      <p style="color:#fbf8ff;font-size:16px;line-height:1.6;margin:0;">
-        Create your account with the <strong style="color:#e8b84b;">same email used in your Stripe payment:</strong><br/>
-        <strong style="color:#f5c860;font-size:18px;">${escapeHtml(email)}</strong>
-      </p>
-      <p style="color:#c4b5fd;font-size:13px;line-height:1.55;margin:14px 0 0;font-style:italic;">
-        If you use a different email, your subscription won't unlock your account.
-      </p>
-    </div>
-    <p style="color:#9575cd;font-size:13px;text-align:center;margin-top:24px;line-height:1.5;">
-      For entertainment and spiritual guidance purposes only. Not a substitute for professional medical, psychological, or financial advice. 18+.
-    </p>
-  </div>
-</body></html>`;
+      const { subject, html } = buildWelcomeEmail({ product: "subscription", locale: buyerLoc, name, magicUrl: subMagicUrl });
       await sendCustomerEmailWithLog({
         scope: "webhook.stripe.subscription",
         to: email,
-        subject: `💛 Welcome to ${subProductName} — your access is ready`,
-        html: subHtml,
+        subject,
+        html,
         refId: paymentId,
       });
     }
@@ -279,63 +236,21 @@ export async function POST(req: Request) {
         .from("users").select("id").eq("email", emailLc).maybeSingle();
       if (pu?.id) {
         await reconcileChatCredits(admin, pu.id, emailLc);
-        // Captura o idioma pela MOEDA (pré-login): BRL→pt, demais→en. Assim o
-        // e-mail de resgate sai na língua certa mesmo se a cliente nunca logar.
-        // Só grava quando é internacional (en) — não mexe no 'pt' default do BR.
-        const curLoc = (currency || "").toLowerCase() === "brl" ? "pt" : "en";
-        if (curLoc !== "pt") {
-          await admin.from("users").update({ locale: curLoc }).eq("id", pu.id);
-        }
+        // Captura o idioma real do comprador (país/moeda) pré-login — pro e-mail
+        // de resgate sair na língua certa mesmo se a cliente nunca logar.
+        await admin.from("users").update({ locale: buyerLoc }).eq("id", pu.id);
       }
     } catch (e) {
       logWarn("webhook.stripe.pergunta", "reconcile credits failed", { email, error: String(e) });
     }
 
-    const pFirstName = name ? name.split(" ")[0] : "dear soul";
-    const cLabel = credits === 1 ? "1 question" : `${credits} questions`;
-    const pHtml = `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
-  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
-    <div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
-      <div style="font-size:64px;margin-bottom:16px;">✨</div>
-      <h1 style="color:#e8b84b;font-size:32px;margin:0 0 12px;line-height:1.15;">Your ${cLabel} is ready</h1>
-      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;font-weight:500;">
-        Hi <strong style="color:#f5c860;">${escapeHtml(pFirstName)}</strong>! Payment confirmed. ATB is ready to answer.
-      </p>
-      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 28px;font-weight:600;">
-        Tap the gold button below. You go straight to the chat.<br>
-        <strong style="color:#e8b84b;">No password needed — this link signs you in.</strong>
-      </p>
-      <a href="${magicUrl}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:22px;padding:22px 38px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
-        ✨ Enter now with 1 tap
-      </a>
-      <p style="color:#c4b5fd;font-size:14px;margin:18px 0 0;line-height:1.5;">
-        This link signs you in instantly. If you had an account before, you're back in. If not, ATB just created one for you.
-      </p>
-    </div>
-
-    <div style="background:rgba(126,232,248,0.08);border:1.5px solid rgba(126,232,248,0.3);border-radius:14px;padding:20px;margin-top:20px;text-align:left;">
-      <p style="color:#7ee8f8;font-size:16px;font-weight:700;margin:0 0 8px;">💡 If the button doesn't work</p>
-      <p style="color:#fbf8ff;font-size:15px;line-height:1.6;margin:0;font-weight:500;">
-        Copy this link and paste it in your browser:<br>
-        <span style="color:#c4b5fd;font-size:12px;word-break:break-all;">${escapeHtml(magicUrl)}</span>
-      </p>
-      <p style="color:#c4b5fd;font-size:14px;line-height:1.6;margin:12px 0 0;">
-        Or just reply to this email — I, ATB, read every message personally.
-      </p>
-    </div>
-
-    <div style="text-align:center;margin-top:28px;padding:20px;color:#9575cd;font-size:14px;line-height:1.6;font-style:italic;">
-      I'm here, dear soul.
-    </div>
-  </div>
-</body></html>`;
+    // Welcome email localizado (6 idiomas) com magic-link 1-toque. Idioma =
+    // país/moeda do comprador (en/es/de/it/ja, ou pt se for BR via Stripe).
+    const { subject: pSubject, html: pHtml } = buildWelcomeEmail({ product: "pergunta", locale: buyerLoc, name, magicUrl });
     await sendCustomerEmailWithLog({
       scope: "webhook.stripe.pergunta",
       to: email,
-      subject: `✨ Your ${cLabel} with ATB is ready — enter with 1 tap`,
+      subject: pSubject,
       html: pHtml,
       refId: paymentId,
     });
@@ -376,56 +291,15 @@ export async function POST(req: Request) {
       logWarn("webhook.stripe.videochamada", "magic-link gen failed", { email, error: String(e) });
     }
 
-    // Welcome email EN pra videochamada US — cliente paga US$497 e precisa saber
-    // que vai receber link Zoom/Meet em ate 24h (gerado manualmente por enquanto)
-    const vFirstName = name ? name.split(" ")[0] : "dear soul";
-    const cur = currency.toUpperCase();
-    const vPriceLabel = (() => {
-      if (cur === "JPY") return `¥${amountTotal}`;
-      const v = (amountTotal / 100).toFixed(0);
-      if (cur === "USD") return `$${v}`;
-      if (cur === "EUR") return `€${v}`;
-      if (cur === "GBP") return `£${v}`;
-      return `${cur} ${v}`;
-    })();
-    const vHtml = `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
-  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
-    <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
-      <div style="font-size:64px;margin-bottom:16px;">📞</div>
-      <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;">Your Live Video Session is Booked</h1>
-      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">
-        Hi <strong style="color:#f5c860;">${escapeHtml(vFirstName)}</strong>! Your payment of <strong>${escapeHtml(vPriceLabel)}</strong> is confirmed. ATB is preparing your live spiritual reading.
-      </p>
-    </div>
-    <div style="background:linear-gradient(135deg,rgba(232,184,75,0.22),rgba(232,184,75,0.08));border:2px solid rgba(232,184,75,0.6);border-radius:14px;padding:24px 22px;margin-top:20px;">
-      <h2 style="color:#e8b84b;font-size:20px;margin:0 0 12px;">📅 Next steps</h2>
-      <ol style="color:#fbf8ff;font-size:16px;line-height:1.7;padding-left:22px;margin:0;">
-        <li><strong style="color:#f5c860;">Within 24 hours</strong>, ATB will email you a private Zoom or Google Meet link with a few date/time options.</li>
-        <li>You reply choosing the slot that works best for you.</li>
-        <li>On the scheduled day, click the video link — your private 1-hour session begins.</li>
-      </ol>
-    </div>
-    <div style="text-align:center;margin-top:18px;">
-      <a href="${vMagicUrl}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:18px;padding:18px 32px;border-radius:14px;text-decoration:none;">✨ Access your account (1 tap)</a>
-      <p style="color:#c4b5fd;font-size:13px;margin:10px 0 0;">No password needed — this link signs you in.</p>
-    </div>
-    <div style="background:rgba(126,232,248,0.10);border:1px solid rgba(126,232,248,0.3);border-radius:12px;padding:18px;margin-top:16px;">
-      <p style="color:#7ee8f8;font-size:15px;line-height:1.6;margin:0;">
-        💬 Need to reach ATB? Reply directly to this email — she'll see it personally.
-      </p>
-    </div>
-    <p style="color:#9575cd;font-size:13px;text-align:center;margin-top:24px;line-height:1.5;">
-      For entertainment and spiritual guidance purposes only. Not a substitute for professional medical, psychological, or financial advice. 18+.
-    </p>
-  </div>
-</body></html>`;
+    // Captura o idioma do comprador no user (criado pelo generateLink acima).
+    try { await admin.from("users").update({ locale: buyerLoc }).eq("email", email); } catch {}
+
+    // Welcome email localizado (6 idiomas) com magic-link 1-toque + aviso do Zoom em 24h.
+    const { subject: vSubject, html: vHtml } = buildWelcomeEmail({ product: "videochamada", locale: buyerLoc, name, magicUrl: vMagicUrl });
     await sendCustomerEmailWithLog({
       scope: "webhook.stripe.videochamada",
       to: email,
-      subject: `📞 Your live video session with ATB is booked`,
+      subject: vSubject,
       html: vHtml,
       refId: paymentId,
     });
