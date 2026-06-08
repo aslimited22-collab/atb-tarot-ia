@@ -5,6 +5,7 @@ import { PlanBadge } from "@/components/PlanBadge";
 import { MESSAGE_LIMITS_MONTH, DAILY_LIMIT_FREE, currentMonthKey, currentDayKey, isPaidPlan } from "@/lib/plans";
 import { dailyLuckyNumbers } from "@/lib/numerology";
 import { reconcileChatCredits } from "@/lib/reconcileCredits";
+import { reconcileUserPlan } from "@/lib/reconcilePlan";
 import { getServerT } from "@/lib/i18n/server";
 import type { Plan } from "@/lib/types";
 
@@ -22,6 +23,9 @@ export default async function DashboardHome() {
   if (user) {
     const admin = createAdminClient();
     await reconcileChatCredits(admin, user.id, user.email || "");
+    // Cura o PLANO (basic/premium) a partir de `purchases` — cobre quem pagou
+    // antes de criar conta, entrou por magic-link, ou ficou preso em "free".
+    await reconcileUserPlan(admin, user.id, user.email || "");
   }
 
   const { data: profile } = await supabase

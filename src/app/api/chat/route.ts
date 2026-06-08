@@ -5,6 +5,7 @@ import { ATB_SYSTEM_PROMPT, deepseekStream } from "@/lib/deepseek";
 import { MESSAGE_LIMITS_MONTH, THROTTLE_SECONDS, currentMonthKey } from "@/lib/plans";
 import { sanitizeInput, rateLimit, getClientIp } from "@/lib/security";
 import { reconcileChatCredits } from "@/lib/reconcileCredits";
+import { reconcileUserPlan } from "@/lib/reconcilePlan";
 import type { Plan } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -63,6 +64,8 @@ export async function POST(req: Request) {
     // server-to-server creditar a conta (pode atrasar).
     const admin = createAdminClient();
     await reconcileChatCredits(admin, user.id, user.email || "");
+    // Cura o PLANO antes do gate de acesso — evita bloquear pagante preso em "free".
+    await reconcileUserPlan(admin, user.id, user.email || "");
 
     const { data: profile } = await supabase
       .from("users")
