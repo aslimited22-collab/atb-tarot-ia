@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateEmail, rateLimit, getClientIp } from "@/lib/security";
 import { reconcileChatCredits } from "@/lib/reconcileCredits";
+import { reconcileUserPlan } from "@/lib/reconcilePlan";
 import { logInfo, logWarn } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -85,29 +86,12 @@ export async function POST(req: Request) {
         .eq("email", normalizedEmail)
         .is("user_id", null);
 
-      // Se tem compra (subscriptions OU one-shots), liga ao user.
-      // Prioriza assinaturas (basic/premium) para definir users.plan.
-      // One-shots (limpeza, limpeza_v2, espirito) são linkadas via purchases.user_id
-      // mas não alteram users.plan — quem controla acesso a esses produtos
-      // é a presença de purchase, não plan.
-      const { data: subscription } = await adminClient
-        .from("purchases")
-        .select("plan, kiwify_order_id")
-        .eq("email", normalizedEmail)
-        .in("plan", ["basic", "premium"])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (subscription?.plan) {
-        await adminClient
-          .from("users")
-          .update({
-            plan: subscription.plan,
-            kiwify_order_id: subscription.kiwify_order_id,
-          })
-          .eq("id", data.user.id);
-      }
+      // Define users.plan a partir das compras (basic/premium). Usa o helper
+      // compartilhado — cancel-aware e só-upgrade — o MESMO usado no dashboard e
+      // /api/chat, garantindo cura consistente em qualquer ponto de entrada.
+      // One-shots (limpeza, espirito, etc.) não alteram users.plan; o acesso a
+      // esses produtos é controlado pela presença da purchase, não pelo plano.
+      await reconcileUserPlan(adminClient, data.user.id, normalizedEmail);
 
       // Credita "perguntas avulsas" compradas ANTES do signup (funil de entrada).
       // Helper centralizado (idempotente) — mesma função é chamada em /api/chat
