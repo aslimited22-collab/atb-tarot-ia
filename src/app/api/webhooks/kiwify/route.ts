@@ -7,6 +7,7 @@ import { logInfo, logWarn, logError } from "@/lib/logger";
 import { getSiteUrl } from "@/lib/site-url";
 import { findUserByFuzzyEmail } from "@/lib/user-matching";
 import { reconcileChatCredits } from "@/lib/reconcileCredits";
+import { buildAbandonedEmail } from "@/lib/remarketing-email";
 
 export const runtime = "nodejs";
 
@@ -117,6 +118,19 @@ export async function POST(req: Request) {
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   if (!emailOk) {
     return NextResponse.json({ error: "invalid email" }, { status: 400 });
+  }
+
+  // Remarketing: qualquer compra aprovada converte os leads abertos deste
+  // e-mail (mede receita recuperada e impede e-mail de resgate pra quem já
+  // pagou). Fail-soft: nunca bloqueia o processamento da venda.
+  if (event === "order.approved" || event === "order_approved") {
+    try {
+      await admin
+        .from("leads")
+        .update({ converted_at: new Date().toISOString() })
+        .eq("email", email.toLowerCase())
+        .is("converted_at", null);
+    } catch {}
   }
 
   const productId: string | undefined =
@@ -855,6 +869,115 @@ export async function POST(req: Request) {
       user_id: userRow?.id ?? null,
     });
     return NextResponse.json({ ok: true, plan: "free" });
+  }
+
+  // ─── REMARKETING: eventos de NÃO-compra ────────────────────────────────────
+  // Carrinho abandonado / Pix gerado / boleto / compra recusada — gatilhos
+  // ativados no painel Kiwify apontando pro MESMO webhook (mesma assinatura).
+  // Nomes exatos dos eventos variam por conta — regex defensiva + log do payload
+  // cru pra confirmar campos no 1º evento real. Abandono envia e-mail NA HORA
+  // (a Kiwify já espera antes de disparar o gatilho — lead quente); Pix/boleto/
+  // recusada só gravam o lead: o cliente ainda pode pagar, e o cron
+  // /api/cron/remarketing envia 2h+ depois se não houver compra nesse meio-tempo.
+  const evLc = event.toLowerCase();
+  const leadSource =
+    /abandon|carrinho/.test(evLc) ? "kiwify_abandoned" :
+    /pix/.test(evLc) ? "kiwify_pix" :
+    /boleto|billet/.test(evLc) ? "kiwify_boleto" :
+    /recus|reject|refus/.test(evLc) ? "kiwify_refused" :
+    null;
+
+  if (leadSource) {
+    logInfo("webhook.kiwify.lead", "non-purchase event received", {
+      event,
+      source: leadSource,
+      raw: raw.slice(0, 1500),
+    });
+
+    const emailLc = email.toLowerCase();
+    const productLabel: string | undefined =
+      order.Product?.product_name ||
+      order.product?.name ||
+      payload.Product?.product_name ||
+      payload.product_name;
+    const checkoutUrl: string | undefined =
+      payload.checkout_link ||
+      payload.checkout_url ||
+      order.checkout_link ||
+      order.checkout_url;
+    const leadPhone: string | undefined =
+      order.Customer?.mobile ||
+      order.Customer?.phone ||
+      payload.Customer?.mobile ||
+      payload.phone;
+
+    const day = new Date().toISOString().slice(0, 10);
+    const { data: leadRow, error: leadErr } = await admin
+      .from("leads")
+      .upsert(
+        {
+          email: emailLc,
+          name: customerName ?? null,
+          phone: leadPhone ?? null,
+          source: leadSource,
+          product_label: productLabel ?? null,
+          checkout_url: checkoutUrl ?? null,
+          locale: "pt", // checkout Kiwify é BR
+          amount_cents: valueCents > 0 ? Math.round(valueCents > 1000 ? valueCents : valueCents * 100) : null,
+          dedup_key: `${leadSource}:${emailLc}:${day}`,
+        },
+        { onConflict: "dedup_key", ignoreDuplicates: true }
+      )
+      .select("id")
+      .maybeSingle();
+    if (leadErr) {
+      logWarn("webhook.kiwify.lead", "lead insert failed", { email: emailLc, error: leadErr.message });
+    }
+
+    // Lead NOVO de abandono → e-mail de resgate imediato (checando opt-out
+    // LGPD e compra recente — quem pagou nas últimas 24h não recebe).
+    if (leadRow?.id && leadSource === "kiwify_abandoned") {
+      try {
+        const { count: optedOut } = await admin
+          .from("email_optouts")
+          .select("*", { count: "exact", head: true })
+          .eq("email", emailLc);
+        const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+        const { count: boughtRecently } = await admin
+          .from("purchases")
+          .select("*", { count: "exact", head: true })
+          .eq("email", emailLc)
+          .gte("created_at", dayAgo);
+
+        if (!optedOut && !boughtRecently) {
+          const { subject, html } = buildAbandonedEmail({
+            locale: "pt",
+            email: emailLc,
+            name: customerName,
+            productLabel,
+            checkoutUrl,
+            siteUrl: getSiteUrl(req),
+          });
+          const sent = await sendCustomerEmailWithLog({
+            scope: "remarketing.abandoned",
+            to: emailLc,
+            subject,
+            html,
+            refId: leadRow.id,
+          });
+          if (sent.ok) {
+            await admin
+              .from("leads")
+              .update({ remarketing_sent_at: new Date().toISOString() })
+              .eq("id", leadRow.id);
+          }
+        }
+      } catch (e) {
+        logWarn("webhook.kiwify.lead", "abandoned email failed", { email: emailLc, error: String(e) });
+      }
+    }
+
+    return NextResponse.json({ ok: true, lead: leadSource, fresh: !!leadRow?.id });
   }
 
   return NextResponse.json({ ok: true, ignored: event });

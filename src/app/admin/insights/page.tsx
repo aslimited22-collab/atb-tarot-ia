@@ -61,6 +61,16 @@ export type InsightsProps = {
     /** Emails na fila (pending no email_outbox) */
     emailQueuePending: number;
   };
+  remarketingKpis: {
+    /** Leads capturados (checkout não concluído) últimos 7d */
+    leads7d: number;
+    /** E-mails de remarketing enviados (webhook + cron) últimos 7d */
+    remarketingSent7d: number;
+    /** Leads que converteram (compraram depois) últimos 7d */
+    converted7d: number;
+    /** Total de descadastros (email_optouts) */
+    optouts: number;
+  };
   spark7d: {
     revenue: number[];
     orders: number[];
@@ -235,6 +245,10 @@ export default async function InsightsPage() {
     { count: recoverySent7d },
     { count: fuzzyMatches7d },
     { count: emailQueuePending },
+    { count: leads7d },
+    { count: remarketingSent7d },
+    { count: converted7d },
+    { count: optouts },
   ] = await Promise.all([
     admin
       .from("email_outbox")
@@ -252,6 +266,24 @@ export default async function InsightsPage() {
       .select("*", { count: "exact", head: true })
       .is("sent_at", null)
       .lt("attempts", 6),
+    // Remarketing (tabelas da migration 0019; antes dela os counts viram 0)
+    admin
+      .from("leads")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", iso7d),
+    admin
+      .from("email_outbox")
+      .select("*", { count: "exact", head: true })
+      .like("scope", "%remarketing%")
+      .gte("created_at", iso7d)
+      .not("sent_at", "is", null),
+    admin
+      .from("leads")
+      .select("*", { count: "exact", head: true })
+      .gte("converted_at", iso7d),
+    admin
+      .from("email_optouts")
+      .select("*", { count: "exact", head: true }),
   ]);
 
   const props: InsightsProps = {
@@ -272,6 +304,12 @@ export default async function InsightsPage() {
       recoverySent7d: recoverySent7d ?? 0,
       fuzzyMatches7d: fuzzyMatches7d ?? 0,
       emailQueuePending: emailQueuePending ?? 0,
+    },
+    remarketingKpis: {
+      leads7d: leads7d ?? 0,
+      remarketingSent7d: remarketingSent7d ?? 0,
+      converted7d: converted7d ?? 0,
+      optouts: optouts ?? 0,
     },
     spark7d,
     series30d,

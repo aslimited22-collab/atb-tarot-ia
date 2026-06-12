@@ -16,6 +16,17 @@ async function triggerRecoveryEmails(): Promise<{ ok: boolean; sent?: number; sk
   }
 }
 
+async function triggerRemarketing(): Promise<{ ok: boolean; leadsSent?: number; leadsConverted?: number; freeSent?: number; skipped?: number; errors?: number; error?: string }> {
+  try {
+    const res = await fetch("/api/cron/remarketing", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error || "unknown" };
+    return { ok: true, ...data };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "network" };
+  }
+}
+
 type Range = "7d" | "30d" | "all";
 
 function fmtBRL(value: number): string {
@@ -32,6 +43,23 @@ export default function InsightsClient(props: InsightsProps) {
   const [range, setRange] = useState<Range>("30d");
   const [recoveryLoading, setRecoveryLoading] = useState(false);
   const [recoveryMsg, setRecoveryMsg] = useState<string | null>(null);
+  const [remarketingLoading, setRemarketingLoading] = useState(false);
+  const [remarketingMsg, setRemarketingMsg] = useState<string | null>(null);
+
+  async function handleRemarketing() {
+    if (remarketingLoading) return;
+    if (!confirm("Disparar remarketing agora? Envia pra leads de checkout não concluído (2h+) e contas grátis sem compra (24h+, máx. 80).")) return;
+    setRemarketingLoading(true);
+    setRemarketingMsg("Enviando...");
+    const result = await triggerRemarketing();
+    setRemarketingLoading(false);
+    if (!result.ok) {
+      setRemarketingMsg(`❌ Erro: ${result.error}`);
+      return;
+    }
+    setRemarketingMsg(`✅ ${result.leadsSent ?? 0} leads · ${result.freeSent ?? 0} contas grátis · ${result.leadsConverted ?? 0} já converteram · ${result.errors ?? 0} falhas`);
+    setTimeout(() => setRemarketingMsg(null), 12000);
+  }
 
   async function handleRecovery() {
     if (recoveryLoading) return;
@@ -48,7 +76,7 @@ export default function InsightsClient(props: InsightsProps) {
     setTimeout(() => setRecoveryMsg(null), 12000);
   }
 
-  const { kpis, recoveryKpis, spark7d, series30d, users, generatedAt } = props;
+  const { kpis, recoveryKpis, remarketingKpis, spark7d, series30d, users, generatedAt } = props;
 
   const rangeStats = useMemo(() => {
     if (range === "7d") {
@@ -211,6 +239,26 @@ export default function InsightsClient(props: InsightsProps) {
             {recoveryMsg && (
               <span style={{ fontSize: 13, color: "#1d1d1f", fontWeight: 500 }}>{recoveryMsg}</span>
             )}
+            <button
+              onClick={handleRemarketing}
+              disabled={remarketingLoading}
+              style={{
+                background: remarketingLoading ? "#cccccc" : "linear-gradient(135deg, #7c5cff, #5a3bd6)",
+                color: "#ffffff",
+                fontWeight: 700,
+                fontSize: 14,
+                padding: "10px 18px",
+                borderRadius: 10,
+                border: "none",
+                cursor: remarketingLoading ? "wait" : "pointer",
+                boxShadow: "0 2px 8px rgba(124,92,255,0.3)",
+              }}
+            >
+              {remarketingLoading ? "Enviando..." : "📣 Disparar remarketing"}
+            </button>
+            {remarketingMsg && (
+              <span style={{ fontSize: 13, color: "#1d1d1f", fontWeight: 500 }}>{remarketingMsg}</span>
+            )}
           </div>
         </div>
 
@@ -290,6 +338,11 @@ export default function InsightsClient(props: InsightsProps) {
               label="📤 Emails na fila"
               value={fmtInt(recoveryKpis.emailQueuePending)}
               sublabel={recoveryKpis.emailQueuePending > 0 ? "🔁 aguardando retry" : "✅ vazia"}
+            />
+            <KpiTile
+              label="📣 Remarketing"
+              value={`${fmtInt(remarketingKpis.leads7d)} leads`}
+              sublabel={`${fmtInt(remarketingKpis.remarketingSent7d)} emails · ${fmtInt(remarketingKpis.converted7d)} voltaram · ${fmtInt(remarketingKpis.optouts)} opt-out`}
             />
           </div>
         </section>

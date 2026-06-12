@@ -55,6 +55,39 @@ export async function POST(req: Request) {
       obj.subscription_details?.metadata?.order_id;
     const customerEmail: string = (obj.customer_email || obj.receipt_email || obj.customer_details?.email || "").toLowerCase();
 
+    // Remarketing: checkout intl expirado COM e-mail capturado = lead.
+    // A sessão expirada não é reutilizável, então o CTA do e-mail (enviado
+    // pelo cron 2h+ depois, se não houver compra) leva pra landing.
+    if (event.type === "checkout.session.expired" && customerEmail && customerEmail.includes("@")) {
+      try {
+        const adminLead = createAdminClient();
+        const expCountry: string | undefined = obj.customer_details?.address?.country || undefined;
+        const expCurrency = String(obj.currency || "usd").toLowerCase();
+        const day = new Date().toISOString().slice(0, 10);
+        const { error: leadErr } = await adminLead.from("leads").upsert(
+          {
+            email: customerEmail,
+            name: obj.customer_details?.name ?? null,
+            phone: obj.customer_details?.phone ?? null,
+            source: "stripe_expired",
+            product_label: obj.metadata?.plan ?? null,
+            checkout_url: null,
+            locale: buyerLocale(expCountry, expCurrency),
+            amount_cents: Number(obj.amount_total || 0) || null,
+            dedup_key: `stripe_expired:${customerEmail}:${day}`,
+          },
+          { onConflict: "dedup_key", ignoreDuplicates: true }
+        );
+        if (leadErr) {
+          logWarn("webhook.stripe.lead", "lead insert failed", { email: customerEmail, error: leadErr.message });
+        } else {
+          logInfo("webhook.stripe.lead", "expired checkout captured as lead", { email: customerEmail });
+        }
+      } catch (e) {
+        logWarn("webhook.stripe.lead", "lead capture failed", { error: String(e) });
+      }
+    }
+
     if (orderIdRef && /^[0-9a-f-]{36}$/i.test(orderIdRef)) {
       const adminCancel = createAdminClient();
       await adminCancel
@@ -91,6 +124,19 @@ export async function POST(req: Request) {
   const buyerLoc = buyerLocale(buyerCountry, currency);
 
   const admin = createAdminClient();
+
+  // Remarketing: compra concluída converte os leads abertos deste e-mail
+  // (mede receita recuperada e impede e-mail de resgate pra quem já pagou).
+  // Fail-soft: nunca bloqueia o processamento da venda.
+  if (email) {
+    try {
+      await admin
+        .from("leads")
+        .update({ converted_at: new Date().toISOString() })
+        .eq("email", email)
+        .is("converted_at", null);
+    } catch {}
+  }
 
   // ---------- BRANCH 1: Plans recorrentes do roteador /api/checkout/[plan] ----------
   // Estes têm session.metadata.plan setado (premium/basic) e NÃO têm order_id (são subscriptions).
