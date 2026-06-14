@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sanitizeInput, rateLimit, getClientIp, validateEmail } from "@/lib/security";
 import { generatePreview, VALID_THEMES, VALID_SIGNS, THEME_LABELS } from "@/lib/limpeza-v2";
 import { createCheckoutSession, currencyForRequest, detectIsInternational } from "@/lib/stripe";
+import { PLAN_PRICES } from "@/lib/pricing";
 import { getSiteUrl } from "@/lib/site-url";
 
 export const runtime = "nodejs";
@@ -93,7 +94,13 @@ export async function POST(req: Request) {
     else provider = moneyInfo.isInternational ? "stripe" : "kiwify";
 
     const isStripe = provider === "stripe";
-    const amount = isStripe ? moneyInfo.amount : Number(process.env.LIMPEZA_V2_PRICE || 97);
+    // Preço intl unificado com PLAN_PRICES.limpeza ($100/€100/¥10000) — antes
+    // usava moneyInfo.amount, que devolvia €18 / ¥2900 / NaN-USD (env placeholder).
+    // PLAN_PRICES é em centavos; createCheckoutSession espera UNIDADES e faz ×100
+    // (exceto JPY). Logo: JPY usa o valor inteiro; demais dividem por 100.
+    const limpezaCents = PLAN_PRICES.limpeza[moneyInfo.currency];
+    const stripeUnits = moneyInfo.currency === "jpy" ? limpezaCents : limpezaCents / 100;
+    const amount = isStripe ? stripeUnits : Number(process.env.LIMPEZA_V2_PRICE || 97);
     const currency = isStripe ? moneyInfo.currency.toUpperCase() : "BRL";
     const locale = isStripe ? moneyInfo.locale : "pt-BR";
 

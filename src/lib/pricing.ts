@@ -9,6 +9,7 @@ export type PlanId =
   | "basic"
   | "videochamada"
   | "limpeza"
+  | "espirito"
   | "pergunta1"
   | "pergunta3"
   | "pergunta7";
@@ -46,6 +47,12 @@ export const PLAN_PRICES: Record<PlanId, Record<Currency, number>> = {
     usd: 10000, // $100.00
     eur: 10000, // €100,00
     jpy: 10000, // ¥10000
+  },
+  espirito: {
+    brl: 43700, // R$437,00 (one-time)
+    usd: 43700, // $437.00
+    eur: 43700, // €437,00
+    jpy: 43700, // ¥43700
   },
   // ─── Funil de entrada (perguntas avulsas one-time) ───
   // Cliente paga → cria conta → faz N perguntas no /dashboard/chat.
@@ -89,6 +96,7 @@ export const PLAN_TYPE: Record<PlanId, CheckoutMode> = {
   basic: "subscription",
   videochamada: "payment",
   limpeza: "payment",
+  espirito: "payment",
   pergunta1: "payment",
   pergunta3: "payment",
   pergunta7: "payment",
@@ -106,6 +114,7 @@ export function kiwifyUrlFor(plan: PlanId): string | undefined {
     basic: process.env.NEXT_PUBLIC_KIWIFY_BASIC_URL,
     videochamada: process.env.NEXT_PUBLIC_KIWIFY_VIDEO_URL,
     limpeza: process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL,
+    espirito: process.env.NEXT_PUBLIC_KIWIFY_ESPIRITO_URL,
     pergunta1: process.env.NEXT_PUBLIC_KIWIFY_PERGUNTA1_URL,
     pergunta3: process.env.NEXT_PUBLIC_KIWIFY_PERGUNTA3_URL,
     pergunta7: process.env.NEXT_PUBLIC_KIWIFY_PERGUNTA7_URL,
@@ -124,6 +133,7 @@ export function planDisplayName(plan: PlanId): string {
     basic: "ATB Tarot — Basic",
     videochamada: "ATB — Vídeo Chamada ao Vivo",
     limpeza: "ATB — Limpeza Espiritual Personalizada",
+    espirito: "ATB — Espírito Mentor",
     pergunta1: "ATB — 1 Pergunta Espiritual",
     pergunta3: "ATB — 3 Perguntas Espirituais",
     pergunta7: "ATB — 7 Perguntas Espirituais",
@@ -154,6 +164,7 @@ export function isValidPlan(s: string): s is PlanId {
     s === "basic" ||
     s === "videochamada" ||
     s === "limpeza" ||
+    s === "espirito" ||
     s === "pergunta1" ||
     s === "pergunta3" ||
     s === "pergunta7"

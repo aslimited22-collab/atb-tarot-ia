@@ -353,6 +353,54 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, plan: "videochamada", email });
   }
 
+  // ---------- BRANCH 2b: Espírito Mentor intl (one-time) ----------
+  // Espelha o videochamada: cria conta + magic-link DIRETO no Espírito Mentor,
+  // welcome email localizado. O webhook Kiwify já trata o espírito no BR.
+  if (plan === "espirito") {
+    if (!email) {
+      return NextResponse.json({ error: "missing email" }, { status: 400 });
+    }
+    logInfo("webhook.stripe", "espirito paid intl", { email, currency, amountTotal });
+
+    await admin.from("purchases").insert({
+      email,
+      name: name ?? null,
+      kiwify_order_id: paymentId,
+      plan: "espirito",
+      event: "espirito_purchased_intl",
+      amount_cents: amountTotal,
+      user_id: null,
+    });
+
+    // Magic-link 1-toque: cria a conta e loga DIRETO no Espírito Mentor.
+    let espMagicUrl = `${getSiteUrl(req)}/dashboard/espirito-mentor`;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/espirito-mentor")}` },
+      });
+      const actionLink = (linkData as { properties?: { action_link?: string } } | null)?.properties?.action_link;
+      if (actionLink) espMagicUrl = actionLink;
+    } catch (e) {
+      logWarn("webhook.stripe.espirito", "magic-link gen failed", { email, error: String(e) });
+    }
+
+    // Captura o idioma do comprador no user recém-criado.
+    try { await admin.from("users").update({ locale: buyerLoc }).eq("email", email); } catch {}
+
+    const { subject: eSubject, html: eHtml } = buildWelcomeEmail({ product: "espirito", locale: buyerLoc, name, magicUrl: espMagicUrl });
+    await sendCustomerEmailWithLog({
+      scope: "webhook.stripe.espirito",
+      to: email,
+      subject: eSubject,
+      html: eHtml,
+      refId: paymentId,
+    });
+
+    return NextResponse.json({ ok: true, plan: "espirito", email });
+  }
+
   // ---------- BRANCH 3 (fluxo legado): Limpeza V2 com order UUID ----------
   if (!orderId || !/^[0-9a-f-]{36}$/i.test(orderId)) {
     logWarn("webhook.stripe", "missing/invalid order_id (and no recognized plan)", { orderId, plan, eventId: event.id });

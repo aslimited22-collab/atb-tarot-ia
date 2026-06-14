@@ -60,7 +60,9 @@ export default async function EspiritoMentorPage({
     espiritoProfile = profileData;
   }
 
-  const kiwifyUrl = process.env.NEXT_PUBLIC_KIWIFY_ESPIRITO_URL || "#";
+  // Roteia pelo checkout universal: BR → Kiwify, internacional → Stripe na
+  // moeda certa. Antes ia direto na URL Kiwify (só funcionava no Brasil).
+  const kiwifyUrl = "/api/checkout/espirito";
 
   return (
     <EspiritoMentorClient

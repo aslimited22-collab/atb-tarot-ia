@@ -45,8 +45,12 @@ export function currencyForRequest(req: Request): {
   const country = (req.headers.get("x-vercel-ip-country") || "").toUpperCase();
   const lang = (req.headers.get("accept-language") || "").toLowerCase();
 
-  // BR sempre BRL
-  if (country === "BR" || lang.includes("pt-br") || lang.startsWith("pt")) {
+  // BRL/Kiwify SÓ quando o geo é Brasil, OU quando não há geo e o idioma é
+  // português (proteção BR-first pra caso ambíguo). Geo explícito de país
+  // lusófono não-BR (PT/AO/MZ) NÃO cai em BRL — Portugal paga EUR no Stripe,
+  // não é jogado no checkout brasileiro. (Idioma do site segue inalterado.)
+  const isPtLang = lang.includes("pt-br") || lang.startsWith("pt");
+  if (country === "BR" || (country === "" && isPtLang)) {
     return {
       currency: "brl",
       amount: Number(process.env.LIMPEZA_V2_PRICE || 97),
