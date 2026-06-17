@@ -5,6 +5,7 @@
 // Estrutura espelha recovery-email.ts: COPY[product][locale] + helpers box/footer.
 
 import type { Locale } from "@/lib/i18n/locales";
+import { magicEntryUrl } from "@/lib/magic-entry";
 
 function escapeHtml(s: string | undefined | null): string {
   if (!s) return "";
@@ -110,7 +111,8 @@ export function buildWelcomeEmail(input: WelcomeEmailInput): { subject: string; 
   const c = COPY[input.product][locale];
   const firstName = input.name ? input.name.split(" ")[0] : DEFAULT_NAME[locale];
   const htmlLang = locale === "pt" ? "pt-BR" : locale;
-  const link = escapeHtml(input.magicUrl);
+  // Embrulha o magic-link na página intermediária /entrar (anti-scanner de e-mail).
+  const link = escapeHtml(magicEntryUrl(input.magicUrl));
 
   const html = `<!DOCTYPE html>
 <html lang="${htmlLang}">

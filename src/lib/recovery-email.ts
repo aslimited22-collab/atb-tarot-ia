@@ -6,6 +6,8 @@
 //   - "limpeza"  → limpeza/limpeza_v2 (link pra /obrigado-limpeza)
 //   - "subscription" → basic/premium (link pra /cadastro?email=X)
 
+import { magicEntryUrl } from "@/lib/magic-entry";
+
 function escapeHtml(s: string | undefined | null): string {
   if (!s) return "";
   return String(s)
@@ -251,7 +253,8 @@ export function buildRecoveryEmail(input: RecoveryEmailInput): RecoveryEmailTemp
   const tmpl = TEMPLATES[input.product][locale];
   // Magic-link entra como CTA primario (1-clique, sem senha). Fallback: link estatico.
   const link = input.magicLink
-    ?? `${input.siteUrl}${tmpl.path}?email=${encodeURIComponent(input.email)}`;
+    ? magicEntryUrl(input.magicLink)
+    : `${input.siteUrl}${tmpl.path}?email=${encodeURIComponent(input.email)}`;
   const hasMagicLink = !!input.magicLink;
 
   // Copy "Entrar com 1 toque" quando temos magic-link, senao usa o cta padrao do template
