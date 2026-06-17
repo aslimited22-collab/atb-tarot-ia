@@ -22,6 +22,14 @@ import { buildRecoveryEmail, productFromPlan } from "@/lib/recovery-email";
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "aslimited22@gmail.com")
   .split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
 
+// Re-nudge: o magic-link do Supabase EXPIRA. Antes o resgate mandava 1 e-mail só
+// e marcava follow_up_sent_at pra sempre — se o link vencesse e o cliente não
+// clicasse, ele ficava preso (o anti-spam impedia reenvio). Agora: re-envia um
+// link NOVO a cada RENUDGE_DAYS pra quem pagou e ainda não acessou, até
+// MAX_TOUCHES no total (não importunar pra sempre).
+const RENUDGE_DAYS = 4;
+const MAX_TOUCHES = 3;
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -95,10 +103,11 @@ async function userAccessedProduct(
   return chat > 0 || limpeza > 0 || espirito > 0;
 }
 
-async function processFollowUps(req: Request, opts?: { resendPlan?: string }): Promise<NextResponse> {
+async function processFollowUps(req: Request, opts?: { resendPlan?: string; forceEmails?: string[] }): Promise<NextResponse> {
   const admin = createAdminClient();
   const siteUrl = getSiteUrl(req);
   const resendPlan = opts?.resendPlan;
+  const forceEmails = opts?.forceEmails;
 
   // Janela normal: purchases criadas entre 1h e 365d atrás, sem follow-up enviado.
   // 1h dá o webhook processar. Janela larga (365d) garante que NENHUM cliente
@@ -114,24 +123,38 @@ async function processFollowUps(req: Request, opts?: { resendPlan?: string }): P
   // evitada checando email_outbox por ref_id no loop abaixo.
   const min = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString();
   const max = new Date(Date.now() - 1 * 3600 * 1000).toISOString();
+  // Limiar de re-nudge: quem foi marcado há mais de RENUDGE_DAYS volta pra fila
+  // (o link velho já expirou) — desde que ainda não tenha acessado e não tenha
+  // estourado MAX_TOUCHES (checado no loop por compra).
+  const renudge = new Date(Date.now() - RENUDGE_DAYS * 24 * 3600 * 1000).toISOString();
 
   const cols = "id, email, name, plan, created_at, user_id";
-  const { data: pending, error } = resendPlan
-    ? await admin
-        .from("purchases")
-        .select(cols)
-        .in("event", SALE_EVENTS)
-        .lte("created_at", max)
-        .eq("plan", resendPlan)
-        .limit(300)
-    : await admin
-        .from("purchases")
-        .select(cols)
-        .in("event", SALE_EVENTS)
-        .lte("created_at", max)
-        .gte("created_at", min)
-        .is("follow_up_sent_at", null)
-        .limit(100);
+  const { data: pending, error } =
+    forceEmails && forceEmails.length
+      ? // Modo FORCE (admin): reenvia link NOVO pra e-mails específicos, ignorando
+        // marca/teto/janela. Só não envia se o cliente já acessou (checado no loop).
+        await admin
+          .from("purchases")
+          .select(cols)
+          .in("event", SALE_EVENTS)
+          .in("email", forceEmails)
+          .limit(50)
+      : resendPlan
+        ? await admin
+            .from("purchases")
+            .select(cols)
+            .in("event", SALE_EVENTS)
+            .lte("created_at", max)
+            .eq("plan", resendPlan)
+            .limit(300)
+        : await admin
+            .from("purchases")
+            .select(cols)
+            .in("event", SALE_EVENTS)
+            .lte("created_at", max)
+            .gte("created_at", min)
+            .or(`follow_up_sent_at.is.null,follow_up_sent_at.lt.${renudge}`)
+            .limit(100);
 
   if (error) {
     logError("cron.follow-up", "query failed", { error: error.message });
@@ -161,15 +184,23 @@ async function processFollowUps(req: Request, opts?: { resendPlan?: string }): P
         continue;
       }
 
-      // Modo resend: se JÁ existe um email de resgate registrado pra esta
-      // compra (mesmo ref_id), pula — evita 2º email pra quem já recebeu.
-      if (resendPlan) {
-        const { count: already } = await admin
+      // Teto de toques + janela de re-nudge (NÃO vale no modo force — admin forçou).
+      // Conta os e-mails de resgate já enviados a esta compra + o último: pula se
+      // já bateu MAX_TOUCHES OU se o último foi há menos de RENUDGE_DAYS (cedo
+      // demais). Assim re-envia um link NOVO a cada ~4 dias, até 3 vezes, em vez
+      // de mandar 1 só e travar pra sempre (deixando o cliente preso no link expirado).
+      if (!forceEmails) {
+        const { data: priorRows, count: priorCount } = await admin
           .from("email_outbox")
-          .select("*", { count: "exact", head: true })
+          .select("created_at", { count: "exact" })
           .eq("ref_id", p.id)
-          .eq("scope", "cron.follow-up");
-        if ((already ?? 0) > 0) {
+          .eq("scope", "cron.follow-up")
+          .order("created_at", { ascending: false })
+          .limit(1);
+        const touches = priorCount ?? 0;
+        const lastMs = priorRows?.[0]?.created_at ? new Date(priorRows[0].created_at).getTime() : 0;
+        const tooSoon = lastMs > Date.now() - RENUDGE_DAYS * 24 * 3600 * 1000;
+        if (touches >= MAX_TOUCHES || tooSoon) {
           skipped++;
           continue;
         }
@@ -281,11 +312,11 @@ async function processFollowUps(req: Request, opts?: { resendPlan?: string }): P
     }
   }
 
-  logInfo("cron.follow-up", "batch complete", { mode: resendPlan ? `resend:${resendPlan}` : "normal", sent, skipped, errors: errors.length, total: pending.length });
+  logInfo("cron.follow-up", "batch complete", { mode: forceEmails ? "force" : resendPlan ? `resend:${resendPlan}` : "normal", sent, skipped, errors: errors.length, total: pending.length });
 
   return NextResponse.json({
     ok: true,
-    mode: resendPlan ? `resend:${resendPlan}` : "normal",
+    mode: forceEmails ? "force" : resendPlan ? `resend:${resendPlan}` : "normal",
     sent,
     skipped,
     errors: errors.length,
@@ -310,12 +341,25 @@ function parseResendPlan(req: Request): string | undefined {
   return undefined;
 }
 
+// Modo FORCE (admin): ?force=email1,email2 — reenvia link NOVO pra esses e-mails
+// ignorando marca/teto/janela (mas pula quem já acessou). Pra destravar clientes
+// cujo magic-link expirou. Máx 20 por chamada.
+function parseForceEmails(req: Request): string[] | undefined {
+  try {
+    const v = new URL(req.url).searchParams.get("force");
+    if (!v) return undefined;
+    const list = v.split(",").map((s) => s.trim().toLowerCase()).filter((s) => s.includes("@"));
+    return list.length ? list.slice(0, 20) : undefined;
+  } catch {}
+  return undefined;
+}
+
 export async function POST(req: Request) {
   const auth = await checkAuth(req);
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  return processFollowUps(req, { resendPlan: parseResendPlan(req) });
+  return processFollowUps(req, { resendPlan: parseResendPlan(req), forceEmails: parseForceEmails(req) });
 }
 
 // Vercel Cron usa GET por padrão
@@ -324,5 +368,5 @@ export async function GET(req: Request) {
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  return processFollowUps(req, { resendPlan: parseResendPlan(req) });
+  return processFollowUps(req, { resendPlan: parseResendPlan(req), forceEmails: parseForceEmails(req) });
 }
