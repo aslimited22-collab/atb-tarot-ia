@@ -63,46 +63,33 @@ export async function POST(req: Request) {
     }
     const fullName = nameSanity.value;
 
-    // Valida idade
-    const ageNum = Number(body?.age);
-    if (!Number.isFinite(ageNum) || ageNum < 13 || ageNum > 120) {
-      return NextResponse.json({ error: "Idade inválida." }, { status: 400 });
+    // Campos OPCIONAIS — modo "Começar agora" salva só o nome; a ATB pergunta o
+    // resto na conversa. Quando vierem, valida; senão ignora (não bloqueia).
+    let ageNum: number | null = null;
+    if (body?.age !== undefined && body?.age !== null && String(body.age).trim() !== "") {
+      const n = Number(body.age);
+      if (!Number.isFinite(n) || n < 13 || n > 120) {
+        return NextResponse.json({ error: "Idade inválida." }, { status: 400 });
+      }
+      ageNum = n;
+    }
+    const maritalStatus = VALID_MARITAL.has(String(body?.marital_status || "")) ? String(body?.marital_status) : null;
+    const mainFeeling = VALID_FEELINGS.has(String(body?.main_feeling || "")) ? String(body?.main_feeling) : null;
+    let situation: string | null = null;
+    if (body?.situation) {
+      const s = sanitizeInput(String(body.situation), 500);
+      if (s.ok && s.value.length >= 10) situation = s.value;
     }
 
-    // Valida estado civil
-    const maritalStatus = String(body?.marital_status || "");
-    if (!VALID_MARITAL.has(maritalStatus)) {
-      return NextResponse.json({ error: "Estado civil inválido." }, { status: 400 });
-    }
-
-    // Valida sentimento principal
-    const mainFeeling = String(body?.main_feeling || "");
-    if (!VALID_FEELINGS.has(mainFeeling)) {
-      return NextResponse.json({ error: "Sentimento inválido." }, { status: 400 });
-    }
-
-    // Valida situação (texto livre, max 500)
-    const situationSanity = sanitizeInput(String(body?.situation || ""), 500);
-    if (!situationSanity.ok || situationSanity.value.length < 10) {
-      return NextResponse.json({ error: "Conte um pouco mais sobre sua situação (mínimo 10 caracteres)." }, { status: 400 });
-    }
-    const situation = situationSanity.value;
-
-    // Upsert: cria ou atualiza
+    // Upsert mesclando: grava só os campos que vieram (não apaga o que já existe).
+    const patch: Record<string, any> = { user_id: user.id, full_name: fullName, updated_at: new Date().toISOString() };
+    if (ageNum !== null) patch.age = ageNum;
+    if (maritalStatus !== null) patch.marital_status = maritalStatus;
+    if (mainFeeling !== null) patch.main_feeling = mainFeeling;
+    if (situation !== null) patch.situation = situation;
     const { error: upsertErr } = await supabase
       .from("limpeza_profile")
-      .upsert(
-        {
-          user_id: user.id,
-          full_name: fullName,
-          age: ageNum,
-          marital_status: maritalStatus,
-          main_feeling: mainFeeling,
-          situation: situation,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
+      .upsert(patch, { onConflict: "user_id" });
 
     if (upsertErr) {
       return NextResponse.json({ error: "Erro ao salvar dados." }, { status: 500 });

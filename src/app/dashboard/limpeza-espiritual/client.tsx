@@ -484,6 +484,31 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
     }
   }
 
+  // "Começar agora": salva só o nome e cai direto no chat — a ATB pergunta o
+  // resto na conversa. Mata a fricção do formulário (a causa do limpeza 0%).
+  async function skip() {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const name = fullName.trim().length >= 2 ? fullName.trim() : (firstName !== "querida" ? firstName : "querida alma");
+      const res = await fetch("/api/limpeza/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ full_name: name }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t("limpeza_dash.toast_save_error"));
+        setLoading(false);
+        return;
+      }
+      onSaved();
+    } catch {
+      toast.error(t("limpeza_dash.toast_connection"));
+      setLoading(false);
+    }
+  }
+
   const canNext1 = fullName.trim().length >= 2 && age && Number(age) >= 13 && Number(age) <= 120 && marital;
   const canNext2 = !!feeling;
   const canSubmit = situation.trim().length >= 10;
@@ -503,6 +528,22 @@ function ProfileForm({ firstName, onSaved }: { firstName: string; onSaved: () =>
         <p style={{ fontSize: "1rem", color: "#c4b5fd", lineHeight: 1.6, maxWidth: 460, margin: "0 auto" }}>
           {t("limpeza_dash.profile_subtitle")}
         </p>
+      </div>
+
+      {/* Atalho sem fricção: começar já e contar tudo na conversa com a ATB */}
+      <div style={{ textAlign: "center", marginBottom: 22 }}>
+        <button
+          onClick={skip}
+          disabled={loading}
+          className="btn-gold"
+          style={{ width: "100%", maxWidth: 480, padding: "18px 24px", fontSize: 18, fontWeight: 800, border: "none", color: "#120025", cursor: loading ? "wait" : "pointer", borderRadius: 14 }}
+        >
+          {loading ? "..." : "✨ Começar minha Limpeza agora"}
+        </button>
+        <p style={{ color: "#9575cd", fontSize: 13, margin: "10px 0 0", lineHeight: 1.5 }}>
+          Você conversa direto com a ATB e conta tudo no chat.<br />Ou preencha abaixo, se preferir personalizar.
+        </p>
+        <div style={{ height: 1, background: "rgba(232,184,75,0.18)", margin: "22px auto 0", maxWidth: 480 }} />
       </div>
 
       {/* Progress */}

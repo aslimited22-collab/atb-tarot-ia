@@ -140,14 +140,21 @@ export async function POST(req: Request) {
       outro: "estado civil reservado",
     };
 
+    // Monta o contexto só com o que a cliente JÁ informou. No modo "Começar
+    // agora" temos só o nome — então a ATB acolhe e pergunta o resto na conversa,
+    // como uma médium de verdade (em vez de exigir formulário e perder a cliente).
+    const ctxLines = [`- Nome: ${profile.full_name || "(ela ainda não disse o nome)"}`];
+    if (profile.age) ctxLines.push(`- Idade: ${profile.age} anos`);
+    if (profile.marital_status) ctxLines.push(`- Estado civil: ${MARITAL_LABELS[profile.marital_status] || profile.marital_status}`);
+    if (profile.main_feeling) ctxLines.push(`- Dor principal que ela sente: ${FEELING_LABELS[profile.main_feeling] || profile.main_feeling}`);
+    if (profile.situation) ctxLines.push(`- O que ela disse com as próprias palavras: "${profile.situation}"`);
+    const faltaDados = !profile.main_feeling && !profile.situation;
     const profileContext = `CONTEXTO ESPIRITUAL DESTA CLIENTE (use esses dados para personalizar TUDO):
-- Nome: ${profile.full_name}
-- Idade: ${profile.age} anos
-- Estado civil: ${MARITAL_LABELS[profile.marital_status] || profile.marital_status}
-- Dor principal que ela sente: ${FEELING_LABELS[profile.main_feeling] || profile.main_feeling}
-- O que ela disse com as próprias palavras: "${profile.situation}"
+${ctxLines.join("\n")}
 
-Use essas informações para chamá-la pelo nome, levar em conta a fase da vida dela, e adaptar a leitura ao que ela está sentindo. Não repita esses dados literalmente, apenas use como contexto interno.`;
+${faltaDados
+  ? "A cliente ainda NÃO contou o que está pesando. Acolha com muito carinho, chame pelo nome (se tiver), e com delicadeza pergunte o que está no coração dela — o que ela quer limpar/resolver. A partir da resposta dela, conduza a limpeza."
+  : "Use essas informações para chamá-la pelo nome, levar em conta a fase da vida dela, e adaptar a leitura ao que ela está sentindo. Não repita esses dados literalmente, apenas use como contexto interno."}`;
 
     const { data: userMsgRow } = await supabase
       .from("limpeza_messages")

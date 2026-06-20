@@ -86,7 +86,7 @@ export default async function LimpezaPage({
       kiwifyUrl={kiwifyUrl}
       initialMessages={messages}
       initialRemaining={remaining}
-      hasProfile={!!limpezaProfile?.main_feeling}
+      hasProfile={!!limpezaProfile?.full_name}
       pastLimpezas={pastLimpezas}
     />
   );
