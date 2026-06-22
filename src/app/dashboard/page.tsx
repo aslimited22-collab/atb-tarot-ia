@@ -48,20 +48,17 @@ export default async function DashboardHome() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, marginBottom: 32 }}>
-          {/* Basic */}
+          {/* Pergunta avulsa R$29 — entrada de 1 pergunta (pagamento único) */}
           <div className="card" style={{ padding: "32px 26px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)" }}>
-            <h2 className="serif" style={{ fontSize: "1.8rem", color: "#e8b84b", marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.fullAccess")}</h2>
-            <div style={{ fontSize: "2.6rem", fontWeight: 800, color: "#f5f0ff", marginBottom: 22, lineHeight: 1 }}>
-              {t("plans.basic_price")} <span style={{ fontSize: 19, fontWeight: 400, color: "#c4b5fd" }}>{t("price.perMonth")}</span>
+            <h2 className="serif" style={{ fontSize: "1.8rem", color: "#e8b84b", marginBottom: 6, fontWeight: 700 }}>{t("landing.pergunta_card_1_h")}</h2>
+            <div style={{ fontSize: "2.6rem", fontWeight: 800, color: "#f5f0ff", marginBottom: 16, lineHeight: 1 }}>
+              {t("landing.pergunta_card_1_price")}
             </div>
-            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 26px", flex: 1 }}>
-              <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f1")}</li>
-              <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f2")}</li>
-              <li style={{ color: "#f5f0ff", marginBottom: 12, fontSize: 19, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f3")}</li>
-              <li style={{ color: "#c4b5fd", fontSize: 19, lineHeight: 1.5 }}>{t("plans.basic.f4")}</li>
-            </ul>
-            <a href="/api/checkout/basic" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>
-              {t("checkout.cta.access")}
+            <p style={{ color: "#f5f0ff", fontSize: 19, fontWeight: 500, lineHeight: 1.5, marginBottom: 26, flex: 1 }}>
+              {t("landing.pergunta_subtitle")}
+            </p>
+            <a href="/api/checkout/pergunta1" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>
+              {t("landing.pergunta_card_cta")}
             </a>
           </div>
 

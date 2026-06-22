@@ -266,7 +266,7 @@ export function buildFreeUserEmail(input: FreeUserEmailInput): { subject: string
     h1: c.h1(firstName),
     body: c.body,
     cta: c.cta,
-    ctaUrl: `${input.siteUrl}/#pergunta`,
+    ctaUrl: `${input.siteUrl}/#limpeza`,
     email: input.email,
     siteUrl: input.siteUrl,
   });

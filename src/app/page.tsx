@@ -17,8 +17,9 @@ const S = {
 
 export default function Home() {
   const { t } = useT();
-  // Os botões Basic/Premium/Limpeza agora vão pelo roteador /api/checkout/[plan]
-  // (decide Kiwify BR vs Stripe intl server-side por IP).
+  // Landing reduzida a 3 produtos, na ordem: Limpeza (herói) → Consulta
+  // Completa R$197/mês → Pergunta avulsa R$29. Botões vão pelo roteador
+  // /api/checkout/[plan] (decide Kiwify BR vs Stripe intl server-side por IP).
 
   const features = [
     { icon: "💬", title: t("features.chat.title"), desc: t("features.chat.desc") },
@@ -48,7 +49,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* HERO — produto principal: Chat com ATB */}
+      {/* HERO — produto principal: Limpeza Espiritual com ATB */}
       <section style={{ padding: "70px 24px 80px", background: "radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 65%)", position: "relative", overflow: "hidden" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 40, alignItems: "center" }}>
 
@@ -65,7 +66,7 @@ export default function Home() {
               {t("hero.desc")}
             </p>
             <a
-              href="#pergunta"
+              href="#limpeza"
               className="btn-gold btn-big"
               style={{
                 fontSize: "1.3rem",
@@ -76,10 +77,10 @@ export default function Home() {
                 minHeight: 70,
               }}
             >
-              {t("hero.cta_pergunta")}
+              {t("landing.payment_cta")}
             </a>
             <p style={{ fontSize: 15, color: "#c4b5fd", marginTop: 14, fontWeight: 500 }}>
-              {t("hero.cta_pergunta_sub")}
+              {t("landing.payment_once")}
             </p>
           </div>
 
@@ -103,157 +104,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PRODUTO 1 — Chat com ATB (destaque) */}
-      <section id="chat" style={{ padding: "70px 24px", background: "radial-gradient(ellipse at 50% 50%, #1e0040 0%, #120025 75%)" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <div style={{ fontSize: 18, color: S.gold, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>
-              <span aria-hidden="true">✨</span> {t("features.chat.title")} <span aria-hidden="true">✨</span>
-            </div>
-            <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, lineHeight: 1.15, marginBottom: 16, fontWeight: 700 }}>
-              {t("features.chat.title")}
-            </h2>
-            <p style={{ fontSize: "1.3rem", color: S.text, maxWidth: 620, margin: "0 auto", lineHeight: 1.6, fontWeight: 500 }}>
-              {t("features.chat.desc")}
-            </p>
-          </div>
-
-          {/* O que entrega — 4 bullets grandes */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 18,
-            maxWidth: 900,
-            margin: "0 auto 40px",
-          }}>
-            {features.map((f) => (
-              <div key={f.title} className="card" style={{ padding: "26px 22px", textAlign: "center", border: "1.5px solid rgba(232,184,75,0.25)" }}>
-                <div style={{ fontSize: 52, marginBottom: 14 }} aria-hidden="true">{f.icon}</div>
-                <h3 className="serif" style={{ fontSize: "1.4rem", color: S.gold, marginBottom: 10, fontWeight: 700 }}>{f.title}</h3>
-                <p style={{ color: S.text, fontSize: 19, lineHeight: 1.6, fontWeight: 500 }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Funil de entrada: Pergunta avulsa (R$14,90/R$19,90/R$39,90) */}
-      <section id="pergunta" style={{ padding: "70px 24px", background: "radial-gradient(ellipse at 50% 0%, #1e0040 0%, #120025 70%)" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{
-            fontSize: 16,
-            color: S.gold,
-            fontWeight: 700,
-            letterSpacing: "0.12em",
-            textAlign: "center",
-            textTransform: "uppercase",
-            marginBottom: 14,
-          }}>
-            {t("landing.pergunta_eyebrow")}
-          </div>
-          <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, textAlign: "center", marginBottom: 14, fontWeight: 700 }}>
-            {t("landing.pergunta_title")}
-          </h2>
-          <p style={{ fontSize: 22, color: S.text, textAlign: "center", marginBottom: 40, lineHeight: 1.55, maxWidth: 640, margin: "0 auto 40px", fontWeight: 500 }}>
-            {t("landing.pergunta_subtitle")}
-          </p>
-
-          {/* 3 cards lado a lado */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: 22,
-            marginBottom: 28,
-          }}>
-            {[
-              { plan: "pergunta1", h: t("landing.pergunta_card_1_h"), price: t("landing.pergunta_card_1_price"), badge: null, highlight: false },
-              { plan: "pergunta3", h: t("landing.pergunta_card_3_h"), price: t("landing.pergunta_card_3_price"), badge: t("landing.pergunta_card_3_badge"), highlight: false },
-              { plan: "pergunta7", h: t("landing.pergunta_card_7_h"), price: t("landing.pergunta_card_7_price"), badge: t("landing.pergunta_card_7_badge"), highlight: true },
-            ].map((card) => (
-              <div
-                key={card.plan}
-                style={{
-                  position: "relative",
-                  padding: "32px 24px 28px",
-                  background: card.highlight
-                    ? "linear-gradient(135deg, rgba(232,184,75,0.18) 0%, rgba(126,232,248,0.10) 100%)"
-                    : "linear-gradient(135deg, #1e0040 0%, #2a0055 100%)",
-                  border: card.highlight ? "2.5px solid #e8b84b" : "1.5px solid rgba(232,184,75,0.35)",
-                  borderRadius: 20,
-                  boxShadow: card.highlight ? "0 18px 44px rgba(232,184,75,0.25)" : "0 8px 24px rgba(0,0,0,0.3)",
-                  textAlign: "center",
-                }}
-              >
-                {card.badge && (
-                  <div style={{
-                    position: "absolute",
-                    top: -14,
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    background: card.highlight ? "linear-gradient(135deg, #e8b84b, #c9950a)" : "linear-gradient(135deg, #7ee8f8, #5fb3e3)",
-                    color: "#120025",
-                    fontSize: 15,
-                    fontWeight: 800,
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    letterSpacing: "0.04em",
-                    whiteSpace: "nowrap",
-                  }}>
-                    {card.badge}
-                  </div>
-                )}
-                <div className="serif" style={{ fontSize: "1.6rem", color: S.gold, fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
-                  {card.h}
-                </div>
-                <div className="serif" style={{ fontSize: "2.8rem", color: S.text, fontWeight: 800, marginBottom: 22, lineHeight: 1 }}>
-                  {card.price}
-                </div>
-                <a
-                  href={`/api/checkout/${card.plan}`}
-                  className="btn-gold btn-big"
-                  style={{
-                    display: "block",
-                    textAlign: "center",
-                    padding: "18px 24px",
-                    fontSize: "1.15rem",
-                    fontWeight: 800,
-                    textDecoration: "none",
-                    border: "none",
-                  }}
-                >
-                  {t("landing.pergunta_card_cta")}
-                </a>
-              </div>
-            ))}
-          </div>
-
-          {/* Linha upsell pra Basic */}
-          <div style={{ textAlign: "center", marginBottom: 16 }}>
-            <a
-              href="#planos"
-              style={{
-                display: "inline-block",
-                fontSize: 20,
-                color: S.text2,
-                textDecoration: "none",
-                fontWeight: 600,
-                padding: "14px 22px",
-                borderRadius: 12,
-                background: "rgba(126,232,248,0.10)",
-                border: "1.5px solid rgba(126,232,248,0.35)",
-              }}
-            >
-              {t("landing.pergunta_upsell")} →
-            </a>
-          </div>
-
-          <p style={{ fontSize: 18, color: S.muted, textAlign: "center", lineHeight: 1.5, fontWeight: 500, marginTop: 14 }}>
-            {t("landing.pergunta_security")}
-          </p>
-        </div>
-      </section>
-
-      {/* Limpeza Espiritual — Produto único R$100 */}
+      {/* PRODUTO 1 — Limpeza Espiritual (herói, R$100 pagamento único) */}
       <section id="limpeza" style={{
         padding: "70px 24px",
         background: "radial-gradient(ellipse at 50% 50%, #2a0055 0%, #120025 75%)",
@@ -454,7 +305,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Planos do Chat — só pagos, dois cards grandes 60+ */}
+      {/* O que você recebe conversando com a ATB (apoia a Consulta Completa) */}
+      <section id="chat" style={{ padding: "70px 24px", background: "radial-gradient(ellipse at 50% 50%, #1e0040 0%, #120025 75%)" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={{ fontSize: 18, color: S.gold, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>
+              <span aria-hidden="true">✨</span> {t("features.chat.title")} <span aria-hidden="true">✨</span>
+            </div>
+            <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, lineHeight: 1.15, marginBottom: 16, fontWeight: 700 }}>
+              {t("features.chat.title")}
+            </h2>
+            <p style={{ fontSize: "1.3rem", color: S.text, maxWidth: 620, margin: "0 auto", lineHeight: 1.6, fontWeight: 500 }}>
+              {t("features.chat.desc")}
+            </p>
+          </div>
+
+          {/* O que entrega — 4 bullets grandes */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: 18,
+            maxWidth: 900,
+            margin: "0 auto 40px",
+          }}>
+            {features.map((f) => (
+              <div key={f.title} className="card" style={{ padding: "26px 22px", textAlign: "center", border: "1.5px solid rgba(232,184,75,0.25)" }}>
+                <div style={{ fontSize: 52, marginBottom: 14 }} aria-hidden="true">{f.icon}</div>
+                <h3 className="serif" style={{ fontSize: "1.4rem", color: S.gold, marginBottom: 10, fontWeight: 700 }}>{f.title}</h3>
+                <p style={{ color: S.text, fontSize: 19, lineHeight: 1.6, fontWeight: 500 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PRODUTOS 2 e 3 — Consulta Completa R$197/mês + Pergunta avulsa R$29 */}
       <section id="planos" style={{ padding: "70px 24px", background: "radial-gradient(ellipse at 50% 100%, #2a0055 0%, #120025 70%)" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, textAlign: "center", marginBottom: 14, fontWeight: 700 }}>
@@ -463,23 +348,9 @@ export default function Home() {
           <p style={{ fontSize: 21, color: S.text, textAlign: "center", marginBottom: 40, lineHeight: 1.55, maxWidth: 580, margin: "0 auto 40px", fontWeight: 500 }}>
             {t("checkout.recurringDisclaimer")}
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 20, alignItems: "stretch" }}>
 
-            <div className="card" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)" }}>
-              <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 6, fontWeight: 700 }}>{t("checkout.title.fullAccess")}</h3>
-              <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 24, lineHeight: 1 }}>
-                {t("plans.basic_price")} <span style={{ fontSize: 18, fontWeight: 400, color: S.text2 }}>{t("price.perMonth")}</span>
-              </div>
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", flex: 1 }}>
-                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f1")}</li>
-                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f2")}</li>
-                <li style={{ color: S.text, marginBottom: 12, fontSize: 18, fontWeight: 500, lineHeight: 1.5 }}>{t("plans.basic.f3")}</li>
-                <li style={{ color: S.text2, fontSize: 18, lineHeight: 1.5 }}>{t("plans.basic.f4")}</li>
-              </ul>
-              <a href="/api/checkout/basic" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("checkout.cta.access")}</a>
-            </div>
-
-            {/* CONSULTA COMPLETA — Premium R$197 (consulta + numerologia + tratamento espiritual) */}
+            {/* PRODUTO 2 — CONSULTA COMPLETA (Premium R$197/mês: consulta + numerologia + tratamento espiritual) */}
             <div className="card-gold" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
               {/* Decoração: bolas douradas sutis no topo */}
               <div style={{ position: "absolute", top: -20, right: -20, display: "flex", gap: 8, opacity: 0.18, pointerEvents: "none" }} aria-hidden="true">
@@ -512,6 +383,24 @@ export default function Home() {
               <a href="/api/checkout/premium" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("plans.premium.numerologia_cta")}</a>
               <p style={{ fontSize: 12, color: S.muted, marginTop: 14, fontStyle: "italic", lineHeight: 1.5, textAlign: "center" }}>
                 {t("plans.premium.numerologia_disclaimer")}
+              </p>
+            </div>
+
+            {/* PRODUTO 3 — PERGUNTA avulsa (R$29, pagamento único, 1 pergunta à ATB) */}
+            <div className="card" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)" }}>
+              <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 8, fontWeight: 700, lineHeight: 1.1 }}>
+                {t("landing.pergunta_card_1_h")}
+              </h3>
+              <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 10, lineHeight: 1 }}>
+                {t("landing.pergunta_card_1_price")}
+              </div>
+              <p style={{ fontSize: 17, color: S.text, marginBottom: 24, fontWeight: 500, lineHeight: 1.5 }}>
+                {t("landing.pergunta_subtitle")}
+              </p>
+              <div style={{ flex: 1 }} />
+              <a href="/api/checkout/pergunta1" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("landing.pergunta_card_cta")}</a>
+              <p style={{ fontSize: 15, color: S.muted, marginTop: 14, lineHeight: 1.5, textAlign: "center", fontWeight: 500 }}>
+                {t("landing.pergunta_security")}
               </p>
             </div>
           </div>

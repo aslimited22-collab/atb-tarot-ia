@@ -47,12 +47,12 @@ export default function StickyMobileCTA() {
       {/* Spacer pra conteúdo não ficar atrás da barra */}
       <div className="sticky-cta-spacer" aria-hidden="true" />
       <a
-        href="/api/checkout/pergunta1"
+        href="/api/checkout/limpeza"
         className="sticky-cta-bar"
-        aria-label={`${t("cta.sticky_mobile")} — ${t("landing.pergunta_card_1_price")}`}
+        aria-label={`${t("landing.payment_cta")} — ${t("landing.limpeza_price")}`}
       >
-        <span style={{ fontSize: 22, lineHeight: 1 }} aria-hidden="true">💬</span>
-        <span>{t("cta.sticky_mobile")} — <strong>{t("landing.pergunta_card_1_price")}</strong></span>
+        <span style={{ fontSize: 22, lineHeight: 1 }} aria-hidden="true">🕊️</span>
+        <span>{t("landing.payment_cta")} — <strong>{t("landing.limpeza_price")}</strong></span>
       </a>
       <style>{`
         .sticky-cta-spacer { display: none; }

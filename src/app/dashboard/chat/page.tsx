@@ -14,7 +14,7 @@ function fmtTime(iso?: string): string {
   try { return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch { return ""; }
 }
 
-function UpgradeCard({ basicUrl, premiumUrl, pergunta3Url, isCreditsExhausted }: { basicUrl: string; premiumUrl: string; pergunta3Url: string; isCreditsExhausted?: boolean }) {
+function UpgradeCard({ premiumUrl, pergunta1Url, isCreditsExhausted }: { premiumUrl: string; pergunta1Url: string; isCreditsExhausted?: boolean }) {
   const { t } = useT();
   return (
     <div className="card" style={{ margin:"16px auto", maxWidth:420, padding:28, textAlign:"center" }}>
@@ -25,19 +25,15 @@ function UpgradeCard({ basicUrl, premiumUrl, pergunta3Url, isCreditsExhausted }:
       <p style={{ fontSize:15, color:"#c4b5fd", marginBottom:24, lineHeight:1.6 }}>
         {t("chat.upgrade_desc")}
       </p>
-      {isCreditsExhausted && (
-        <a href={pergunta3Url}
-          style={{ display:"block", background:"linear-gradient(135deg,#7ee8f8,#5fb3e3)", color:"#120025", fontWeight:800, fontSize:17, padding:"16px", borderRadius:14, marginBottom:12, textDecoration:"none" }}>
-          {t("chat.credits_buy_3")}
-        </a>
-      )}
-      <a href={basicUrl}
-        style={{ display:"block", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:800, fontSize:17, padding:"16px", borderRadius:14, marginBottom:12, textDecoration:"none" }}>
-        {t("chat.credits_subscribe_basic")}
-      </a>
+      {/* Produto principal: Consulta Completa R$197/mês */}
       <a href={premiumUrl}
-        style={{ display:"block", border:"2px solid #e8b84b", color:"#e8b84b", fontWeight:600, fontSize:16, padding:"13px", borderRadius:14, textDecoration:"none" }}>
+        style={{ display:"block", background:"linear-gradient(135deg,#e8b84b,#c9950a)", color:"#120025", fontWeight:800, fontSize:17, padding:"16px", borderRadius:14, marginBottom:12, textDecoration:"none" }}>
         {t("chat.upgrade_cta_premium")}
+      </a>
+      {/* Entrada barata: 1 pergunta avulsa R$29 (pagamento único) */}
+      <a href={pergunta1Url}
+        style={{ display:"block", border:"2px solid #7ee8f8", color:"#7ee8f8", fontWeight:700, fontSize:16, padding:"13px", borderRadius:14, textDecoration:"none" }}>
+        {t("chat.credits_buy_3")}
       </a>
       <p style={{ fontSize:13, color:"#9575cd", marginTop:12 }}>{t("chat.upgrade_security")}</p>
     </div>
@@ -57,10 +53,9 @@ export default function ChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Roteador /api/checkout/[plan] decide Kiwify (BR) vs Stripe (intl) por IP.
-  const BASIC_URL   = "/api/checkout/basic";
   const PREMIUM_URL = "/api/checkout/premium";
   const VIDEO_URL   = "/api/checkout/videochamada";
-  const PERGUNTA3_URL = "/api/checkout/pergunta3";
+  const PERGUNTA1_URL = "/api/checkout/pergunta1";
 
   useEffect(() => {
     fetch("/api/chat").then((r) => r.json()).then((d) => {
@@ -271,9 +266,8 @@ export default function ChatPage() {
             ))}
             {showUpgrade && !sending && (
               <UpgradeCard
-                basicUrl={BASIC_URL}
                 premiumUrl={PREMIUM_URL}
-                pergunta3Url={PERGUNTA3_URL}
+                pergunta1Url={PERGUNTA1_URL}
                 isCreditsExhausted={usingCredits && remaining === 0}
               />
             )}

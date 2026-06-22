@@ -58,10 +58,10 @@ export const PLAN_PRICES: Record<PlanId, Record<Currency, number>> = {
   // Cliente paga → cria conta → faz N perguntas no /dashboard/chat.
   // Webhook (Kiwify ou Stripe) incrementa users.chat_credits_balance += N.
   pergunta1: {
-    brl: 1490, // R$14,90
-    usd: 1490, // $14.90
-    eur: 1490, // €14,90
-    jpy: 1490, // ¥1490
+    brl: 2900, // R$29,00 (pergunta avulsa única — landing reduzida a 3 produtos)
+    usd: 2900, // $29.00
+    eur: 2900, // €29,00
+    jpy: 2900, // ¥2900
   },
   pergunta3: {
     brl: 1990, // R$19,90
