@@ -49,25 +49,27 @@ h1, h2, h3, .serif {
 
 /* Card padrão — superfície roxa média, texto claro */
 .card {
-  background: var(--surface);
-  border-radius: 18px;
-  border: 1px solid rgba(196,181,253,0.18);
-  box-shadow: var(--shadow);
+  background: linear-gradient(160deg, #210544 0%, #160030 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(196,181,253,0.16);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 
 /* Card dourado destaque */
 .card-gold {
-  background: linear-gradient(135deg, #2a0055, #3b0764);
-  border-radius: 18px;
-  border: 1.5px solid rgba(232,184,75,0.45);
-  box-shadow: 0 4px 24px rgba(232,184,75,0.12);
+  background: linear-gradient(135deg, #2e0a5e 0%, #3b0764 55%, #2a0055 100%);
+  border-radius: 20px;
+  border: 1.5px solid rgba(232,184,75,0.5);
+  box-shadow: 0 12px 38px rgba(232,184,75,0.18), inset 0 0 0 1px rgba(232,184,75,0.16);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 
 .border-gold { border: 1.5px solid var(--gold) !important; }
 
 /* Botão dourado sólido — tamanho amigável para 60+ */
 .btn-gold {
-  background: linear-gradient(135deg, #e8b84b 0%, #c9950a 100%);
+  background: linear-gradient(135deg, #f5cd6a 0%, #e8b84b 45%, #c9950a 100%);
   color: #120025;
   font-weight: 700;
   padding: 1.1rem 2rem;
@@ -75,13 +77,14 @@ h1, h2, h3, .serif {
   font-size: 1.15rem;
   display: inline-block;
   text-align: center;
-  transition: opacity .15s, transform .1s;
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
   letter-spacing: 0.01em;
   min-height: 60px;
   cursor: pointer;
+  box-shadow: 0 8px 22px rgba(232,184,75,0.32), inset 0 1px 0 rgba(255,255,255,0.42);
 }
-.btn-gold:hover { opacity: 0.92; }
-.btn-gold:active { transform: scale(0.98); }
+.btn-gold:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(232,184,75,0.46), inset 0 1px 0 rgba(255,255,255,0.5); filter: brightness(1.04); }
+.btn-gold:active { transform: translateY(0) scale(0.98); }
 
 /* Botão contorno */
 .btn-outline {
@@ -184,3 +187,66 @@ h1, h2, h3, .serif {
   to { opacity: 1; transform: translateY(0); }
 }
 .fade-in-up { animation: fadeInUp 0.4s ease-out both; }
+
+/* ─────────────── Polimento visual premium ─────────────── */
+
+/* Título com dourado em degradê (clip no texto) */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #f8d97a 0%, #e8b84b 50%, #c9950a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Card que sobe de leve no hover (só onde há mouse) */
+@media (hover: hover) {
+  .lift:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 22px 52px rgba(232,184,75,0.24);
+    border-color: rgba(232,184,75,0.6) !important;
+  }
+}
+
+/* Divisor ornamental dourado (use com um ✦ no meio) */
+.ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: rgba(232,184,75,0.9);
+  font-size: 1.2rem;
+}
+.ornament::before,
+.ornament::after {
+  content: "";
+  height: 1px;
+  width: clamp(40px, 12vw, 90px);
+  background: linear-gradient(90deg, transparent, rgba(232,184,75,0.55));
+}
+.ornament::after {
+  background: linear-gradient(90deg, rgba(232,184,75,0.55), transparent);
+}
+
+/* Aura de brilho radial (atrás de heróis/títulos) */
+.glow-aura {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(232,184,75,0.45), transparent 70%);
+  z-index: 0;
+}
+
+/* Float bem sutil pra imagem-herói */
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.floaty { animation: floaty 6s ease-in-out infinite; }
+
+/* Acessibilidade: desliga movimento pra quem prefere */
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up, .floaty, .pulse-attention { animation: none !important; }
+}

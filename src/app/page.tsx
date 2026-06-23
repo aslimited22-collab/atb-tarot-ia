@@ -50,17 +50,18 @@ export default function Home() {
       </header>
 
       {/* HERO — produto principal: Limpeza Espiritual com ATB */}
-      <section style={{ padding: "70px 24px 80px", background: "radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 65%)", position: "relative", overflow: "hidden" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 40, alignItems: "center" }}>
+      <section style={{ padding: "80px 24px 90px", background: "radial-gradient(ellipse at 50% -10%, #4a1a7a 0%, #2a0055 35%, #120025 72%)", position: "relative", overflow: "hidden" }}>
+        <div className="glow-aura" style={{ top: "-14%", left: "6%", width: 520, height: 520 }} aria-hidden="true" />
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 40, alignItems: "center", position: "relative", zIndex: 1 }}>
 
           {/* Texto à esquerda */}
-          <div style={{ textAlign: "left" }}>
+          <div className="fade-in-up" style={{ textAlign: "left" }}>
             <div style={{ fontSize: 18, color: S.gold, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 16, textTransform: "uppercase" }}>
               {t("landing.hero_badge")}
             </div>
             <h1 className="serif" style={{ fontSize: "clamp(2.6rem,6vw,4.6rem)", color: S.text, lineHeight: 1.1, marginBottom: 24, fontWeight: 700 }}>
               {t("hero.title_1")}<br/>
-              <span style={{ color: S.gold }}>{t("hero.title_2")}</span>
+              <span className="text-gold-gradient">{t("hero.title_2")}</span>
             </h1>
             <p style={{ fontSize: "1.4rem", color: S.text, maxWidth: 560, marginBottom: 36, lineHeight: 1.6, fontWeight: 500 }}>
               {t("hero.desc")}
@@ -85,7 +86,7 @@ export default function Home() {
           </div>
 
           {/* Imagem à direita — ATB acolhedora */}
-          <div style={{ position: "relative", borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 60px rgba(232,184,75,0.3), 0 0 0 3px rgba(232,184,75,0.4)" }}>
+          <div className="fade-in-up floaty" style={{ position: "relative", borderRadius: 24, overflow: "hidden", boxShadow: "0 24px 70px rgba(232,184,75,0.35), 0 0 0 3px rgba(232,184,75,0.45)" }}>
             <Image
               src="/img/landing-hero.png"
               alt={t("landing.hero_alt")}
@@ -143,9 +144,10 @@ export default function Home() {
             <div style={{ fontSize: 18, color: "#f5c860", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
               {t("landing.limpeza_eyebrow")}
             </div>
-            <h2 className="serif" style={{ fontSize: "clamp(2.4rem,6vw,3.8rem)", color: S.gold, lineHeight: 1.1, marginBottom: 18 }}>
+            <h2 className="serif text-gold-gradient" style={{ fontSize: "clamp(2.4rem,6vw,3.8rem)", lineHeight: 1.1, marginBottom: 16 }}>
               {t("landing.limpeza_h2")}
             </h2>
+            <div className="ornament" style={{ marginBottom: 20 }} aria-hidden="true">✦</div>
             <p style={{ fontSize: "clamp(1.2rem, 2.5vw, 1.4rem)", color: S.text, maxWidth: 620, margin: "0 auto", lineHeight: 1.65, fontWeight: 500 }}>
               {t("landing.limpeza_desc")}
             </p>
@@ -163,7 +165,7 @@ export default function Home() {
               { img: "/img/carta-caminhos.png", title: t("landing.card2_title"), saint: t("landing.card2_saint"), desc: t("landing.card2_desc") },
               { img: "/img/carta-protecao.png", title: t("landing.card3_title"), saint: t("landing.card3_saint"), desc: t("landing.card3_desc") },
             ].map((c) => (
-              <div key={c.title} style={{
+              <div key={c.title} className="lift" style={{
                 background: "linear-gradient(135deg, #2a0055 0%, #1e0040 100%)",
                 borderRadius: 22,
                 overflow: "hidden",
@@ -271,7 +273,7 @@ export default function Home() {
             <div style={{ fontSize: 18, color: "#f5c860", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontWeight: 700 }}>
               {t("landing.payment_eyebrow")}
             </div>
-            <div className="serif" style={{ fontSize: "clamp(3.4rem, 8vw, 4.5rem)", color: S.gold, fontWeight: 800, lineHeight: 1, marginBottom: 6 }}>
+            <div className="serif text-gold-gradient" style={{ fontSize: "clamp(3.4rem, 8vw, 4.5rem)", fontWeight: 800, lineHeight: 1, marginBottom: 6 }}>
               {t("landing.limpeza_price")}
             </div>
             <div style={{ fontSize: 19, color: "#fbf8ff", marginBottom: 28, fontWeight: 500 }}>
@@ -329,7 +331,7 @@ export default function Home() {
             margin: "0 auto 40px",
           }}>
             {features.map((f) => (
-              <div key={f.title} className="card" style={{ padding: "26px 22px", textAlign: "center", border: "1.5px solid rgba(232,184,75,0.25)" }}>
+              <div key={f.title} className="card lift" style={{ padding: "26px 22px", textAlign: "center", border: "1.5px solid rgba(232,184,75,0.25)" }}>
                 <div style={{ fontSize: 52, marginBottom: 14 }} aria-hidden="true">{f.icon}</div>
                 <h3 className="serif" style={{ fontSize: "1.4rem", color: S.gold, marginBottom: 10, fontWeight: 700 }}>{f.title}</h3>
                 <p style={{ color: S.text, fontSize: 19, lineHeight: 1.6, fontWeight: 500 }}>{f.desc}</p>
@@ -342,16 +344,17 @@ export default function Home() {
       {/* PRODUTOS 2 e 3 — Consulta Completa R$197/mês + Pergunta avulsa R$29 */}
       <section id="planos" style={{ padding: "70px 24px", background: "radial-gradient(ellipse at 50% 100%, #2a0055 0%, #120025 70%)" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-          <h2 className="serif" style={{ fontSize: "clamp(2rem,5vw,3rem)", color: S.gold, textAlign: "center", marginBottom: 14, fontWeight: 700 }}>
+          <h2 className="serif text-gold-gradient" style={{ fontSize: "clamp(2rem,5vw,3rem)", textAlign: "center", marginBottom: 14, fontWeight: 700 }}>
             {t("plans.title")}
           </h2>
+          <div className="ornament" style={{ marginBottom: 22 }} aria-hidden="true">✦</div>
           <p style={{ fontSize: 21, color: S.text, textAlign: "center", marginBottom: 40, lineHeight: 1.55, maxWidth: 580, margin: "0 auto 40px", fontWeight: 500 }}>
             {t("checkout.recurringDisclaimer")}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 20, alignItems: "stretch" }}>
 
             {/* PRODUTO 2 — CONSULTA COMPLETA (Premium R$197/mês: consulta + numerologia + tratamento espiritual) */}
-            <div className="card-gold" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+            <div className="card-gold lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
               {/* Decoração: bolas douradas sutis no topo */}
               <div style={{ position: "absolute", top: -20, right: -20, display: "flex", gap: 8, opacity: 0.18, pointerEvents: "none" }} aria-hidden="true">
                 {[42, 27, 13].map((n, i) => (
@@ -387,7 +390,7 @@ export default function Home() {
             </div>
 
             {/* PRODUTO 3 — PERGUNTA avulsa (R$29, pagamento único, 1 pergunta à ATB) */}
-            <div className="card" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)" }}>
+            <div className="card lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)" }}>
               <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 8, fontWeight: 700, lineHeight: 1.1 }}>
                 {t("landing.pergunta_card_1_h")}
               </h3>
@@ -414,7 +417,7 @@ export default function Home() {
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
           {testimonials.map((tm) => (
-            <div key={tm.name} className="card" style={{ padding: "28px 24px" }}>
+            <div key={tm.name} className="card lift" style={{ padding: "28px 24px" }}>
               <p style={{ fontStyle: "italic", color: S.text, lineHeight: 1.7, marginBottom: 16, fontSize: 19, fontWeight: 500 }}>&ldquo;{tm.text}&rdquo;</p>
               <div style={{ fontWeight: 700, color: S.gold, fontSize: 17 }}>— {tm.name}</div>
             </div>
