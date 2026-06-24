@@ -44,7 +44,6 @@ export default function Home() {
           <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
             <LangSwitcher compact />
             <Link href="/login" style={{ color: S.text2, fontWeight: 700, fontSize: 18, textDecoration: "none", padding: "10px 14px", minHeight: 44 }}>{t("nav.signin")}</Link>
-            <Link href="/cadastro" className="btn-gold" style={{ padding: "14px 26px", fontSize: 17, fontWeight: 800, minHeight: 48 }}>{t("nav.signup")}</Link>
           </div>
         </div>
       </header>
@@ -67,7 +66,7 @@ export default function Home() {
               {t("hero.desc")}
             </p>
             <a
-              href="#limpeza"
+              href="/api/checkout/limpeza"
               className="btn-gold btn-big"
               style={{
                 fontSize: "1.3rem",
@@ -78,7 +77,7 @@ export default function Home() {
                 minHeight: 70,
               }}
             >
-              {t("landing.payment_cta")}
+              {t("landing.payment_cta")} — {t("landing.limpeza_price")}
             </a>
             <p style={{ fontSize: 15, color: "#c4b5fd", marginTop: 14, fontWeight: 500 }}>
               {t("landing.payment_once")}
@@ -101,6 +100,24 @@ export default function Home() {
               background: "linear-gradient(180deg, transparent 60%, rgba(18,0,37,0.5) 100%)",
               pointerEvents: "none",
             }} />
+          </div>
+        </div>
+      </section>
+
+      {/* Como funciona — 3 passos simples (tira o medo do "e agora?") */}
+      <section style={{ padding: "50px 24px", background: "#160030" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <h2 className="serif text-gold-gradient" style={{ fontSize: "clamp(1.7rem,4vw,2.4rem)", textAlign: "center", marginBottom: 10, fontWeight: 700 }}>
+            {t("landing.howto_title")}
+          </h2>
+          <div className="ornament" style={{ marginBottom: 30 }} aria-hidden="true">✦</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 18 }}>
+            {[t("landing.howto_1"), t("landing.howto_2"), t("landing.howto_3")].map((step, i) => (
+              <div key={i} className="card lift" style={{ padding: "30px 24px", textAlign: "center" }}>
+                <div className="serif" style={{ width: 64, height: 64, margin: "0 auto 18px", borderRadius: "50%", background: "radial-gradient(circle at 30% 30%, #f5c860, #c89a2a)", color: "#1e0040", fontSize: 30, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 18px rgba(232,184,75,0.35)" }}>{i + 1}</div>
+                <p style={{ fontSize: 19, color: S.text, lineHeight: 1.55, fontWeight: 500, margin: 0 }}>{step}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -294,7 +311,7 @@ export default function Home() {
                 letterSpacing: "0.02em",
               }}
             >
-              {t("landing.payment_cta")}
+              {t("landing.payment_cta")} — {t("landing.limpeza_price")}
             </a>
             <div style={{ marginTop: 22, padding: "16px 20px", background: "rgba(232,184,75,0.08)", borderRadius: 12, border: "1px solid rgba(232,184,75,0.2)" }}>
               <p style={{ fontSize: 18, color: "#fbf8ff", lineHeight: 1.6, margin: 0, fontWeight: 500 }}>

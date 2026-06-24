@@ -12,9 +12,9 @@ export const dict = {
     "brand": "ATB",
 
     // Landing Hero
-    "hero.title_1": "Converse com ATB,",
-    "hero.title_2": "sua Espírita Mentora",
-    "hero.desc": "Sessão Espírita Transformadora — acolhedora e direta, 24 horas por dia. Fale com seu Espírito Mentor sobre ansiedade, relacionamentos e vícios.",
+    "hero.title_1": "Tire o peso do seu coração",
+    "hero.title_2": "e abra os caminhos da sua vida",
+    "hero.desc": "A ATB te ouve com carinho, a qualquer hora do dia ou da noite. Conte sua dor, sua aflição, sua saudade — e receba uma palavra de fé, força e proteção dos santos.",
     "hero.cta": "Ver os planos",
 
     // Features
@@ -472,13 +472,17 @@ export const dict = {
     "nav.logout": "Sair da conta",
 
     // Landing principal /
-    "landing.hero_badge": "✨ SESSÃO ESPÍRITA • LIMPEZA ESPIRITUAL • PROTEÇÃO ✨",
+    "landing.hero_badge": "✨ LIMPEZA ESPIRITUAL • ORAÇÃO • PROTEÇÃO DOS SANTOS ✨",
+    "landing.howto_title": "Como funciona — bem simples",
+    "landing.howto_1": "Você paga com Cartão, Pix ou Boleto — uma vez só, 100% seguro.",
+    "landing.howto_2": "A ATB prepara sua limpeza com a força dos santos, oração e proteção.",
+    "landing.howto_3": "Você recebe na hora um link no seu celular, pra usar quando quiser.",
     "landing.hero_cta_limpeza": "🕊️ Limpeza Espiritual",
     "landing.hero_alt": "Mulher abençoada recebendo a luz divina",
     "landing.altar_alt": "Altar sagrado com vela acesa, manto, rosa branca e Nossa Senhora",
     "landing.limpeza_eyebrow": "✨ Sessão Sagrada Exclusiva ✨",
     "landing.limpeza_h2": "Limpeza Espiritual com ATB",
-    "landing.limpeza_desc": "Tire o peso da sua alma, abra os caminhos da sua vida e proteja-se de toda inveja com a força dos santos.",
+    "landing.limpeza_desc": "Se você anda com o coração pesado, sem dormir, preocupada com os filhos, com a saúde ou sentindo inveja por perto — a ATB faz sua limpeza com a força dos santos, abre seus caminhos e devolve a sua paz.",
     "landing.card1_title": "Limpeza Profunda",
     "landing.card1_saint": "Nossa Senhora Aparecida",
     "landing.card1_desc": "Tira energia pesada, mau-olhado e a dor da alma",
@@ -498,11 +502,11 @@ export const dict = {
     "landing.saints_title": "✨ Os santos que vão estar com você ✨",
     "landing.saints_alt": "Nossa Senhora Aparecida, Sagrado Coração, São Miguel, Santo Antônio, São Jorge e Nossa Senhora Desatadora dos Nós",
     "landing.payment_eyebrow": "Pagamento único",
-    "landing.payment_once": "Você paga uma vez só",
+    "landing.payment_once": "Você paga uma vez só. Não é mensalidade. Nunca cobramos de novo.",
     "landing.payment_cta": "✨ Quero minha Limpeza",
     "landing.trust_secure": "Pagamento totalmente seguro",
     "landing.trust_methods": "Você pode pagar com Cartão, Pix ou Boleto",
-    "landing.trust_delivery": "Logo depois de pagar, sua limpeza está pronta",
+    "landing.trust_delivery": "Assim que você paga, você recebe um link pra fazer sua limpeza com a ATB no seu próprio celular. Qualquer dúvida, a gente te ajuda passo a passo.",
 
     // Dashboard hub
     "dash.welcome": "Bem-vinda, {name} ✨",
@@ -1386,6 +1390,10 @@ export const dict = {
 
     // Main landing /
     "landing.hero_badge": "✨ SPIRITUAL SESSION • CLEANSING • PROTECTION ✨",
+    "landing.howto_title": "How it works — very simple",
+    "landing.howto_1": "You pay by card — once only, 100% secure.",
+    "landing.howto_2": "ATB prepares your cleansing with the strength of the saints, prayer and protection.",
+    "landing.howto_3": "You instantly get a link on your phone, to use whenever you want.",
     "landing.hero_cta_limpeza": "🕊️ Spiritual Cleansing",
     "landing.hero_alt": "Blessed woman receiving the divine light",
     "landing.altar_alt": "Sacred altar with lit candle, mantle, white rose and Our Lady",
@@ -1411,7 +1419,7 @@ export const dict = {
     "landing.saints_title": "✨ The saints who will be with you ✨",
     "landing.saints_alt": "Our Lady of Aparecida, Sacred Heart, Saint Michael, Saint Anthony, Saint George and Our Lady Undoer of Knots",
     "landing.payment_eyebrow": "One-time payment",
-    "landing.payment_once": "You pay only once",
+    "landing.payment_once": "You pay only once. No subscription. We never charge you again.",
     "landing.payment_cta": "✨ I want my Cleansing",
     "landing.trust_secure": "Fully secure payment",
     "landing.trust_methods": "Pay with Card, Apple Pay or Google Pay",
@@ -2299,6 +2307,10 @@ export const dict = {
 
     // Landing principal /
     "landing.hero_badge": "✨ SESIÓN ESPIRITISTA • LIMPIEZA ESPIRITUAL • PROTECCIÓN ✨",
+    "landing.howto_title": "Cómo funciona — muy sencillo",
+    "landing.howto_1": "Pagas con tarjeta — una sola vez, 100% seguro.",
+    "landing.howto_2": "ATB prepara tu limpieza con la fuerza de los santos, oración y protección.",
+    "landing.howto_3": "Recibes al instante un enlace en tu celular, para usar cuando quieras.",
     "landing.hero_cta_limpeza": "🕊️ Limpieza Espiritual",
     "landing.hero_alt": "Mujer bendecida recibiendo la luz divina",
     "landing.altar_alt": "Altar sagrado con vela encendida, manto, rosa blanca y Nuestra Señora",
@@ -2324,7 +2336,7 @@ export const dict = {
     "landing.saints_title": "✨ Los santos que estarán contigo ✨",
     "landing.saints_alt": "Nuestra Señora Aparecida, Sagrado Corazón, San Miguel, San Antonio, San Jorge y Nuestra Señora Desatanudos",
     "landing.payment_eyebrow": "Pago único",
-    "landing.payment_once": "Pagas una sola vez",
+    "landing.payment_once": "Pagas una sola vez. No es mensualidad. Nunca te cobramos de nuevo.",
     "landing.payment_cta": "✨ Quiero mi Limpieza",
     "landing.trust_secure": "Pago totalmente seguro",
     "landing.trust_methods": "Paga con Tarjeta, Apple Pay o Google Pay",
@@ -3212,6 +3224,10 @@ export const dict = {
 
     // Haupt-Landing /
     "landing.hero_badge": "✨ SPIRITISTISCHE SITZUNG • REINIGUNG • SCHUTZ ✨",
+    "landing.howto_title": "So einfach funktioniert es",
+    "landing.howto_1": "Du zahlst per Karte — nur einmal, 100% sicher.",
+    "landing.howto_2": "ATB bereitet deine Reinigung mit der Kraft der Heiligen, Gebet und Schutz vor.",
+    "landing.howto_3": "Du erhältst sofort einen Link auf deinem Handy, jederzeit nutzbar.",
     "landing.hero_cta_limpeza": "🕊️ Spirituelle Reinigung",
     "landing.hero_alt": "Gesegnete Frau, die das göttliche Licht empfängt",
     "landing.altar_alt": "Heiliger Altar mit brennender Kerze, Mantel, weißer Rose und Unserer Lieben Frau",
@@ -3237,7 +3253,7 @@ export const dict = {
     "landing.saints_title": "✨ Die Heiligen, die bei dir sein werden ✨",
     "landing.saints_alt": "Unsere Liebe Frau von Aparecida, Heiligstes Herz, Heiliger Michael, Heiliger Antonius, Heiliger Georg und Unsere Liebe Frau Knotenlöserin",
     "landing.payment_eyebrow": "Einmalige Zahlung",
-    "landing.payment_once": "Du zahlst nur einmal",
+    "landing.payment_once": "Du zahlst nur einmal. Kein Abo. Wir berechnen dir nie wieder etwas.",
     "landing.payment_cta": "✨ Ich will meine Reinigung",
     "landing.trust_secure": "Vollständig sichere Zahlung",
     "landing.trust_methods": "Zahle mit Karte, Apple Pay oder Google Pay",
@@ -4125,6 +4141,10 @@ export const dict = {
 
     // Landing principale /
     "landing.hero_badge": "✨ SESSIONE SPIRITICA • PULIZIA SPIRITUALE • PROTEZIONE ✨",
+    "landing.howto_title": "Come funziona — semplicissimo",
+    "landing.howto_1": "Paghi con carta — una sola volta, 100% sicuro.",
+    "landing.howto_2": "ATB prepara la tua pulizia con la forza dei santi, preghiera e protezione.",
+    "landing.howto_3": "Ricevi subito un link sul tuo cellulare, da usare quando vuoi.",
     "landing.hero_cta_limpeza": "🕊️ Pulizia Spirituale",
     "landing.hero_alt": "Donna benedetta che riceve la luce divina",
     "landing.altar_alt": "Altare sacro con candela accesa, manto, rosa bianca e Nostra Signora",
@@ -4150,7 +4170,7 @@ export const dict = {
     "landing.saints_title": "✨ I santi che saranno con te ✨",
     "landing.saints_alt": "Nostra Signora di Aparecida, Sacro Cuore, San Michele, Sant'Antonio, San Giorgio e Nostra Signora che Scioglie i Nodi",
     "landing.payment_eyebrow": "Pagamento unico",
-    "landing.payment_once": "Paghi una sola volta",
+    "landing.payment_once": "Paghi una sola volta. Nessun abbonamento. Non ti addebitiamo mai più nulla.",
     "landing.payment_cta": "✨ Voglio la mia Pulizia",
     "landing.trust_secure": "Pagamento totalmente sicuro",
     "landing.trust_methods": "Paga con Carta, Apple Pay o Google Pay",
@@ -5038,6 +5058,10 @@ export const dict = {
 
     // メイン・ランディング /
     "landing.hero_badge": "✨ 霊的セッション • クレンジング • 守護 ✨",
+    "landing.howto_title": "ご利用の流れ — とても簡単",
+    "landing.howto_1": "カードでお支払い — 一度だけ、100%安全。",
+    "landing.howto_2": "ATBが聖人の力、祈り、守護であなたのクレンジングを準備します。",
+    "landing.howto_3": "すぐにスマホにリンクが届き、いつでもご利用いただけます。",
     "landing.hero_cta_limpeza": "🕊️ スピリチュアル・クレンジング",
     "landing.hero_alt": "神聖な光を受ける祝福された女性",
     "landing.altar_alt": "ろうそく、マント、白いバラ、そして聖母のある聖なる祭壇",
@@ -5063,7 +5087,7 @@ export const dict = {
     "landing.saints_title": "✨ あなたと共にいる聖人たち ✨",
     "landing.saints_alt": "アパレシーダの聖母、聖心、聖ミカエル、聖アントニオ、聖ジョージ、そして結び目を解く聖母",
     "landing.payment_eyebrow": "一回限りのお支払い",
-    "landing.payment_once": "お支払いは一度だけ",
+    "landing.payment_once": "お支払いは一度だけ。定期購入ではありません。二度と請求しません。",
     "landing.payment_cta": "✨ クレンジングを受けたい",
     "landing.trust_secure": "完全に安全なお支払い",
     "landing.trust_methods": "カード、Apple Pay、Google Payでお支払い可能",
