@@ -14,6 +14,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { magicLinkFromGenerate } from "@/lib/magic-entry";
 import { sendCustomerEmailWithLog } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
 import { getSiteUrl } from "@/lib/site-url";
@@ -272,8 +273,7 @@ async function processFollowUps(req: Request, opts?: { resendPlan?: string; forc
             redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`,
           },
         });
-        magicLink = (linkData as { properties?: { action_link?: string } } | null)
-          ?.properties?.action_link;
+        magicLink = magicLinkFromGenerate(linkData, siteUrl, "");
       } catch (e) {
         logWarn("cron.follow-up", "magic-link gen failed", { email: p.email, error: String(e) });
       }

@@ -6,6 +6,7 @@ import { deliverLimpezaOrder, sendCustomerEmailWithLog } from "@/lib/delivery";
 import { logInfo, logWarn, logError } from "@/lib/logger";
 import { getSiteUrl } from "@/lib/site-url";
 import { buildWelcomeEmail } from "@/lib/welcome-email";
+import { magicLinkFromGenerate } from "@/lib/magic-entry";
 import { buyerLocale } from "@/lib/i18n/locales";
 
 function escapeHtml(s: string | undefined | null): string {
@@ -165,8 +166,7 @@ export async function POST(req: Request) {
         email,
         options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/chat")}` },
       });
-      const actionLink = (linkData as { properties?: { action_link?: string } } | null)?.properties?.action_link;
-      if (actionLink) subMagicUrl = actionLink;
+      subMagicUrl = magicLinkFromGenerate(linkData, getSiteUrl(req), subMagicUrl);
     } catch (e) {
       logWarn("webhook.stripe.subscription", "magic-link gen failed", { email, error: String(e) });
     }
@@ -266,9 +266,7 @@ export async function POST(req: Request) {
           redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/chat?welcome=pergunta")}`,
         },
       });
-      const actionLink = (linkData as { properties?: { action_link?: string } } | null)
-        ?.properties?.action_link;
-      if (actionLink) magicUrl = actionLink;
+      magicUrl = magicLinkFromGenerate(linkData, getSiteUrl(req), magicUrl);
     } catch (e) {
       logWarn("webhook.stripe.pergunta", "magic-link gen failed", { email, error: String(e) });
     }
@@ -331,8 +329,7 @@ export async function POST(req: Request) {
         email,
         options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard")}` },
       });
-      const actionLink = (linkData as { properties?: { action_link?: string } } | null)?.properties?.action_link;
-      if (actionLink) vMagicUrl = actionLink;
+      vMagicUrl = magicLinkFromGenerate(linkData, getSiteUrl(req), vMagicUrl);
     } catch (e) {
       logWarn("webhook.stripe.videochamada", "magic-link gen failed", { email, error: String(e) });
     }
@@ -380,8 +377,7 @@ export async function POST(req: Request) {
         email,
         options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/espirito-mentor")}` },
       });
-      const actionLink = (linkData as { properties?: { action_link?: string } } | null)?.properties?.action_link;
-      if (actionLink) espMagicUrl = actionLink;
+      espMagicUrl = magicLinkFromGenerate(linkData, getSiteUrl(req), espMagicUrl);
     } catch (e) {
       logWarn("webhook.stripe.espirito", "magic-link gen failed", { email, error: String(e) });
     }

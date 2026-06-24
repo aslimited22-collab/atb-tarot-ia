@@ -19,8 +19,13 @@ export default function EntrarPage() {
     try {
       const d = new URLSearchParams(window.location.search).get("dest") || "";
       const supa = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
-      // Só aceita destino que seja o Supabase Auth do projeto.
-      const ok = !!d && !!supa && d.startsWith(supa);
+      const origin = window.location.origin;
+      // Anti-open-redirect. Aceita só: (a) /auth/callback do PRÓPRIO site (fluxo
+      // token_hash, novo) ou (b) o Supabase Auth do projeto (legado action_link).
+      const ok = !!d && (
+        d.startsWith(`${origin}/auth/`) ||
+        (!!supa && d.startsWith(supa))
+      );
       setDest(ok ? d : null);
     } catch {
       setDest(null);

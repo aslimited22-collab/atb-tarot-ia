@@ -8,7 +8,7 @@ import { getSiteUrl } from "@/lib/site-url";
 import { findUserByFuzzyEmail } from "@/lib/user-matching";
 import { reconcileChatCredits } from "@/lib/reconcileCredits";
 import { buildAbandonedEmail } from "@/lib/remarketing-email";
-import { magicEntryUrl } from "@/lib/magic-entry";
+import { magicLinkFromGenerate } from "@/lib/magic-entry";
 
 export const runtime = "nodejs";
 
@@ -311,10 +311,7 @@ export async function POST(req: Request) {
             redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/chat?welcome=pergunta")}`,
           },
         });
-        const actionLink = (linkData as { properties?: { action_link?: string } } | null)
-          ?.properties?.action_link;
-        if (actionLink) magicUrl = actionLink;
-        magicUrl = magicEntryUrl(magicUrl); // embrulha no /entrar (anti-scanner)
+        magicUrl = magicLinkFromGenerate(linkData, getSiteUrl(req), magicUrl);
       } catch (e) {
         logWarn("webhook.kiwify.pergunta", "magic-link gen failed", { email, error: String(e) });
       }
@@ -426,10 +423,7 @@ export async function POST(req: Request) {
           redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/limpeza-espiritual")}`,
         },
       });
-      const actionLink = (linkData as { properties?: { action_link?: string } } | null)
-        ?.properties?.action_link;
-      if (actionLink) magicUrl = actionLink;
-      magicUrl = magicEntryUrl(magicUrl); // embrulha no /entrar (anti-scanner)
+      magicUrl = magicLinkFromGenerate(linkData, getSiteUrl(req), magicUrl);
     } catch (e) {
       logWarn("webhook.kiwify.v1.limpeza", "magic-link gen failed", { email, error: String(e) });
     }
@@ -541,9 +535,7 @@ export async function POST(req: Request) {
         email: email.toLowerCase(),
         options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/espirito-mentor")}` },
       });
-      const actionLink = (linkData as { properties?: { action_link?: string } } | null)?.properties?.action_link;
-      if (actionLink) espAccessLink = actionLink;
-      espAccessLink = magicEntryUrl(espAccessLink); // embrulha no /entrar (anti-scanner)
+      espAccessLink = magicLinkFromGenerate(linkData, getSiteUrl(req), espAccessLink);
     } catch (e) {
       logWarn("webhook.kiwify.v1.espirito", "magic-link gen failed", { email, error: String(e) });
     }
@@ -665,9 +657,7 @@ export async function POST(req: Request) {
         email: email.toLowerCase(),
         options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard")}` },
       });
-      const actionLink = (linkData as { properties?: { action_link?: string } } | null)?.properties?.action_link;
-      if (actionLink) vidAccessLink = actionLink;
-      vidAccessLink = magicEntryUrl(vidAccessLink); // embrulha no /entrar (anti-scanner)
+      vidAccessLink = magicLinkFromGenerate(linkData, getSiteUrl(req), vidAccessLink);
     } catch (e) {
       logWarn("webhook.kiwify.v1.video", "magic-link gen failed", { email, error: String(e) });
     }
