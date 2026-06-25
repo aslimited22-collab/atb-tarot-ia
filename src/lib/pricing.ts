@@ -25,10 +25,10 @@ export type CheckoutMode = "subscription" | "payment";
 // cliente intl percebe o mesmo valor psicológico que o BR.
 export const PLAN_PRICES: Record<PlanId, Record<Currency, number>> = {
   premium: {
-    brl: 19700, // R$197,00/mês
-    usd: 19700, // $197.00/month
-    eur: 19700, // €197,00/mês
-    jpy: 19700, // ¥19700/月
+    brl: 25000, // R$250,00/mês (alinhado ao produto Kiwify "Consulta Completa")
+    usd: 25000, // $250.00/month
+    eur: 25000, // €250,00/mês
+    jpy: 25000, // ¥25000/月
   },
   basic: {
     brl: 2900, // R$29,00/mês
