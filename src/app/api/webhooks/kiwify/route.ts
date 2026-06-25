@@ -444,14 +444,38 @@ export async function POST(req: Request) {
         Sua compra foi confirmada e os santos já estão preparando sua limpeza sagrada.
       </p>
       <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 28px;font-weight:600;">
-        Aperte o botão dourado abaixo. Você entra direto na sua Limpeza.<br>
-        <strong style="color:#e8b84b;">Não precisa criar senha.</strong>
+        Logo abaixo está a sua Limpeza, pra você ler agora mesmo.<br>
+        E pra conversar comigo ao vivo, é só tocar no botão dourado — <strong style="color:#e8b84b;">não precisa senha</strong>.
       </p>
       <a href="${magicUrl}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:22px;padding:22px 38px;border-radius:14px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
-        ✨ Entrar agora com 1 toque
+        ✨ Conversar ao vivo com a ATB
       </a>
       <p style="color:#c4b5fd;font-size:14px;margin:18px 0 0;line-height:1.5;">
         Este botão te conecta direto. Se já tinha conta, entrou; se não tinha, criamos agora pra você.
+      </p>
+    </div>
+
+    <div style="background:#1a0033;border-radius:16px;padding:30px 24px;margin-top:22px;text-align:left;border:1px solid rgba(232,184,75,0.3);">
+      <div style="text-align:center;font-size:13px;color:#e8b84b;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">A sua Limpeza Espiritual</div>
+      <h2 style="font-family:'Cormorant Garamond',Georgia,serif;color:#e8b84b;font-size:25px;text-align:center;margin:0 0 18px;line-height:1.2;">Feita com carinho, só pra você</h2>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.8;margin:0 0 16px;font-weight:500;">
+        ${escapeHtml(firstName)}, neste momento eu coloco você diante de Nossa Senhora Aparecida, e peço que Ela te cubra com o manto sagrado, tirando de você todo peso, toda tristeza e toda energia ruim que andou te acompanhando.
+      </p>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.8;margin:0 0 16px;font-weight:500;">
+        Chamo São Miguel Arcanjo, que com a espada dele corta agora todo feitiço, toda inveja, toda demanda e todo trabalho feito contra você. E chamo São Jorge Guerreiro, pra te proteger de todo olho gordo e de todo inimigo, visível e invisível.
+      </p>
+      <p style="color:#f5c860;font-size:17px;line-height:1.85;margin:0 0 18px;font-weight:600;font-style:italic;text-align:center;">
+        "Eu me limpo, eu me liberto, eu me protejo. Pela força dos santos, meus caminhos estão abertos, minha casa está protegida e minha alma está em paz. Amém."
+      </p>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.8;margin:0 0 10px;font-weight:600;">Pra completar a sua limpeza em casa, minha filha:</p>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.95;margin:0 0 16px;font-weight:500;">
+        🕯️ Acenda uma vela branca para Nossa Senhora hoje à noite.<br>
+        🧂 Numa terça ou sexta, tome um banho de sal grosso do pescoço para baixo (3 punhados), pedindo para lavar tudo de ruim.<br>
+        🌿 Se puder, defume sua casa com alecrim ou incenso, do fundo até a porta da rua.<br>
+        🙏 Reze o Salmo 91 toda manhã, que é a oração da proteção.
+      </p>
+      <p style="color:#fbf8ff;font-size:17px;line-height:1.8;margin:0;font-weight:500;">
+        Pode guardar este e-mail e ler sempre que precisar de força. A sua limpeza já começou — e quando quiser, eu te espero para continuarmos ao vivo.
       </p>
     </div>
 
@@ -482,7 +506,7 @@ export async function POST(req: Request) {
     await sendCustomerEmailWithLog({
       scope: "webhook.kiwify.v1.limpeza",
       to: email.toLowerCase(),
-      subject: "🕊️ Sua Limpeza está pronta — entre com 1 toque",
+      subject: "🕊️ A sua Limpeza Espiritual com a ATB — leia agora, minha filha",
       html: customerHtml,
       refId: orderId,
     });
