@@ -17,11 +17,10 @@ Regra: uma mudança por vez · build após cada · caminhos de dinheiro/acesso s
 **Como medir:** `select utm_source, count(*) from track_events where event='cta_click' group by 1 order by 2 desc;` (cliques de checkout por canal). Idem `event='visit'` pra visitas.
 **Aplicar a migration** no deploy/merge (aditiva, reversível).
 
-### 🔐 #1.b — Receita por canal (PENDENTE — precisa do OK do dono, mexe em caminho de pagamento)
-Pra ligar UTM → RECEITA (e não só visitas/cliques), preciso:
-1. `src/app/api/checkout/[plan]/route.ts` — ler o cookie de atribuição e **anexar `?utm_*` na URL de redirect do Kiwify** (Kiwify já rastreia e mostra venda por origem no painel dele) + no `metadata` da sessão Stripe. *Risco: baixo (só acrescenta query params; com try/catch e URL-encode). Não muda produto/preço/fluxo.*
-2. `src/app/api/webhooks/kiwify/route.ts` + `stripe/route.ts` — gravar a origem nas colunas `utm_*` de `purchases`. *Aditivo, não altera detecção de plano/crédito/e-mail.*
-→ **Aguardando OK** pra mexer nesses arquivos.
+### ✅ #1.b — Receita por canal (FEITO — PR #4, com OK do dono)
+**Onde:** `src/app/api/checkout/[plan]/route.ts` (ÚNICO arquivo). Lê o cookie `atb_attr` e **anexa `utm_*` na URL do Kiwify** (o Kiwify atribui a venda ao canal no painel dele) + no `metadata` da sessão Stripe. **Puramente aditivo:** não muda produto/preço/fluxo; qualquer falha cai no redirect original (try/catch). **Não toquei no webhook nem na detecção de plano.**
+**Como medir:** painel Kiwify → Vendas com filtro/coluna de UTM (origem por venda); Stripe → metadata da sessão. As colunas `purchases.utm_*` (criadas na migration 0020) ficam prontas pra um relatório in-app de receita-por-canal depois — não precisei do webhook agora, porque Kiwify e Stripe já atribuem nativamente.
+**Build:** ✅ OK.
 
 ---
 

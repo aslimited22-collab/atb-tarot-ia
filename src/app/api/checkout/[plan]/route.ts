@@ -27,6 +27,42 @@ import { logInfo, logWarn, logError } from "@/lib/logger";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Atribuição: lê a origem (utm_*) do cookie first-party `atb_attr` (setado pelo
+// AttributionTracker) e repassa ao checkout — pra Kiwify/Stripe atribuírem a venda
+// ao canal. PURAMENTE ADITIVO: nunca altera produto/preço/fluxo; qualquer falha
+// cai no comportamento original (try/catch).
+type Attr = { utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string; utm_term?: string };
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
+
+function getAttribution(req: Request): Attr {
+  try {
+    const cookie = req.headers.get("cookie") || "";
+    const m = cookie.match(/(?:^|;\s*)atb_attr=([^;]+)/);
+    if (!m) return {};
+    const obj = JSON.parse(decodeURIComponent(m[1])) as Record<string, unknown>;
+    const out: Attr = {};
+    for (const k of UTM_KEYS) {
+      const v = obj[k];
+      if (typeof v === "string" && v) out[k] = v.slice(0, 150);
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function withUtm(rawUrl: string, attr: Attr): string {
+  try {
+    const u = new URL(rawUrl);
+    for (const k of UTM_KEYS) {
+      if (attr[k]) u.searchParams.set(k, attr[k]!);
+    }
+    return u.toString();
+  } catch {
+    return rawUrl; // nunca quebra o redirect de pagamento
+  }
+}
+
 export async function GET(
   req: Request,
   { params }: { params: { plan: string } }
@@ -40,6 +76,7 @@ export async function GET(
   }
   const plan = planParam;
   const isIntl = detectIsInternational(req);
+  const attr = getAttribution(req); // origem (utm) pra atribuir a venda ao canal
 
   // ---------- BRANCH BR — Kiwify ----------
   if (!isIntl) {
@@ -49,7 +86,7 @@ export async function GET(
       return NextResponse.redirect(`${baseUrl}/#planos`, 307);
     }
     logInfo("checkout", "routing BR → Kiwify", { plan });
-    return NextResponse.redirect(url, 307);
+    return NextResponse.redirect(withUtm(url, attr), 307);
   }
 
   // ---------- BRANCH INTL — Stripe Checkout ----------
@@ -76,7 +113,7 @@ export async function GET(
       acceptLanguage: req.headers.get("accept-language"),
     });
     const kiwifyUrl = kiwifyUrlFor(plan);
-    if (kiwifyUrl) return NextResponse.redirect(kiwifyUrl, 307);
+    if (kiwifyUrl) return NextResponse.redirect(withUtm(kiwifyUrl, attr), 307);
     return NextResponse.redirect(`${baseUrl}/#planos`, 307);
   }
 
@@ -112,6 +149,7 @@ export async function GET(
         source: "international",
         locale,
         currency,
+        ...attr, // utm_* (quando houver) pra atribuir a venda no Stripe
       },
     });
 
