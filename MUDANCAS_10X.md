@@ -24,9 +24,13 @@ Regra: uma mudança por vez · build após cada · caminhos de dinheiro/acesso s
 
 ---
 
-## ⏳ #2 — AOV: order bump + upsell pós-compra (precisa de decisão de oferta)
-- **Order bump:** config nativa no painel Kiwify (você faz — sem código). Ex.: no checkout da Pergunta, oferecer "+ Limpeza por R$X".
-- **Upsell pós-compra:** bloco 1-clique nas páginas `/obrigado-*` (eu codo, é seguro — página pós-pagamento, não mexe em dinheiro). **Falta você definir as ofertas** (quem comprou X → oferecer Y por quanto).
+## ✅ #2 — AOV: cross-sell pós-compra (FEITO — PR #5)
+**Onde:** `src/lib/welcome-email.ts` (e-mail de boas-vindas, 6 idiomas) + `src/app/api/checkout/[plan]/route.ts` (lê utm da URL, prioridade).
+- **Cross-sell no e-mail de entrega:** bloco SUAVE (estilo secundário, não compete com o CTA de acesso) com o próximo produto — comprou **Pergunta → Limpeza R$100**; comprou **Limpeza → Consulta R$250/mês**. Alcança 100% dos compradores no momento certo. *(Coloquei no e-mail, não no `/obrigado-*`, porque a página de pergunta auto-redireciona e os outros estados são pré-acesso — oferecer "compre mais" antes de usar o 1º produto seria ruim.)*
+- **Mensurável:** o link leva `utm_campaign=upsell_pergunta`/`upsell_limpeza` e o checkout repassa pro Kiwify/Stripe → venda atribuída à campanha de upsell.
+- **Seguro:** template de e-mail; não toca pagamento/acesso. Build ✅.
+
+**Ainda na sua mão (o MAIOR ganho de AOV):** o **order bump no painel do Kiwify** (config, sem código). No checkout de cada produto, ativar "oferta adicional / order bump". Ex.: no checkout da **Pergunta R$29**, marcar "**+ Limpeza por R$80**". É nativo do Kiwify, no momento do pagamento — o lever de AOV nº1. Eu não consigo fazer (é seu painel).
 
 ## ⏳ #3 — Escalar canal vencedor + reativar base (operacional + envio)
 - Escalar o canal que a UTM apontar (anúncios — operacional seu).

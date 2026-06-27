@@ -7,6 +7,8 @@
 import type { Locale } from "@/lib/i18n/locales";
 import { magicEntryUrl } from "@/lib/magic-entry";
 
+const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://atbtartot.com").replace(/\/$/, "");
+
 function escapeHtml(s: string | undefined | null): string {
   if (!s) return "";
   return String(s)
@@ -98,6 +100,34 @@ const COPY: Record<WelcomeProduct, Record<Locale, { emoji: string; subject: stri
   },
 };
 
+// Cross-sell pós-compra (AOV): oferta SUAVE do próximo produto (estilo secundário,
+// não compete com o CTA de acesso). Link com utm pra Kiwify/Stripe atribuírem a venda
+// à campanha de upsell. Só nos produtos de maior volume.
+const CROSS: Partial<Record<WelcomeProduct, { plan: string; copy: Record<Locale, { h: string; d: string; cta: string }> }>> = {
+  pergunta: {
+    plan: "limpeza",
+    copy: {
+      pt: { h: "🕊️ Vá mais fundo", d: "Sentindo um peso que uma pergunta sozinha não tira? A sua Limpeza Espiritual completa com a ATB abre seus caminhos e devolve sua paz.", cta: "Quero minha Limpeza" },
+      en: { h: "🕊️ Go deeper", d: "Feeling a weight one question can't lift? A full Spiritual Cleansing with ATB opens your paths and restores your peace.", cta: "I want my Cleansing" },
+      es: { h: "🕊️ Ve más profundo", d: "¿Sientes un peso que una sola pregunta no quita? Tu Limpieza Espiritual completa con ATB abre tus caminos y devuelve tu paz.", cta: "Quiero mi Limpieza" },
+      de: { h: "🕊️ Geh tiefer", d: "Spürst du eine Last, die eine Frage nicht löst? Eine vollständige spirituelle Reinigung mit ATB öffnet deine Wege und schenkt dir Frieden.", cta: "Ich will meine Reinigung" },
+      it: { h: "🕊️ Vai più a fondo", d: "Senti un peso che una sola domanda non toglie? La tua Pulizia Spirituale completa con ATB apre le tue strade e ti ridona la pace.", cta: "Voglio la mia Pulizia" },
+      ja: { h: "🕊️ さらに深く", d: "一つの質問では晴れない重さを感じていますか？ATBによる本格的な霊的クレンジングが道を開き、心の平和を取り戻します。", cta: "クレンジングを受けたい" },
+    },
+  },
+  limpeza: {
+    plan: "premium",
+    copy: {
+      pt: { h: "💛 Quer a ATB com você todo dia?", d: "Sua limpeza é o começo. Com a Consulta Completa você conversa com a ATB sobre tudo — amor, família, trabalho — sempre que precisar.", cta: "Conhecer a Consulta Completa" },
+      en: { h: "💛 Want ATB with you every day?", d: "Your cleansing is the beginning. With the Full Consultation you talk to ATB about everything — love, family, work — whenever you need.", cta: "See the Full Consultation" },
+      es: { h: "💛 ¿Quieres a ATB contigo cada día?", d: "Tu limpieza es el comienzo. Con la Consulta Completa hablas con ATB sobre todo — amor, familia, trabajo — cuando lo necesites.", cta: "Ver la Consulta Completa" },
+      de: { h: "💛 Willst du ATB jeden Tag an deiner Seite?", d: "Deine Reinigung ist der Anfang. Mit der Vollberatung sprichst du mit ATB über alles — Liebe, Familie, Arbeit — wann immer du willst.", cta: "Vollberatung entdecken" },
+      it: { h: "💛 Vuoi ATB con te ogni giorno?", d: "La tua pulizia è l'inizio. Con la Consulenza Completa parli con ATB di tutto — amore, famiglia, lavoro — quando vuoi.", cta: "Scopri la Consulenza Completa" },
+      ja: { h: "💛 毎日ATBをそばに？", d: "クレンジングは始まりです。フルコンサルテーションなら、愛・家族・仕事など何でも、必要なときにATBと話せます。", cta: "フルコンサルテーションを見る" },
+    },
+  },
+};
+
 export type WelcomeEmailInput = {
   product: WelcomeProduct;
   locale: Locale;
@@ -113,6 +143,16 @@ export function buildWelcomeEmail(input: WelcomeEmailInput): { subject: string; 
   const htmlLang = locale === "pt" ? "pt-BR" : locale;
   // Embrulha o magic-link na página intermediária /entrar (anti-scanner de e-mail).
   const link = escapeHtml(magicEntryUrl(input.magicUrl));
+
+  // Cross-sell suave (AOV) — só quando há oferta de próximo passo pro produto.
+  const cross = CROSS[input.product];
+  const crossBlock = cross
+    ? `<div style="background:rgba(232,184,75,0.06);border:1px solid rgba(232,184,75,0.28);border-radius:14px;padding:20px 22px;margin-top:18px;text-align:center;">
+      <p style="color:#e8b84b;font-size:17px;font-weight:700;margin:0 0 8px;">${cross.copy[locale].h}</p>
+      <p style="color:#fbf8ff;font-size:15px;line-height:1.6;margin:0 0 16px;font-weight:500;">${cross.copy[locale].d}</p>
+      <a href="${escapeHtml(`${SITE}/api/checkout/${cross.plan}?utm_source=email&utm_medium=welcome&utm_campaign=upsell_${input.product}`)}" style="display:inline-block;border:2px solid #e8b84b;color:#e8b84b;font-weight:700;font-size:16px;padding:13px 26px;border-radius:12px;text-decoration:none;">${cross.copy[locale].cta} →</a>
+    </div>`
+    : "";
 
   const html = `<!DOCTYPE html>
 <html lang="${htmlLang}">
@@ -132,6 +172,7 @@ export function buildWelcomeEmail(input: WelcomeEmailInput): { subject: string; 
         <span style="color:#c4b5fd;font-size:12px;word-break:break-all;">${link}</span>
       </p>
     </div>
+    ${crossBlock}
     <div style="text-align:center;margin-top:24px;padding:16px;color:#9575cd;font-size:13px;line-height:1.6;font-style:italic;">${FOOTER[locale]}</div>
   </div>
 </body></html>`;
