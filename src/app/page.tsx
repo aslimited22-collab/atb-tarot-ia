@@ -79,27 +79,24 @@ export default function Home() {
             >
               {t("landing.payment_cta")} — {t("landing.limpeza_price")}
             </a>
-            <p style={{ fontSize: 15, color: "#c4b5fd", marginTop: 14, fontWeight: 500 }}>
-              {t("landing.payment_once")}
+            <p style={{ fontSize: 18, color: S.text, marginTop: 16, fontWeight: 600 }}>
+              <span aria-hidden="true">🔒</span> {t("landing.payment_once")}
+            </p>
+            <p style={{ fontSize: 16, color: S.text2, marginTop: 10, fontWeight: 500, maxWidth: 520 }}>
+              {t("landing.hero_trust")}
             </p>
           </div>
 
-          {/* Imagem à direita — ATB acolhedora */}
+          {/* Imagem à direita — altar sagrado (clara e acolhedora; a antiga era escura e parecia caixa vazia) */}
           <div className="fade-in-up floaty" style={{ position: "relative", borderRadius: 24, overflow: "hidden", boxShadow: "0 24px 70px rgba(232,184,75,0.35), 0 0 0 3px rgba(232,184,75,0.45)" }}>
             <Image
-              src="/img/landing-hero.png"
-              alt={t("landing.hero_alt")}
-              width={768}
-              height={512}
+              src="/img/limpeza-altar.png"
+              alt={t("landing.altar_alt")}
+              width={1536}
+              height={1024}
               priority
               style={{ width: "100%", height: "auto", display: "block" }}
             />
-            <div style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(180deg, transparent 60%, rgba(18,0,37,0.5) 100%)",
-              pointerEvents: "none",
-            }} />
           </div>
         </div>
       </section>
@@ -119,6 +116,19 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Quem é a ATB — âncora humana (tira o medo de "caixa anônima"/charlatão) */}
+      <section style={{ padding: "10px 24px 54px", background: "#160030" }}>
+        <div className="card-gold" style={{ maxWidth: 760, margin: "0 auto", padding: "34px 30px", textAlign: "center" }}>
+          <div style={{ fontSize: 46, marginBottom: 10 }} aria-hidden="true">🙏</div>
+          <h2 className="serif" style={{ fontSize: "clamp(1.7rem,4vw,2.3rem)", color: S.gold, marginBottom: 14, fontWeight: 700 }}>
+            {t("landing.about_title")}
+          </h2>
+          <p style={{ fontSize: 20, color: S.text, lineHeight: 1.65, fontWeight: 500, margin: 0, maxWidth: 600, marginLeft: "auto", marginRight: "auto" }}>
+            {t("landing.about_desc")}
+          </p>
         </div>
       </section>
 
@@ -276,6 +286,28 @@ export default function Home() {
             </div>
           </div>
 
+          {/* FAQ — responde as objeções logo antes do botão (tira o medo do Pix) */}
+          <div className="card" style={{ maxWidth: 720, margin: "0 auto 36px", padding: "32px 28px" }}>
+            <h3 className="serif" style={{ fontSize: "1.6rem", color: S.gold, textAlign: "center", marginBottom: 22, fontWeight: 700 }}>
+              {t("landing.faq_title")}
+            </h3>
+            {[
+              { q: t("landing.faq_q1"), a: t("landing.faq_a1") },
+              { q: t("landing.faq_q2"), a: t("landing.faq_a2") },
+              { q: t("landing.faq_q3"), a: t("landing.faq_a3") },
+              { q: t("landing.faq_q4"), a: t("landing.faq_a4") },
+              { q: t("landing.faq_q5"), a: t("landing.faq_a5") },
+              { q: t("landing.faq_q6"), a: t("landing.faq_a6") },
+            ].map((item, i, arr) => (
+              <div key={i} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: i < arr.length - 1 ? `1px solid ${S.sep}` : "none" }}>
+                <div style={{ fontSize: 19, color: S.text, fontWeight: 700, marginBottom: 6 }}>
+                  <span aria-hidden="true">❓</span> {item.q}
+                </div>
+                <p style={{ fontSize: 18, color: S.text2, lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{item.a}</p>
+              </div>
+            ))}
+          </div>
+
           {/* CTA Compra — botão GIGANTE para 60+ */}
           <div style={{
             background: "linear-gradient(135deg, #1e0040 0%, #4a1a7a 50%, #1e0040 100%)",
@@ -320,6 +352,12 @@ export default function Home() {
                 {t("landing.trust_delivery")}
               </p>
             </div>
+            <p style={{ fontSize: 17, color: S.text, lineHeight: 1.6, marginTop: 18, fontWeight: 600 }}>
+              {t("landing.trust_guarantee")}
+            </p>
+            <p style={{ fontSize: 16, color: S.text2, lineHeight: 1.6, marginTop: 10, fontWeight: 500 }}>
+              {t("landing.cta_reassure")}
+            </p>
           </div>
         </div>
       </section>
@@ -366,7 +404,7 @@ export default function Home() {
           </h2>
           <div className="ornament" style={{ marginBottom: 22 }} aria-hidden="true">✦</div>
           <p style={{ fontSize: 21, color: S.text, textAlign: "center", marginBottom: 40, lineHeight: 1.55, maxWidth: 580, margin: "0 auto 40px", fontWeight: 500 }}>
-            {t("checkout.recurringDisclaimer")}
+            {t("landing.plans_subtitle")}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 20, alignItems: "stretch" }}>
 
@@ -401,6 +439,7 @@ export default function Home() {
                 <li style={{ color: S.text, fontSize: 17, lineHeight: 1.5 }}>✦ {t("plans.premium.numerologia_f4")}</li>
               </ul>
               <a href="/api/checkout/premium" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("plans.premium.numerologia_cta")}</a>
+              <p style={{ fontSize: 13, color: S.text2, marginTop: 12, textAlign: "center", fontWeight: 600 }}>{t("landing.recurring_note")}</p>
               <p style={{ fontSize: 12, color: S.muted, marginTop: 14, fontStyle: "italic", lineHeight: 1.5, textAlign: "center" }}>
                 {t("plans.premium.numerologia_disclaimer")}
               </p>

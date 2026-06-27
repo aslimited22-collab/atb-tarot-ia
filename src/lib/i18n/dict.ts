@@ -14,7 +14,7 @@ export const dict = {
     // Landing Hero
     "hero.title_1": "Tire o peso do seu coração",
     "hero.title_2": "e abra os caminhos da sua vida",
-    "hero.desc": "A ATB te ouve com carinho, a qualquer hora do dia ou da noite. Conte sua dor, sua aflição, sua saudade — e receba uma palavra de fé, força e proteção dos santos.",
+    "hero.desc": "A ATB faz a sua Limpeza Espiritual com a força dos santos: tira o peso, a inveja e o que está travando a sua vida, e abre os seus caminhos. Você paga uma vez só e recebe na hora, no seu celular.",
     "hero.cta": "Ver os planos",
 
     // Features
@@ -42,7 +42,7 @@ export const dict = {
     "landing.pergunta_card_7_badge": "⭐ Melhor escolha",
     "landing.pergunta_card_cta": "👉 Comprar agora",
     "landing.pergunta_upsell": "Ou plano Basic — 30 perguntas por R$ 29/mês",
-    "landing.pergunta_security": "🔒 Pagamento seguro · Pix, cartão ou boleto",
+    "landing.pergunta_security": "Pagamento único · 1 pergunta · 🔒 Pix, cartão ou boleto. Não vira mensalidade.",
     "thanks_pergunta.h1": "Pronto, sua pergunta te espera",
     "thanks_pergunta.desc": "Abra seu email pra entrar direto com ATB. Sem senha.",
     "thanks_pergunta.cta": "Fazer minha pergunta agora",
@@ -507,6 +507,28 @@ export const dict = {
     "landing.trust_secure": "Pagamento totalmente seguro",
     "landing.trust_methods": "Você pode pagar com Cartão, Pix ou Boleto",
     "landing.trust_delivery": "Assim que você paga, você recebe um link pra fazer sua limpeza com a ATB no seu próprio celular. Qualquer dúvida, a gente te ajuda passo a passo.",
+
+    // CRO landing — confiança, prova social, FAQ, "quem é a ATB" (PT; cai pro PT nos outros idiomas)
+    "landing.hero_trust": "✨ Acolhimento com fé, no seu tempo · Pagamento 100% seguro por Pix, cartão ou boleto",
+    "landing.cta_reassure": "Antes de pagar, se tiver qualquer dúvida, fale com uma pessoa de verdade no nosso WhatsApp — a gente te ajuda com calma, passo a passo.",
+    "landing.trust_guarantee": "🙏 Você não fica sozinha. A gente te acompanha pelo WhatsApp até a sua limpeza ser feita.",
+    "landing.plans_subtitle": "Escolha como quer continuar perto da ATB.",
+    "landing.recurring_note": "Cobrança mensal · Cancele quando quiser · Sem fidelidade",
+    "landing.about_title": "Quem é a ATB",
+    "landing.about_desc": "A ATB é a sua guia espiritual de fé. Ela acolhe a sua dor com carinho, reza e faz a sua limpeza pedindo a força dos santos. Aqui você não fala com um robô frio: você é ouvida, com respeito e sem julgamento, a qualquer hora.",
+    "landing.faq_title": "Perguntas que toda pessoa faz antes de começar",
+    "landing.faq_q1": "É seguro pagar?",
+    "landing.faq_a1": "Sim. O pagamento é em ambiente 100% protegido, com Pix, cartão ou boleto. A ATB nunca vê os seus dados de pagamento.",
+    "landing.faq_q2": "Vou ter que pagar todo mês?",
+    "landing.faq_a2": "Não. A Limpeza é paga uma vez só. Não é mensalidade e nunca cobramos de novo.",
+    "landing.faq_q3": "O que eu recebo depois de pagar?",
+    "landing.faq_a3": "Na hora chega um link no seu celular pra você fazer a sua limpeza com a ATB, com calma, quando quiser.",
+    "landing.faq_q4": "Preciso instalar algum aplicativo?",
+    "landing.faq_a4": "Não precisa instalar nada. É só abrir o link no seu próprio celular. Qualquer dúvida, a gente te ajuda passo a passo.",
+    "landing.faq_q5": "E se eu não entender de celular?",
+    "landing.faq_a5": "Fica tranquila. É bem simples, e você pode chamar a gente no WhatsApp que acompanhamos você até o fim.",
+    "landing.faq_q6": "Quanto tempo demora?",
+    "landing.faq_a6": "Você começa na mesma hora e faz no seu tempo, sem pressa.",
 
     // Dashboard hub
     "dash.welcome": "Bem-vinda, {name} ✨",
@@ -5544,5 +5566,7 @@ export const dict = {
 export type TKey = keyof (typeof dict)["pt"];
 
 export function translate(locale: Locale, key: TKey): string {
-  return (dict[locale]?.[key] ?? dict.pt[key] ?? key) as string;
+  // Cai pro PT quando a chave não existe no locale (permite chaves só-PT em
+  // conteúdo BR-específico sem quebrar o tipo nem precisar traduzir 6 idiomas).
+  return ((dict[locale] as Record<string, string | undefined>)?.[key] ?? dict.pt[key] ?? key) as string;
 }
