@@ -649,10 +649,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, plan: "espirito" });
   }
 
-  // VÍDEO CHAMADA (R$ 497) — substituiu o threshold simples >= 500
+  // VÍDEO CHAMADA (R$ 497–877) — detecta por product-id OU por faixa de valor.
+  // A faixa 470–900 cobre o preço atual (R$877) e o antigo (R$497); nenhum outro
+  // produto cai nela (limpeza 100, perguntas 19–39, consulta 250, espírito 437).
+  // O valor SEMPRE vale como fallback — assim, mesmo que o product-id não bata,
+  // a venda é classificada como vídeo em vez de cair no "premium" (bug da Clarice/R$877).
   const videoProductId = process.env.KIWIFY_VIDEO_PRODUCT_ID;
   const isVideoByProduct = videoProductId && productId && productId === videoProductId;
-  const isVideoByValue = !videoProductId && valueBRL >= 470 && valueBRL <= 520;
+  const isVideoByValue = valueBRL >= 470 && valueBRL <= 900;
 
   if ((event === "order.approved" || event === "order_approved") && (isVideoByProduct || isVideoByValue)) {
     // Look up existing user com fuzzy match (resolve casos tipo josi@barkert.com.br ↔ barkert.josi@gmail.com)

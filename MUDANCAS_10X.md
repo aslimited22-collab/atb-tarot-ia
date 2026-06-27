@@ -36,6 +36,16 @@ Regra: uma mudança por vez · build após cada · caminhos de dinheiro/acesso s
 **Onde:** `src/app/dashboard/page.tsx`. Card de cross-sell da **Consulta Completa (R$250/mês)** no dashboard, **só pra quem não é premium** (acima do upsell da Limpeza). Link rastreável (`utm_campaign=upsell_consulta`).
 **Por quê:** hoje só 38 assinantes vs 208 pagantes — empurrar o one-time pra recorrência compõe MRR. **Seguro:** dashboard, não toca pagamento/acesso. Build ✅. Clique medido pelo tracker.
 
+## ✅ #4 — Vídeo Chamada ao Vivo (R$877): consertada + surfaçada — FEITO (PR #7)
+**Contexto:** venda de R$877 (Clarice) caiu como "premium" (chat) em vez de vídeo — o código detectava vídeo só na faixa R$470–520 (era R$497), mas o Kiwify cobra R$877. A cliente de maior ticket recebeu o e-mail errado e não tem perfil/login ainda.
+**Fixes (caminho sagrado — webhook/preço):**
+- `pricing.ts` — videochamada 49700 → **87700** (alinha página /videochamada + Stripe ao preço real R$877; corrige isca-e-troca: página mostrava R$497, cobrava R$877).
+- `api/webhooks/kiwify/route.ts` — faixa de detecção de vídeo 470–520 → **470–900** (pega R$497 e R$877); o valor SEMPRE vale como fallback. Nenhum outro produto cai na faixa (limpeza 100, perguntas 19–39, consulta 250, espírito 437).
+**Surfaçar (topo-de-escada / AOV):**
+- `dashboard/page.tsx` — card "Sessão ao Vivo" só pra quem **já é premium** (público mais quente) → leva pra `/videochamada` (página de vendas que já existia, sem link). `utm_campaign=upsell_video`.
+- 3 chaves novas em `dict.ts` (6 idiomas).
+**Pendente seu:** (1) falar com a **Clarice** pra agendar a sessão; (2) **OK de deploy** (toca webhook = sagrado). Build ✅.
+
 ## ⏳ #3 — Escalar canal vencedor + reativar base (operacional + envio)
 - Escalar o canal que a UTM apontar (anúncios — operacional seu).
 - Reativar 358 contas paradas + win-back de assinatura recusada via cron de remarketing (já existe) — **precisa do seu OK pra disparar e-mails**.
