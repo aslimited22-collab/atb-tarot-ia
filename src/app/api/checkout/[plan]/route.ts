@@ -35,20 +35,32 @@ type Attr = { utm_source?: string; utm_medium?: string; utm_campaign?: string; u
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
 
 function getAttribution(req: Request): Attr {
+  const out: Attr = {};
+  // 1) Query da URL (ex.: link de e-mail com ?utm_source=email&utm_campaign=upsell_x)
+  //    tem prioridade — atribui a campanha específica que trouxe o clique.
+  try {
+    const sp = new URL(req.url).searchParams;
+    for (const k of UTM_KEYS) {
+      const v = sp.get(k);
+      if (v) out[k] = v.slice(0, 150);
+    }
+  } catch {
+    /* ignore */
+  }
+  // 2) Cookie atb_attr (first-touch da landing) preenche o que faltar.
   try {
     const cookie = req.headers.get("cookie") || "";
     const m = cookie.match(/(?:^|;\s*)atb_attr=([^;]+)/);
-    if (!m) return {};
-    const obj = JSON.parse(decodeURIComponent(m[1])) as Record<string, unknown>;
-    const out: Attr = {};
-    for (const k of UTM_KEYS) {
-      const v = obj[k];
-      if (typeof v === "string" && v) out[k] = v.slice(0, 150);
+    if (m) {
+      const obj = JSON.parse(decodeURIComponent(m[1])) as Record<string, unknown>;
+      for (const k of UTM_KEYS) {
+        if (!out[k] && typeof obj[k] === "string" && obj[k]) out[k] = (obj[k] as string).slice(0, 150);
+      }
     }
-    return out;
   } catch {
-    return {};
+    /* ignore */
   }
+  return out;
 }
 
 function withUtm(rawUrl: string, attr: Attr): string {
