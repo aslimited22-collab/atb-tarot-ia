@@ -322,6 +322,49 @@ export default async function DashboardHome() {
       </div>
 
       {/* 🕊️ Upsell: Limpeza Espiritual — destaque grande */}
+      {/* 💛 Cross-sell: Consulta Completa (assinatura/MRR) — só pra quem ainda não é premium.
+          Link com utm pra atribuir a venda à campanha de upsell (Kiwify BR / Stripe intl). */}
+      {!isPremium && (
+        <a
+          href="/api/checkout/premium?utm_source=dashboard&utm_medium=app&utm_campaign=upsell_consulta"
+          style={{
+            display: "block",
+            background: "linear-gradient(135deg, #2e0a5e 0%, #3b0764 55%, #2a0055 100%)",
+            border: "3px solid rgba(232,184,75,0.6)",
+            borderRadius: 22,
+            padding: "28px 22px",
+            textDecoration: "none",
+            textAlign: "center",
+            marginBottom: 20,
+            boxShadow: "0 12px 36px rgba(232,184,75,0.2)",
+          }}
+        >
+          <div style={{ fontSize: 56, marginBottom: 10 }} aria-hidden="true">💛</div>
+          <div className="serif" style={{ fontSize: "1.8rem", color: "#f5c860", marginBottom: 8, fontWeight: 700, lineHeight: 1.15 }}>
+            {t("plans.premium.numerologia_title")}
+          </div>
+          <p style={{ fontSize: "1.05rem", color: "#fbf8ff", lineHeight: 1.6, maxWidth: 440, margin: "0 auto 10px", fontWeight: 500 }}>
+            {t("plans.premium.numerologia_subtitle")}
+          </p>
+          <div style={{ fontSize: "1.6rem", color: "#fff", fontWeight: 800, marginBottom: 16 }}>
+            {t("plans.premium_price")} <span style={{ fontSize: 15, fontWeight: 400, color: "#c4b5fd" }}>{t("price.perMonth")}</span>
+          </div>
+          <div style={{
+            display: "inline-block",
+            background: "linear-gradient(90deg, #f5c860, #e8b84b)",
+            color: "#1e0040",
+            padding: "18px 36px",
+            minHeight: 60,
+            borderRadius: 999,
+            fontWeight: 800,
+            fontSize: 18,
+            boxShadow: "0 6px 22px rgba(232,184,75,0.5)",
+          }}>
+            {t("plans.premium.numerologia_cta")}
+          </div>
+        </a>
+      )}
+
       <Link
         href="/dashboard/limpeza-espiritual"
         style={{

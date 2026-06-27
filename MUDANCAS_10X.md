@@ -32,6 +32,10 @@ Regra: uma mudança por vez · build após cada · caminhos de dinheiro/acesso s
 
 **Ainda na sua mão (o MAIOR ganho de AOV):** o **order bump no painel do Kiwify** (config, sem código). No checkout de cada produto, ativar "oferta adicional / order bump". Ex.: no checkout da **Pergunta R$29**, marcar "**+ Limpeza por R$80**". É nativo do Kiwify, no momento do pagamento — o lever de AOV nº1. Eu não consigo fazer (é seu painel).
 
+## ✅ #2b — Empurrar one-time → assinatura (MRR) — FEITO (PR #6)
+**Onde:** `src/app/dashboard/page.tsx`. Card de cross-sell da **Consulta Completa (R$250/mês)** no dashboard, **só pra quem não é premium** (acima do upsell da Limpeza). Link rastreável (`utm_campaign=upsell_consulta`).
+**Por quê:** hoje só 38 assinantes vs 208 pagantes — empurrar o one-time pra recorrência compõe MRR. **Seguro:** dashboard, não toca pagamento/acesso. Build ✅. Clique medido pelo tracker.
+
 ## ⏳ #3 — Escalar canal vencedor + reativar base (operacional + envio)
 - Escalar o canal que a UTM apontar (anúncios — operacional seu).
 - Reativar 358 contas paradas + win-back de assinatura recusada via cron de remarketing (já existe) — **precisa do seu OK pra disparar e-mails**.
