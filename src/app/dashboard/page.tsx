@@ -322,6 +322,46 @@ export default async function DashboardHome() {
       </div>
 
       {/* 🕊️ Upsell: Limpeza Espiritual — destaque grande */}
+      {/* 🎥 Topo-de-escada: Sessão ao Vivo (R$877) — só pra quem JÁ é premium (público mais quente).
+          Leva pra página de vendas /videochamada (high-ticket precisa aquecer antes do checkout). */}
+      {isPremium && (
+        <Link
+          href="/videochamada?utm_source=dashboard&utm_medium=app&utm_campaign=upsell_video"
+          style={{
+            display: "block",
+            background: "linear-gradient(135deg, #2a0a52 0%, #4a1a7a 55%, #2a0a52 100%)",
+            border: "3px solid rgba(232,184,75,0.6)",
+            borderRadius: 22,
+            padding: "28px 22px",
+            textDecoration: "none",
+            textAlign: "center",
+            marginBottom: 20,
+            boxShadow: "0 12px 36px rgba(232,184,75,0.2)",
+          }}
+        >
+          <div style={{ fontSize: 56, marginBottom: 10 }} aria-hidden="true">🎥</div>
+          <div className="serif" style={{ fontSize: "1.8rem", color: "#f5c860", marginBottom: 8, fontWeight: 700, lineHeight: 1.15 }}>
+            {t("dash.video_h1")}
+          </div>
+          <p style={{ fontSize: "1.05rem", color: "#fbf8ff", lineHeight: 1.6, maxWidth: 440, margin: "0 auto 16px", fontWeight: 500 }}>
+            {t("dash.video_desc")}
+          </p>
+          <div style={{
+            display: "inline-block",
+            background: "linear-gradient(90deg, #f5c860, #e8b84b)",
+            color: "#1e0040",
+            padding: "18px 36px",
+            minHeight: 60,
+            borderRadius: 999,
+            fontWeight: 800,
+            fontSize: 18,
+            boxShadow: "0 6px 22px rgba(232,184,75,0.5)",
+          }}>
+            {t("dash.video_cta")}
+          </div>
+        </Link>
+      )}
+
       {/* 💛 Cross-sell: Consulta Completa (assinatura/MRR) — só pra quem ainda não é premium.
           Link com utm pra atribuir a venda à campanha de upsell (Kiwify BR / Stripe intl). */}
       {!isPremium && (

@@ -79,7 +79,7 @@ export default function TermosPage() {
         <h3 style={{ fontSize: "1.25rem", color: "#f5c860", marginTop: 24, marginBottom: 10, fontWeight: 700 }}>3.1. Produtos avulsos</h3>
         <ul style={{ paddingLeft: 24 }}>
           <li style={liStyle}><strong>Limpeza Espiritual — R$ 100</strong>: pagamento único, entrega imediata via e-mail/WhatsApp.</li>
-          <li style={liStyle}><strong>Sessão Vídeo Chamada — R$ 497</strong>: agendamento via WhatsApp após pagamento.</li>
+          <li style={liStyle}><strong>Sessão Vídeo Chamada — R$ 877</strong>: agendamento via WhatsApp após pagamento.</li>
         </ul>
 
         <h2 style={h2Style}>4. Cancelamento</h2>

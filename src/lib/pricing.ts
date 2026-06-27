@@ -37,10 +37,10 @@ export const PLAN_PRICES: Record<PlanId, Record<Currency, number>> = {
     jpy: 2900, // ¥2900/月
   },
   videochamada: {
-    brl: 49700, // R$497,00 (one-time)
-    usd: 49700, // $497.00
-    eur: 49700, // €497,00
-    jpy: 49700, // ¥49700
+    brl: 87700, // R$877,00 (one-time) — alinhado ao produto Kiwify
+    usd: 87700, // $877.00
+    eur: 87700, // €877,00
+    jpy: 87700, // ¥87700
   },
   limpeza: {
     brl: 10000, // R$100,00 (one-time)
