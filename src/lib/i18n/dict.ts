@@ -535,6 +535,7 @@ export const dict = {
     "landing.video_card_desc": "Uma hora só sua, por vídeo no WhatsApp. A ATB ouve o seu coração e lê as cartas pra você, ao vivo, com calma e sem pressa.",
     "landing.video_card_cta": "🎥 Quero minha sessão ao vivo",
     "landing.video_card_note": "Pagamento único · Agendamento flexível no WhatsApp",
+    "landing.plan_recommended": "✨ RECOMENDADA",
 
     // Dashboard hub
     "dash.welcome": "Bem-vinda, {name} ✨",

@@ -409,7 +409,11 @@ export default function Home() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 20, alignItems: "stretch" }}>
 
             {/* PRODUTO 2 — CONSULTA COMPLETA (Premium R$197/mês: consulta + numerologia + tratamento espiritual) */}
-            <div className="card-gold lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+            <div className="card-gold lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", order: 2 }}>
+              {/* Selo de recomendação — ponto focal da escada de ofertas */}
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#120025", background: "linear-gradient(90deg, #f5c860, #e8b84b)", borderRadius: 999, padding: "7px 20px", display: "inline-block", marginBottom: 16, alignSelf: "center", letterSpacing: "0.04em", boxShadow: "0 4px 14px rgba(232,184,75,0.5)" }}>
+                {t("landing.plan_recommended")}
+              </div>
               {/* Decoração: bolas douradas sutis no topo */}
               <div style={{ position: "absolute", top: -20, right: -20, display: "flex", gap: 8, opacity: 0.18, pointerEvents: "none" }} aria-hidden="true">
                 {[42, 27, 13].map((n, i) => (
@@ -446,7 +450,7 @@ export default function Home() {
             </div>
 
             {/* PRODUTO 3 — PERGUNTA avulsa (R$29, pagamento único, 1 pergunta à ATB) */}
-            <div className="card lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)" }}>
+            <div className="card lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.4)", order: 1 }}>
               <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 8, fontWeight: 700, lineHeight: 1.1 }}>
                 {t("landing.pergunta_card_1_h")}
               </h3>
@@ -464,7 +468,7 @@ export default function Home() {
             </div>
 
             {/* PRODUTO 4 — SESSÃO AO VIVO / Vídeo Chamada (R$877) — leva pra página de vendas /videochamada */}
-            <div className="card lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.55)" }}>
+            <div className="card lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.55)", order: 3 }}>
               <div style={{ fontSize: 13, fontWeight: 700, background: S.gold, color: "#120025", borderRadius: 999, padding: "5px 16px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em" }}>{t("landing.video_card_badge")}</div>
               <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 8, fontWeight: 700, lineHeight: 1.1 }}>
                 {t("landing.video_card_title")}
