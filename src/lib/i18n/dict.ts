@@ -529,6 +529,12 @@ export const dict = {
     "landing.faq_a5": "Fica tranquila. É bem simples, e você pode chamar a gente no WhatsApp que acompanhamos você até o fim.",
     "landing.faq_q6": "Quanto tempo demora?",
     "landing.faq_a6": "Você começa na mesma hora e faz no seu tempo, sem pressa.",
+    "landing.video_card_badge": "✨ AO VIVO",
+    "landing.video_card_title": "Sessão ao Vivo com a ATB",
+    "landing.video_card_price": "R$ 877",
+    "landing.video_card_desc": "Uma hora só sua, por vídeo no WhatsApp. A ATB ouve o seu coração e lê as cartas pra você, ao vivo, com calma e sem pressa.",
+    "landing.video_card_cta": "🎥 Quero minha sessão ao vivo",
+    "landing.video_card_note": "Pagamento único · Agendamento flexível no WhatsApp",
 
     // Dashboard hub
     "dash.welcome": "Bem-vinda, {name} ✨",

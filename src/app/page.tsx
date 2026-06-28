@@ -462,6 +462,25 @@ export default function Home() {
                 {t("landing.pergunta_security")}
               </p>
             </div>
+
+            {/* PRODUTO 4 — SESSÃO AO VIVO / Vídeo Chamada (R$877) — leva pra página de vendas /videochamada */}
+            <div className="card lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", border: "2px solid rgba(232,184,75,0.55)" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, background: S.gold, color: "#120025", borderRadius: 999, padding: "5px 16px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em" }}>{t("landing.video_card_badge")}</div>
+              <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 8, fontWeight: 700, lineHeight: 1.1 }}>
+                {t("landing.video_card_title")}
+              </h3>
+              <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 10, lineHeight: 1 }}>
+                {t("landing.video_card_price")}
+              </div>
+              <p style={{ fontSize: 17, color: S.text, marginBottom: 24, fontWeight: 500, lineHeight: 1.5 }}>
+                {t("landing.video_card_desc")}
+              </p>
+              <div style={{ flex: 1 }} />
+              <a href="/videochamada?utm_source=home&utm_medium=card&utm_campaign=card_video" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>{t("landing.video_card_cta")}</a>
+              <p style={{ fontSize: 15, color: S.muted, marginTop: 14, lineHeight: 1.5, textAlign: "center", fontWeight: 500 }}>
+                {t("landing.video_card_note")}
+              </p>
+            </div>
           </div>
         </div>
       </section>
