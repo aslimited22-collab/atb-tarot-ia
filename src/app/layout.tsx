@@ -6,6 +6,7 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { AnalyticsWrapper } from "@/components/AnalyticsWrapper";
 import AttributionTracker from "@/components/AttributionTracker";
 import GoogleAdsTag from "@/components/GoogleAdsTag";
+import GoogleAdsFunnelEvents from "@/components/GoogleAdsFunnelEvents";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 import GlobalLangSwitcher from "@/components/GlobalLangSwitcher";
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AnalyticsWrapper />
           <AttributionTracker />
           <GoogleAdsTag />
+          <GoogleAdsFunnelEvents />
           <Toaster
             position="top-center"
             toastOptions={{

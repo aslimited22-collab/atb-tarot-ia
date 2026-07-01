@@ -5,6 +5,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { fireGadsLead } from "@/lib/gads-events";
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function CadastroPage() {
     const supabase = createClient();
     const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
+    fireGadsLead(); // conversão "Lead/Cadastro" do Google Ads (uma vez, no sucesso)
     if (loginError) return toast.error(t("auth.signup_created"));
     toast.success(t("auth.signup_success"));
     // Após criar conta, manda direto pros planos — não tem nada de graça pra usar antes
