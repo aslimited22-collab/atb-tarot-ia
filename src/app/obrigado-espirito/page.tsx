@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ObrigadoEspiritoClient from "./client";
+import GoogleAdsPurchase from "@/components/GoogleAdsPurchase";
 
 export const dynamic = "force-dynamic";
 
@@ -39,9 +40,14 @@ export default async function ObrigadoEspiritoPage({
     }
   }
 
+  // Conversão "Compra" do Google Ads (Espírito R$437; dedupe via orderRef)
+  const gadsPurchase = (
+    <GoogleAdsPurchase value={437} orderId={orderRef || undefined} email={customerEmail || undefined} />
+  );
+
   // Já logado?
   if (user) {
-    return <ObrigadoEspiritoClient mode="logged-purchased" email={(user.email || "").toLowerCase()} />;
+    return <>{gadsPurchase}<ObrigadoEspiritoClient mode="logged-purchased" email={(user.email || "").toLowerCase()} /></>;
   }
 
   // Não logado — checa se já tem conta
@@ -54,9 +60,9 @@ export default async function ObrigadoEspiritoPage({
       .maybeSingle();
 
     if (existingUser) {
-      return <ObrigadoEspiritoClient mode="account-exists" email={customerEmail} />;
+      return <>{gadsPurchase}<ObrigadoEspiritoClient mode="account-exists" email={customerEmail} /></>;
     }
   }
 
-  return <ObrigadoEspiritoClient mode="needs-signup" email={customerEmail} />;
+  return <>{gadsPurchase}<ObrigadoEspiritoClient mode="needs-signup" email={customerEmail} /></>;
 }

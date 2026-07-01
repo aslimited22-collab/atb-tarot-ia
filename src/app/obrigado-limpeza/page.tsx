@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ObrigadoLimpezaClient from "./client";
+import GoogleAdsPurchase from "@/components/GoogleAdsPurchase";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,11 @@ export default async function ObrigadoLimpezaPage({
     }
   }
 
+  // Conversão "Compra" do Google Ads (dedupe via orderId; email = conversões aprimoradas)
+  const gadsPurchase = (
+    <GoogleAdsPurchase value={100} orderId={orderIdValid || undefined} email={customerEmail || undefined} />
+  );
+
   // Já está logado?
   if (user) {
     // Se logado E tem compra de limpeza, vai direto para a sessão
@@ -47,11 +53,11 @@ export default async function ObrigadoLimpezaPage({
       .maybeSingle();
 
     if (purchase) {
-      return <ObrigadoLimpezaClient mode="logged-purchased" email={userEmail} orderId={orderIdValid} />;
+      return <>{gadsPurchase}<ObrigadoLimpezaClient mode="logged-purchased" email={userEmail} orderId={orderIdValid} /></>;
     }
 
     // Logado mas sem compra registrada ainda — webhook pode estar atrasado
-    return <ObrigadoLimpezaClient mode="logged-waiting" email={userEmail} orderId={orderIdValid} />;
+    return <>{gadsPurchase}<ObrigadoLimpezaClient mode="logged-waiting" email={userEmail} orderId={orderIdValid} /></>;
   }
 
   // Não logado — verifica se já existe conta com esse email
@@ -65,10 +71,10 @@ export default async function ObrigadoLimpezaPage({
 
     if (existingUser) {
       // Já tem conta — manda fazer login
-      return <ObrigadoLimpezaClient mode="account-exists" email={customerEmail} orderId={orderIdValid} />;
+      return <>{gadsPurchase}<ObrigadoLimpezaClient mode="account-exists" email={customerEmail} orderId={orderIdValid} /></>;
     }
   }
 
   // Não logado, sem conta — pede pra criar conta
-  return <ObrigadoLimpezaClient mode="needs-signup" email={customerEmail} orderId={orderIdValid} />;
+  return <>{gadsPurchase}<ObrigadoLimpezaClient mode="needs-signup" email={customerEmail} orderId={orderIdValid} /></>;
 }
