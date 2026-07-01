@@ -8,7 +8,7 @@ import { GADS_ID } from "@/components/GoogleAdsTag";
 // pagamento. Não bloqueia a navegação: transport_type 'beacon' envia o hit
 // mesmo com a página descarregando. Mesmo padrão de captura do AttributionTracker.
 // Rótulo via env (Production-only na Vercel) — sem a env, não dispara (dev/preview ok).
-const CHECKOUT_LABEL = process.env.NEXT_PUBLIC_GADS_CHECKOUT_LABEL || "";
+const CHECKOUT_LABEL = (process.env.NEXT_PUBLIC_GADS_CHECKOUT_LABEL || "").trim();
 
 export default function GoogleAdsFunnelEvents() {
   useEffect(() => {

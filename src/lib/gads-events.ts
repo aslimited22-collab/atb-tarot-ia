@@ -3,7 +3,7 @@
 // Vercel — em dev/preview as vars não existem, então nenhum evento dispara.
 import { GADS_ID } from "@/components/GoogleAdsTag";
 
-const LEAD_LABEL = process.env.NEXT_PUBLIC_GADS_LEAD_LABEL || "";
+const LEAD_LABEL = (process.env.NEXT_PUBLIC_GADS_LEAD_LABEL || "").trim();
 
 type GtagFn = (...args: unknown[]) => void;
 

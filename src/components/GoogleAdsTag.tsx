@@ -6,7 +6,8 @@ import Script from "next/script";
 //  - remarketing (públicos de visitantes no Google Ads)
 //  - conversões aprimoradas (casa a venda pelo e-mail — checkout é no Kiwify, outro domínio)
 // ID público por natureza (aparece no fonte de qualquer site que anuncia).
-export const GADS_ID = process.env.NEXT_PUBLIC_GADS_ID || "AW-11337182960";
+// .trim() defensivo: env setada via CLI pode vir com \n no fim (quebraria o send_to).
+export const GADS_ID = (process.env.NEXT_PUBLIC_GADS_ID || "AW-11337182960").trim();
 
 export default function GoogleAdsTag() {
   if (!GADS_ID) return null;
