@@ -31,8 +31,15 @@ export const dynamic = "force-dynamic";
 // AttributionTracker) e repassa ao checkout — pra Kiwify/Stripe atribuírem a venda
 // ao canal. PURAMENTE ADITIVO: nunca altera produto/preço/fluxo; qualquer falha
 // cai no comportamento original (try/catch).
-type Attr = { utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string; utm_term?: string };
+type Attr = {
+  utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string; utm_term?: string;
+  gclid?: string; gbraid?: string; wbraid?: string;
+};
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
+// Click IDs do Google Ads — repassados na URL do Kiwify pro pixel deles
+// carimbar a conversão com o clique do anúncio (atribuição da venda).
+const CLICK_KEYS = ["gclid", "gbraid", "wbraid"] as const;
+const ALL_KEYS = [...UTM_KEYS, ...CLICK_KEYS] as const;
 
 function getAttribution(req: Request): Attr {
   const out: Attr = {};
@@ -40,20 +47,25 @@ function getAttribution(req: Request): Attr {
   //    tem prioridade — atribui a campanha específica que trouxe o clique.
   try {
     const sp = new URL(req.url).searchParams;
-    for (const k of UTM_KEYS) {
+    for (const k of ALL_KEYS) {
       const v = sp.get(k);
       if (v) out[k] = v.slice(0, 150);
     }
   } catch {
     /* ignore */
   }
-  // 2) Cookie atb_attr (first-touch da landing) preenche o que faltar.
+  // 2) Cookies (first-touch utm em atb_attr; last-touch click ids em atb_gclid)
+  //    preenchem o que faltar.
   try {
     const cookie = req.headers.get("cookie") || "";
-    const m = cookie.match(/(?:^|;\s*)atb_attr=([^;]+)/);
-    if (m) {
+    for (const [name, keys] of [
+      ["atb_attr", UTM_KEYS],
+      ["atb_gclid", CLICK_KEYS],
+    ] as const) {
+      const m = cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+      if (!m) continue;
       const obj = JSON.parse(decodeURIComponent(m[1])) as Record<string, unknown>;
-      for (const k of UTM_KEYS) {
+      for (const k of keys) {
         if (!out[k] && typeof obj[k] === "string" && obj[k]) out[k] = (obj[k] as string).slice(0, 150);
       }
     }
@@ -66,7 +78,7 @@ function getAttribution(req: Request): Attr {
 function withUtm(rawUrl: string, attr: Attr): string {
   try {
     const u = new URL(rawUrl);
-    for (const k of UTM_KEYS) {
+    for (const k of ALL_KEYS) {
       if (attr[k]) u.searchParams.set(k, attr[k]!);
     }
     return u.toString();

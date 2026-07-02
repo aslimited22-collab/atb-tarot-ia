@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ObrigadoLimpezaClient from "./client";
-import GoogleAdsPurchase from "@/components/GoogleAdsPurchase";
 
 export const dynamic = "force-dynamic";
 
@@ -33,10 +32,10 @@ export default async function ObrigadoLimpezaPage({
     }
   }
 
-  // Conversão "Compra" do Google Ads (dedupe via orderId; email = conversões aprimoradas)
-  const gadsPurchase = (
-    <GoogleAdsPurchase value={100} orderId={orderIdValid || undefined} email={customerEmail || undefined} />
-  );
+  // NOTA: aqui NÃO disparamos a conversão "Compra" do Google Ads — pro produto
+  // Limpeza quem dispara é o PIXEL DO KIWIFY (configurado no produto, "ao aprovar
+  // cartão/pix"). Disparar aqui também contaria a venda 2x (contagem = "Todas" e
+  // o redirect da Kiwify vem só com ?email=, sem transaction_id pra dedupe).
 
   // Já está logado?
   if (user) {
@@ -53,11 +52,11 @@ export default async function ObrigadoLimpezaPage({
       .maybeSingle();
 
     if (purchase) {
-      return <>{gadsPurchase}<ObrigadoLimpezaClient mode="logged-purchased" email={userEmail} orderId={orderIdValid} /></>;
+      return <ObrigadoLimpezaClient mode="logged-purchased" email={userEmail} orderId={orderIdValid} />;
     }
 
     // Logado mas sem compra registrada ainda — webhook pode estar atrasado
-    return <>{gadsPurchase}<ObrigadoLimpezaClient mode="logged-waiting" email={userEmail} orderId={orderIdValid} /></>;
+    return <ObrigadoLimpezaClient mode="logged-waiting" email={userEmail} orderId={orderIdValid} />;
   }
 
   // Não logado — verifica se já existe conta com esse email
@@ -71,10 +70,10 @@ export default async function ObrigadoLimpezaPage({
 
     if (existingUser) {
       // Já tem conta — manda fazer login
-      return <>{gadsPurchase}<ObrigadoLimpezaClient mode="account-exists" email={customerEmail} orderId={orderIdValid} /></>;
+      return <ObrigadoLimpezaClient mode="account-exists" email={customerEmail} orderId={orderIdValid} />;
     }
   }
 
   // Não logado, sem conta — pede pra criar conta
-  return <>{gadsPurchase}<ObrigadoLimpezaClient mode="needs-signup" email={customerEmail} orderId={orderIdValid} /></>;
+  return <ObrigadoLimpezaClient mode="needs-signup" email={customerEmail} orderId={orderIdValid} />;
 }

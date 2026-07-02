@@ -163,10 +163,45 @@ export async function POST(req: Request) {
 
     // M-5: Monta URL do checkout (Kiwify ou Stripe). Se ambos falharem,
     // limpamos a order recém-criada e retornamos 503.
+
+    // Atribuição Google Ads: anexa gclid/gbraid/wbraid + utm_* (cookies atb_gclid/
+    // atb_attr do AttributionTracker) na URL do checkout Kiwify. O pixel da Kiwify
+    // captura o gclid da URL e carimba a conversão — sem isso o Google não atribui
+    // a venda ao anúncio. Best-effort: qualquer falha cai na URL original.
+    function trackingParams(): Record<string, string> {
+      const out: Record<string, string> = {};
+      try {
+        const cookie = req.headers.get("cookie") || "";
+        for (const [name, keys] of [
+          ["atb_gclid", ["gclid", "gbraid", "wbraid"]],
+          ["atb_attr", ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]],
+        ] as const) {
+          const m = cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+          if (!m) continue;
+          const obj = JSON.parse(decodeURIComponent(m[1])) as Record<string, unknown>;
+          for (const k of keys) {
+            const v = obj[k];
+            if (typeof v === "string" && v) out[k] = v.slice(0, 150);
+          }
+        }
+      } catch {
+        /* best-effort */
+      }
+      return out;
+    }
+
     function buildKiwifyUrl(orderId: string): string | null {
       if (!baseKiwify) return null;
-      const sep = baseKiwify.includes("?") ? "&" : "?";
-      return `${baseKiwify}${sep}external_reference=${orderId}&email=${encodeURIComponent(email)}`;
+      try {
+        const u = new URL(baseKiwify);
+        u.searchParams.set("external_reference", orderId);
+        u.searchParams.set("email", email);
+        for (const [k, v] of Object.entries(trackingParams())) u.searchParams.set(k, v);
+        return u.toString();
+      } catch {
+        const sep = baseKiwify.includes("?") ? "&" : "?";
+        return `${baseKiwify}${sep}external_reference=${orderId}&email=${encodeURIComponent(email)}`;
+      }
     }
 
     let checkoutUrl: string | null = null;

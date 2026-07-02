@@ -49,6 +49,20 @@ export default function AttributionTracker() {
       if (hasUtm && !getCookie("atb_attr")) {
         setCookie("atb_attr", JSON.stringify({ ...cur, referrer: document.referrer || null }), 90);
       }
+      // Click IDs do Google Ads (gclid/gbraid/wbraid) — LAST-touch: um novo clique
+      // de anúncio sobrescreve o anterior (janela de conversão da conta = 90 dias).
+      // Cookie (o backend lê ao montar a URL do checkout Kiwify) + localStorage
+      // (redundância). Captura própria — não depende da tag gtag nem do _gcl_aw.
+      const click = {
+        gclid: q.get("gclid"),
+        gbraid: q.get("gbraid"),
+        wbraid: q.get("wbraid"),
+      };
+      if (Object.values(click).some(Boolean)) {
+        const packed = JSON.stringify(click);
+        setCookie("atb_gclid", packed, 90);
+        try { localStorage.setItem("atb_gclid", packed); } catch { /* ignore */ }
+      }
       let attr: Record<string, string | null> | null = null;
       try { attr = JSON.parse(getCookie("atb_attr") || "null"); } catch { /* ignore */ }
       const utm = {
