@@ -15,7 +15,10 @@ export default function GoogleAdsFunnelEvents() {
     if (!CHECKOUT_LABEL || !GADS_ID) return;
     const onClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
-      const link = target?.closest?.('a[href*="/api/checkout/"]');
+      // Dois formatos de botão de compra no site:
+      //  - /api/checkout/[plan] (home, dashboard, e-mails) — roteador BR/intl
+      //  - pay.kiwify.com.br direto (botão dourado do funil /limpeza pós-prévia)
+      const link = target?.closest?.('a[href*="/api/checkout/"], a[href*="pay.kiwify.com.br"]');
       if (!link) return;
       const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
       if (typeof gtag !== "function") return;
