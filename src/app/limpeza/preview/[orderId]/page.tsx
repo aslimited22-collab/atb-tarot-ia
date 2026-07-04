@@ -32,6 +32,11 @@ function buildFallbackCheckout(base: string, orderId: string, email: string): st
         }
       } catch { /* best-effort */ }
     }
+    // Veio de anúncio (gclid) sem utm → rotula a origem pro painel do Kiwify.
+    if (u.searchParams.get("gclid") && !u.searchParams.get("utm_source")) {
+      u.searchParams.set("utm_source", "google");
+      u.searchParams.set("utm_medium", "cpc");
+    }
     return u.toString();
   } catch {
     return `${base}${base.includes("?") ? "&" : "?"}external_reference=${orderId}&email=${encodeURIComponent(email)}`;

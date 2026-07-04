@@ -187,6 +187,11 @@ export async function POST(req: Request) {
       } catch {
         /* best-effort */
       }
+      // Veio de anúncio (gclid) sem utm → rotula a origem pro painel do Kiwify.
+      if (out.gclid && !out.utm_source) {
+        out.utm_source = "google";
+        out.utm_medium = "cpc";
+      }
       return out;
     }
 

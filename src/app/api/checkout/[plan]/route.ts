@@ -72,6 +72,12 @@ function getAttribution(req: Request): Attr {
   } catch {
     /* ignore */
   }
+  // Veio de anúncio (gclid) sem utm na URL → rotula a origem pro painel do
+  // Kiwify mostrar de onde veio a venda (o gclid sozinho não aparece lá).
+  if (out.gclid && !out.utm_source) {
+    out.utm_source = "google";
+    out.utm_medium = "cpc";
+  }
   return out;
 }
 
