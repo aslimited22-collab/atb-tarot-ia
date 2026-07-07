@@ -10,6 +10,7 @@ const HIDDEN_PATHS = [
   "/login",
   "/cadastro",
   "/limpeza/preview",
+  "/limpeza-espiritual", // landing focada R$29 tem barra própria (evita CTA duplo R$100)
   "/entrega",
   "/admin",
   "/obrigado-",
