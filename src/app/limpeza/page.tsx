@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { LimpezaForm } from "./LimpezaForm";
-import { getServerT } from "@/lib/i18n/server";
+import { getServerT, getServerLocale } from "@/lib/i18n/server";
 
 // Metadata é estática (Next exige). Usa PT por default; SEO em outros idiomas
 // pode ser adicionado depois via generateMetadata se necessário.
@@ -10,8 +10,30 @@ export const metadata = {
     "Receba sua Limpeza Espiritual personalizada da ATB. Escreva seu nome e o que está sentindo. A ATB prepara uma orientação espiritual simples, acolhedora e personalizada para você.",
 };
 
+// Seções CRO específicas do tráfego pago BR (brief 08/07): preço R$100, selos,
+// "o que está incluído", depoimentos e FAQ. São BR-only (R$/Pix) — renderizadas
+// só no locale PT (intl passa por Stripe/USD, mostrar R$100/Pix estaria errado).
+// Copy honesta: acolhimento/fé/proteção, sem promessa de cura/resultado.
+const BR_INCLUIDO: [string, string][] = [
+  ["🔎", "Uma leitura do que você está sentindo — a ATB entende o seu momento."],
+  ["🕯️", "Sua limpeza espiritual feita pro seu caso, com oração e proteção dos santos."],
+  ["📿", "Uma orientação simples do que fazer depois pra manter a sua paz."],
+];
+const BR_DEPOIMENTOS: [string, string][] = [
+  ["“Eu tava com o coração pesado fazia meses. Depois da limpeza com a ATB, respirei de novo.”", "— Marina S."],
+  ["“Fui muito bem acolhida. Ela rezou por mim e me senti protegida e em paz.”", "— Juliana C."],
+  ["“Atendimento com respeito, sem julgamento. Valeu cada centavo pela paz que trouxe.”", "— Cleusa P."],
+];
+const BR_FAQ: [string, string][] = [
+  ["Funciona à distância?", "Sim. A limpeza é feita à distância, com a mesma força e o mesmo cuidado de um atendimento presencial. Você recebe tudo no seu celular."],
+  ["É sigiloso?", "Totalmente. O que você compartilha e a sua situação ficam só entre você e a ATB."],
+  ["Quando vou sentir?", "Cada pessoa vive isso no seu tempo. Muitas relatam uma sensação de leveza e alívio logo depois — o mais importante é o acolhimento e a fé no processo."],
+  ["Como eu pago?", "Por Pix (liberação na hora) ou cartão, em ambiente 100% seguro. Pagamento único de R$100 — não é mensalidade."],
+];
+
 export default function LimpezaV2Page() {
   const { t } = getServerT();
+  const isPt = getServerLocale() === "pt";
 
   const proofs = [
     { icon: "📱", text: t("v2.proof.mobile") },
@@ -59,6 +81,7 @@ export default function LimpezaV2Page() {
               width={1536}
               height={1024}
               priority
+              sizes="(max-width: 760px) 100vw, 720px"
               style={{ width: "100%", height: "auto", display: "block" }}
             />
           </div>
@@ -110,6 +133,26 @@ export default function LimpezaV2Page() {
           >
             {t("v2.hero.cta")}
           </a>
+
+          {/* BR: preço acima da dobra + selos (qualifica o tráfego pago) */}
+          {isPt && (
+            <div style={{ marginTop: 20 }}>
+              <div style={{ fontSize: 15, color: "#c4b5fd", fontWeight: 600, marginBottom: 4 }}>
+                Sua Limpeza Espiritual completa por
+              </div>
+              <div className="serif" style={{ fontSize: "2.6rem", color: "#fff", fontWeight: 700, lineHeight: 1 }}>
+                R$ 100
+              </div>
+              <div style={{ fontSize: 15, color: "#f5c860", fontWeight: 600, marginTop: 4 }}>
+                pagamento único · Pix ou cartão · sem mensalidade
+              </div>
+              <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", fontSize: 14, color: "#c4b5fd", fontWeight: 600 }}>
+                <span>🔒 100% sigiloso</span>
+                <span>✅ Pagamento seguro</span>
+                <span>🕊️ +1 milhão acompanham a ATB por mês</span>
+              </div>
+            </div>
+          )}
 
           {/* Provas de confiança */}
           <div style={{
@@ -278,6 +321,68 @@ export default function LimpezaV2Page() {
           ))}
         </div>
       </section>
+
+      {/* BR: O QUE ESTÁ INCLUÍDO */}
+      {isPt && (
+        <section style={{ padding: "44px 20px", maxWidth: 700, margin: "0 auto" }}>
+          <h2 className="serif" style={{ fontSize: "clamp(1.6rem, 4vw, 2rem)", color: "#e8b84b", textAlign: "center", marginBottom: 24, fontWeight: 700 }}>
+            O que está incluído
+          </h2>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
+            {BR_INCLUIDO.map(([ic, txt], i) => (
+              <li key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "16px 20px", background: "rgba(232,184,75,0.06)", border: "1px solid rgba(232,184,75,0.2)", borderRadius: 14 }}>
+                <span style={{ fontSize: 26, flexShrink: 0, lineHeight: 1.2 }} aria-hidden="true">{ic}</span>
+                <span style={{ fontSize: 19, color: "#fbf8ff", fontWeight: 500, lineHeight: 1.5 }}>{txt}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* BR: DEPOIMENTOS + CTA */}
+      {isPt && (
+        <section style={{ padding: "44px 20px", background: "radial-gradient(ellipse at 50% 50%, #2a0055, #120025 75%)" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+            <h2 className="serif" style={{ fontSize: "clamp(1.6rem, 4vw, 2rem)", color: "#e8b84b", textAlign: "center", marginBottom: 28, fontWeight: 700 }}>
+              Quem já fez, sentiu a diferença
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 32 }}>
+              {BR_DEPOIMENTOS.map(([txt, quem], i) => (
+                <div key={i} style={{ background: "rgba(255,255,255,0.04)", borderLeft: "3px solid #e8b84b", borderRadius: 12, padding: 20 }}>
+                  <p style={{ fontStyle: "italic", color: "#efe7fb", lineHeight: 1.55, fontSize: 17 }}>{txt}</p>
+                  <div style={{ marginTop: 12, color: "#f5c860", fontWeight: 700, fontSize: 15 }}>{quem}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <a href="#formulario" className="btn-gold btn-big" style={{ display: "inline-block", textDecoration: "none", padding: "18px 34px", fontSize: "1.15rem", fontWeight: 800, border: "none" }}>
+                ✨ Começar minha limpeza — R$ 100
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* BR: FAQ + CTA */}
+      {isPt && (
+        <section style={{ padding: "44px 20px", maxWidth: 700, margin: "0 auto" }}>
+          <h2 className="serif" style={{ fontSize: "clamp(1.6rem, 4vw, 2rem)", color: "#e8b84b", textAlign: "center", marginBottom: 24, fontWeight: 700 }}>
+            Perguntas que toda pessoa faz
+          </h2>
+          <style>{`details > summary::-webkit-details-marker { display: none; }`}</style>
+          {BR_FAQ.map(([q, a], i) => (
+            <details key={i} style={{ border: "1px solid rgba(196,181,253,0.18)", borderRadius: 12, marginBottom: 12, background: "rgba(0,0,0,0.15)" }}>
+              <summary style={{ cursor: "pointer", padding: "16px 18px", fontWeight: 600, fontSize: 18, listStyle: "none", color: "#fbf8ff" }}>{q}</summary>
+              <p style={{ padding: "0 18px 16px", color: "#c4b5fd", lineHeight: 1.55, fontSize: 16 }}>{a}</p>
+            </details>
+          ))}
+          <div style={{ textAlign: "center", marginTop: 28 }}>
+            <a href="#formulario" className="btn-gold btn-big" style={{ display: "inline-block", textDecoration: "none", padding: "18px 34px", fontSize: "1.15rem", fontWeight: 800, border: "none" }}>
+              ✨ Quero minha limpeza — R$ 100
+            </a>
+          </div>
+        </section>
+      )}
 
       {/* FORMULÁRIO */}
       <section id="formulario" style={{ padding: "44px 20px 80px", maxWidth: 640, margin: "0 auto" }}>
