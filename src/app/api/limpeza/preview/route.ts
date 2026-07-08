@@ -217,7 +217,10 @@ export async function POST(req: Request) {
           orderId: order.id,
           email,
           name,
-          amount: moneyInfo.amount,
+          // FIX: era moneyInfo.amount (placeholder $19/€18/¥2900) — cobrava a
+          // menos e divergia da prévia. `amount` = stripeUnits do PLAN_PRICES
+          // ($100/€100/¥10000), o mesmo valor gravado na order e mostrado ao cliente.
+          amount,
           currency: moneyInfo.currency,
           locale: moneyInfo.locale,
           successUrl: `${baseUrl}/entrega/${order.id}?provider=stripe`,

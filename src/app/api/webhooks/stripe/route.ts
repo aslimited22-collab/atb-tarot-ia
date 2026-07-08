@@ -397,6 +397,55 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, plan: "espirito", email });
   }
 
+  // ---------- BRANCH 2c: Limpeza compra DIRETA intl (sem funil / sem order_id) ----------
+  // Home CTA + barra sticky → /api/checkout/limpeza → Stripe com metadata.plan="limpeza"
+  // e SEM order_id. Espelha o V1 do Kiwify (BR): cria conta + magic-link 1-toque +
+  // welcome localizado. A limpeza via FUNIL tem order_id e NÃO seta metadata.plan
+  // (createCheckoutSession), então cai na BRANCH 3 — não aqui. Sem este branch, o
+  // cliente intl pagava e ficava órfão (mesmo incidente do cliente US $100).
+  if (plan === "limpeza") {
+    if (!email) {
+      return NextResponse.json({ error: "missing email" }, { status: 400 });
+    }
+    logInfo("webhook.stripe", "limpeza direta paid intl", { email, currency, amountTotal });
+
+    await admin.from("purchases").insert({
+      email,
+      name: name ?? null,
+      kiwify_order_id: paymentId,
+      plan: "limpeza",
+      event: "limpeza_purchased_intl",
+      amount_cents: amountTotal,
+      user_id: null,
+    });
+
+    let lMagicUrl = `${getSiteUrl(req)}/dashboard/limpeza-espiritual`;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/limpeza-espiritual")}` },
+      });
+      lMagicUrl = magicLinkFromGenerate(linkData, getSiteUrl(req), lMagicUrl);
+    } catch (e) {
+      logWarn("webhook.stripe.limpeza", "magic-link gen failed", { email, error: String(e) });
+    }
+
+    // Captura idioma real do comprador (país/moeda) no user recém-criado.
+    try { await admin.from("users").update({ locale: buyerLoc }).eq("email", email); } catch {}
+
+    const { subject: lSubject, html: lHtml } = buildWelcomeEmail({ product: "limpeza", locale: buyerLoc, name, magicUrl: lMagicUrl });
+    await sendCustomerEmailWithLog({
+      scope: "webhook.stripe.limpeza",
+      to: email,
+      subject: lSubject,
+      html: lHtml,
+      refId: paymentId,
+    });
+
+    return NextResponse.json({ ok: true, plan: "limpeza", email });
+  }
+
   // ---------- BRANCH 3 (fluxo legado): Limpeza V2 com order UUID ----------
   if (!orderId || !/^[0-9a-f-]{36}$/i.test(orderId)) {
     logWarn("webhook.stripe", "missing/invalid order_id (and no recognized plan)", { orderId, plan, eventId: event.id });
