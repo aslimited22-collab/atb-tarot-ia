@@ -287,8 +287,8 @@ export const dict = {
     // V2 Limpeza Espiritual em /limpeza
     "v2.hero.badge": "✨ Personalizado por ATB ✨",
     "v2.hero.title": "Receba sua Limpeza Espiritual personalizada da ATB",
-    "v2.hero.desc": "Escreva seu nome e o que está sentindo. A ATB prepara uma orientação espiritual simples, acolhedora e personalizada para você.",
-    "v2.hero.cta": "✨ Quero minha limpeza espiritual",
+    "v2.hero.desc": "Escreva seu nome e o que está sentindo — e em instantes a ATB prepara uma prévia da sua orientação espiritual, grátis e sem compromisso.",
+    "v2.hero.cta": "✨ Ver minha prévia grátis",
     "v2.proof.mobile": "Funciona pelo celular",
     "v2.proof.payment": "Pagamento por Pix, cartão ou boleto",
     "v2.proof.delivery": "Receba sua orientação após o pagamento",

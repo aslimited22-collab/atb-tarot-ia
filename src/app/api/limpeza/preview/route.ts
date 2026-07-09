@@ -115,21 +115,24 @@ export async function POST(req: Request) {
       );
     }
 
-    // M-1: Gera preview com DeepSeek ANTES de criar a order. Se a IA falhar,
-    // não fica order pending órfã no banco.
-    let previewText: string;
-    try {
-      previewText = await generatePreview({
-        name,
-        theme: THEME_LABELS[theme as keyof typeof THEME_LABELS] || theme,
-        sign,
-        question,
-      });
-    } catch {
-      return NextResponse.json(
-        { error: "Não conseguimos preparar sua prévia agora. Tente em alguns minutos." },
-        { status: 502 }
-      );
+    // M-1: usa a prévia já gerada no passo 1 (/api/limpeza/generate-preview) se
+    // veio no body — evita 2ª chamada ao DeepSeek. Renderizada como texto (React
+    // escapa), sem risco de XSS. Fallback: gera agora se não veio / veio inválida.
+    let previewText: string = typeof body?.previewText === "string" ? body.previewText.trim() : "";
+    if (previewText.length < 10 || previewText.length > 2000) {
+      try {
+        previewText = await generatePreview({
+          name,
+          theme: THEME_LABELS[theme as keyof typeof THEME_LABELS] || theme,
+          sign,
+          question,
+        });
+      } catch {
+        return NextResponse.json(
+          { error: "Não conseguimos preparar sua prévia agora. Tente em alguns minutos." },
+          { status: 502 }
+        );
+      }
     }
 
     // Cap defensivo de 80 palavras (caso a IA passe)
@@ -255,6 +258,30 @@ export async function POST(req: Request) {
 
     // Atualiza order com checkout_url
     await admin.from("orders").update({ checkout_url: checkoutUrl }).eq("id", order.id);
+
+    // Lead "preencheu-não-pagou": entra na régua de remarketing (o cron pega
+    // leads com converted_at null, sem filtrar por source, e usa este checkout_url
+    // no e-mail). Quando este e-mail comprar, o webhook marca converted_at e para
+    // a régua. Best-effort: nunca bloqueia o checkout. dedup por dia.
+    try {
+      const day = new Date().toISOString().slice(0, 10);
+      await admin.from("leads").upsert(
+        {
+          email,
+          name,
+          phone: phone || null,
+          source: "funnel_limpeza",
+          product_label: "limpeza",
+          checkout_url: checkoutUrl,
+          locale,
+          amount_cents: Math.round(Number(amount) * 100) || null,
+          dedup_key: `funnel_limpeza:${email}:${day}`,
+        },
+        { onConflict: "dedup_key", ignoreDuplicates: true }
+      );
+    } catch {
+      /* best-effort — remarketing não pode travar a venda */
+    }
 
     return NextResponse.json({
       ok: true,
