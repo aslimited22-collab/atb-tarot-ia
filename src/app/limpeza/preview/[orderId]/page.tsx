@@ -7,7 +7,7 @@ import { PreviewClient } from "./PreviewClient";
 
 export const dynamic = "force-dynamic";
 
-const PRICE = Number(process.env.LIMPEZA_V2_PRICE || 97);
+const PRICE = Number(process.env.LIMPEZA_V2_PRICE || 100);
 
 // Fallback do checkout (order sem checkout_url): monta a URL do Kiwify anexando
 // gclid/utm dos cookies — mesma atribuição do caminho principal (/api/limpeza/preview).

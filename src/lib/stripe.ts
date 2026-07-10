@@ -53,7 +53,7 @@ export function currencyForRequest(req: Request): {
   if (country === "BR" || (country === "" && isPtLang)) {
     return {
       currency: "brl",
-      amount: Number(process.env.LIMPEZA_V2_PRICE || 97),
+      amount: Number(process.env.LIMPEZA_V2_PRICE || 100),
       isInternational: false,
       locale: "pt-BR",
     };

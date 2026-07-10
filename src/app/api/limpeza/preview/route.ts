@@ -100,7 +100,7 @@ export async function POST(req: Request) {
     // (exceto JPY). Logo: JPY usa o valor inteiro; demais dividem por 100.
     const limpezaCents = PLAN_PRICES.limpeza[moneyInfo.currency];
     const stripeUnits = moneyInfo.currency === "jpy" ? limpezaCents : limpezaCents / 100;
-    const amount = isStripe ? stripeUnits : Number(process.env.LIMPEZA_V2_PRICE || 97);
+    const amount = isStripe ? stripeUnits : Number(process.env.LIMPEZA_V2_PRICE || 100);
     const currency = isStripe ? moneyInfo.currency.toUpperCase() : "BRL";
     const locale = isStripe ? moneyInfo.locale : "pt-BR";
 
