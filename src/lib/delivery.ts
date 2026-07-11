@@ -129,6 +129,22 @@ export async function deliverLimpezaOrder(input: DeliverInput): Promise<DeliverR
     }
   }
 
+  // Carrega a leitura completa recém-gerada pra ENTREGAR o produto DENTRO do
+  // e-mail — público 60+ não navega no site: abre o e-mail e já lê a limpeza.
+  // A geração acima é aguardada (await), então o full_text já está salvo.
+  let readingText: string | null = null;
+  try {
+    const { data: rd } = await admin
+      .from("readings")
+      .select("full_text")
+      .eq("order_id", orderId)
+      .maybeSingle();
+    const ft = (rd?.full_text || "").trim();
+    readingText = ft.length > 0 ? ft : null;
+  } catch (e) {
+    logWarn(scope, "could not load reading for email body", { orderId, error: String(e) });
+  }
+
   // ─── 2. Email Resend ──────────────────────────────────────────
   let email: DeliverResult["email"] = { ok: false, reason: "not_attempted" };
   if (process.env.RESEND_API_KEY && input.email) {
@@ -139,32 +155,45 @@ export async function deliverLimpezaOrder(input: DeliverInput): Promise<DeliverR
       const isPt = !input.locale || input.locale.startsWith("pt");
 
       const subject = isPt
-        ? "🕊️ Sua Sessão Espiritual está pronta"
-        : "🕊️ Your Spiritual Session is ready";
+        ? "🕊️ Sua Limpeza Espiritual está aqui, minha filha"
+        : "🕊️ Your Spiritual Cleansing is here";
 
       const greeting = isPt
-        ? `Olá, <strong style="color:#f5c860;">${escapeHtml(firstName)}</strong>!<br>A ATB preparou sua sessão espiritual.`
-        : `Hello, <strong style="color:#f5c860;">${escapeHtml(firstName)}</strong>!<br>ATB has prepared your spiritual session.`;
-      const cta = isPt ? "✨ Abrir minha sessão" : "✨ Open my session";
-      const note = isPt
-        ? "Vai chegar em até 5 minutos. Pode abrir e ler com calma."
-        : "It will arrive within 5 minutes. Take your time to read.";
+        ? `Olá, <strong style="color:#f5c860;">${escapeHtml(firstName)}</strong>! A ATB preparou a sua limpeza com muito carinho. Ela está aqui embaixo — é só ler com calma. 🕊️`
+        : `Hello, <strong style="color:#f5c860;">${escapeHtml(firstName)}</strong>! ATB prepared your cleansing with care. It's right below — read it calmly. 🕊️`;
 
-      const saveTitle = isPt ? "💡 Guarde este email" : "💡 Save this email";
+      // Entrega o PRODUTO dentro do e-mail: a leitura completa em parágrafos
+      // grandes e legíveis (público 60+ abre a caixa de entrada e já tem tudo).
+      // Se por algum motivo a leitura não estiver pronta, cai no botão do site.
+      const readingHtml = readingText
+        ? readingText
+            .split(/\n{2,}|\r?\n/)
+            .map((p) => p.trim())
+            .filter(Boolean)
+            .map((p) => `<p style="color:#fbf8ff;font-size:19px;line-height:1.8;margin:0 0 18px;">${escapeHtml(p)}</p>`)
+            .join("")
+        : "";
+
+      const cta = isPt ? "✨ Abrir também no site" : "✨ Also open on the site";
+      const saveTitle = isPt ? "💛 Guarde este e-mail" : "💛 Save this email";
       const saveDesc = isPt
-        ? "Se precisar voltar a esta limpeza, é só fazer login em <strong style=\"color:#e8b84b\">atbtartot.com</strong> com este endereço de email — sua limpeza fica salva em \"Minhas limpezas\"."
-        : "If you need to come back, just log in at <strong style=\"color:#e8b84b\">atbtartot.com</strong> with this email — your cleansing is saved in \"My cleansings\".";
+        ? "A sua limpeza fica guardada aqui neste e-mail — pode voltar a ler sempre que quiser. Se preferir, também está em <strong style=\"color:#e8b84b\">atbtartot.com</strong> com este mesmo endereço."
+        : "Your cleansing is saved right here in this email — read it whenever you want. It's also at <strong style=\"color:#e8b84b\">atbtartot.com</strong> with this same address.";
 
       const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
-<div style="max-width:560px;margin:0 auto;padding:30px 20px;">
-  <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.4);">
-    <div style="font-size:64px;margin-bottom:16px;">🕊️</div>
-    <h1 style="font-family:Georgia,serif;color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;">${isPt ? "Sua sessão está pronta" : "Your session is ready"}</h1>
-    <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">${greeting}</p>
-    <a href="${escapeHtml(input.deliveryLink)}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px rgba(232,184,75,0.4);">${cta}</a>
-    <p style="color:#c4b5fd;font-size:13px;margin:24px 0 0;">${note}</p>
+<div style="max-width:600px;margin:0 auto;padding:30px 20px;">
+  <div style="background:linear-gradient(135deg,#1e0040,#2a0055,#1e0040);border-radius:20px;padding:34px 26px;text-align:center;border:2px solid rgba(232,184,75,0.4);">
+    <div style="font-size:64px;margin-bottom:12px;">🕊️</div>
+    <h1 style="font-family:Georgia,serif;color:#e8b84b;font-size:30px;margin:0 0 14px;line-height:1.15;">${isPt ? "Sua limpeza está pronta" : "Your cleansing is ready"}</h1>
+    <p style="color:#fbf8ff;font-size:19px;line-height:1.65;margin:0;">${greeting}</p>
+    ${readingHtml
+      ? `<div style="margin-top:22px;background:rgba(18,0,37,0.55);border:2px solid rgba(232,184,75,0.45);border-radius:16px;padding:26px 24px;text-align:left;">${readingHtml}</div>`
+      : `<a href="${escapeHtml(input.deliveryLink)}" style="display:inline-block;margin-top:22px;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px rgba(232,184,75,0.4);">${isPt ? "✨ Abrir minha sessão" : "✨ Open my session"}</a>`}
   </div>
-  <div style="margin-top:20px;padding:18px 20px;background:rgba(126,232,248,0.08);border:1.5px solid rgba(126,232,248,0.32);border-radius:14px;color:#fbf8ff;text-align:left;">
+  ${readingHtml
+    ? `<div style="text-align:center;margin-top:16px;"><a href="${escapeHtml(input.deliveryLink)}" style="display:inline-block;color:#e8b84b;font-weight:700;font-size:16px;text-decoration:underline;padding:12px;">${cta}</a></div>`
+    : ""}
+  <div style="margin-top:16px;padding:18px 20px;background:rgba(126,232,248,0.08);border:1.5px solid rgba(126,232,248,0.32);border-radius:14px;color:#fbf8ff;text-align:left;">
     <div style="font-size:17px;font-weight:700;color:#7ee8f8;margin-bottom:8px;line-height:1.3;">${saveTitle}</div>
     <div style="font-size:16px;line-height:1.6;font-weight:500;">${saveDesc}</div>
   </div>
