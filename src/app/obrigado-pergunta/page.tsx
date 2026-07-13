@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ObrigadoPerguntaClient from "./client";
-import GoogleAdsPurchase from "@/components/GoogleAdsPurchase";
 
 export const dynamic = "force-dynamic";
 
@@ -59,14 +58,14 @@ export default async function ObrigadoPerguntaPage({
     purchaseConfirmed = (count ?? 0) > 0;
   }
 
-  // Conversão "Compra" do Google Ads (pergunta avulsa R$29; dedupe via orderRef)
-  const gadsPurchase = (
-    <GoogleAdsPurchase value={29} orderId={orderRef || undefined} email={customerEmail || undefined} />
-  );
+  // NOTA: aqui NÃO disparamos a conversão "Compra" do Google Ads — pra Pergunta
+  // quem dispara é o PIXEL DO KIWIFY (produto → Pixels → G Ads, "Compra Pergunta",
+  // ao aprovar cartão/pix — verificado no painel). Disparar aqui também contaria
+  // a venda 2x (contagem = "Todas", sem dedupe entre pixel e site).
 
   // Cliente já logado → redireciona direto pro chat (skip spinner — webhook irrelevante)
   if (user) {
-    return <>{gadsPurchase}<ObrigadoPerguntaClient mode="logged-with-credits" email={(user.email || "").toLowerCase()} name={customerName} purchaseConfirmed={true} /></>;
+    return <ObrigadoPerguntaClient mode="logged-with-credits" email={(user.email || "").toLowerCase()} name={customerName} purchaseConfirmed={true} />;
   }
 
   // Não logado — checa se já tem conta
@@ -80,16 +79,16 @@ export default async function ObrigadoPerguntaPage({
 
     if (existingUser) {
       // Tem conta mas não logada — precisa de senha (LoginForm)
-      return <>{gadsPurchase}<ObrigadoPerguntaClient mode="account-exists" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} /></>;
+      return <ObrigadoPerguntaClient mode="account-exists" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} />;
     }
   }
 
   // Sem conta + temos email da Kiwify → cliente vai entrar pelo magic-link do email.
   // Não criamos conta com senha aleatória aqui. Mostra tela "Verifique seu email".
   if (customerEmail) {
-    return <>{gadsPurchase}<ObrigadoPerguntaClient mode="check-email" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} /></>;
+    return <ObrigadoPerguntaClient mode="check-email" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} />;
   }
 
   // Sem email — fallback raro (cliente chegou aqui direto via URL sem params)
-  return <>{gadsPurchase}<ObrigadoPerguntaClient mode="needs-signup" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} /></>;
+  return <ObrigadoPerguntaClient mode="needs-signup" email={customerEmail} name={customerName} purchaseConfirmed={purchaseConfirmed} />;
 }

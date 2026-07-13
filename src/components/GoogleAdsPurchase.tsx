@@ -9,7 +9,11 @@ import { GADS_ID } from "@/components/GoogleAdsTag";
 // base (GoogleAdsTag) continua medindo visitas/remarketing normalmente.
 // - transaction_id (order do Kiwify) deduplica reloads no próprio Google.
 // - user_data.email liga as conversões aprimoradas (checkout é em outro domínio).
-const PURCHASE_LABEL = (process.env.NEXT_PUBLIC_GADS_PURCHASE_LABEL || "").trim();
+// Default = o rótulo REAL da ação "Compra" (valor público — aparece no `send_to`
+// de qualquer anúncio). Com o default, a conversão dispara MESMO se a env var for
+// esquecida na Vercel (era a causa dos "0 Compras"). Mesmo padrão do GADS_ID.
+// A env var, se setada, tem prioridade.
+const PURCHASE_LABEL = (process.env.NEXT_PUBLIC_GADS_PURCHASE_LABEL || "Vn61CImjkcccEPDd_p0q").trim();
 
 type Props = {
   /** Valor da compra em BRL (ex.: 100 pra Limpeza). */

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getServerT } from "@/lib/i18n/server";
-import GoogleAdsPurchase from "@/components/GoogleAdsPurchase";
 
 export default function ObrigadoVideoChamadaPage({
   searchParams,
@@ -8,8 +7,9 @@ export default function ObrigadoVideoChamadaPage({
   searchParams?: { email?: string; order?: string; order_id?: string };
 }) {
   const { t } = getServerT();
-  const orderRef = (searchParams?.order || searchParams?.order_id || "").trim();
-  const customerEmail = (searchParams?.email || "").toLowerCase().trim();
+  // searchParams (order/email) reservados pra uso futuro; hoje não disparamos
+  // conversão aqui — ver NOTA abaixo.
+  void searchParams;
 
   const nextSteps: Array<[string, string, string]> = [
     ["📱", t("videochamada_obrigado.step1_title"), t("videochamada_obrigado.step1_desc")],
@@ -19,8 +19,9 @@ export default function ObrigadoVideoChamadaPage({
 
   return (
     <div style={{ minHeight:"100vh", background:"radial-gradient(ellipse at 50% 0%, #3b0764 0%, #120025 70%)", color:"#f5f0ff", fontFamily:"'Inter', sans-serif", display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
-      {/* Conversão "Compra" do Google Ads (Sessão ao Vivo R$877) */}
-      <GoogleAdsPurchase value={877} orderId={orderRef || undefined} email={customerEmail || undefined} />
+      {/* NOTA: aqui NÃO disparamos a conversão "Compra" do Google Ads — pro Vídeo
+          quem dispara é o PIXEL DO KIWIFY ("Compra Video", ao aprovar cartão/pix —
+          verificado no painel). Disparar aqui também contaria a venda 2x. */}
 
       <div style={{ maxWidth:620, width:"100%", textAlign:"center", padding:"40px 24px" }}>
 
