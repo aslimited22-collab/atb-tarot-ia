@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerT } from "@/lib/i18n/server";
+import { isTestClickId } from "@/lib/click-id";
 import { PreviewClient } from "./PreviewClient";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,10 @@ function buildFallbackCheckout(base: string, orderId: string, email: string): st
         try { obj = JSON.parse(decodeURIComponent(raw)); } catch { obj = JSON.parse(raw); }
         for (const k of keys) {
           const v = obj?.[k];
-          if (typeof v === "string" && v) u.searchParams.set(k, v.slice(0, 150));
+          if (typeof v !== "string" || !v) continue;
+          // Click-ids de TESTE (ATB_*/TEST*) não saem pro checkout (cookie de QA).
+          if (name === "atb_gclid" && isTestClickId(v)) continue;
+          u.searchParams.set(k, v.slice(0, 150));
         }
       } catch { /* best-effort */ }
     }

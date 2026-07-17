@@ -10,6 +10,7 @@ import { reconcileChatCredits } from "@/lib/reconcileCredits";
 import { buildAbandonedEmail } from "@/lib/remarketing-email";
 import { magicLinkFromGenerate } from "@/lib/magic-entry";
 import { sendClickConversion, isGoogleAdsApiConfigured } from "@/lib/google-ads-conversions";
+import { isTestClickId } from "@/lib/click-id";
 
 export const runtime = "nodejs";
 
@@ -150,7 +151,12 @@ export async function POST(req: Request) {
     (typeof trackingSrc.utm_campaign === "string" && trackingSrc.utm_campaign) ||
     (typeof order.utm_campaign === "string" && order.utm_campaign) ||
     undefined;
-  const gadsTracking = { gclid, gbraid, wbraid, utm_source: trackUtmSource, utm_medium: trackUtmMedium, utm_campaign: trackUtmCampaign };
+  // Click-ids de TESTE (ATB_*/TEST*) nunca entram em purchases nem sobem pro
+  // Google — compra-teste de QA com gclid falso não vira conversão inválida.
+  const safeGclid = isTestClickId(gclid) ? undefined : gclid;
+  const safeGbraid = isTestClickId(gbraid) ? undefined : gbraid;
+  const safeWbraid = isTestClickId(wbraid) ? undefined : wbraid;
+  const gadsTracking = { gclid: safeGclid, gbraid: safeGbraid, wbraid: safeWbraid, utm_source: trackUtmSource, utm_medium: trackUtmMedium, utm_campaign: trackUtmCampaign };
 
   // Diagnóstico ÚNICO por venda: já que os nomes reais dos campos de tracking
   // no payload da Kiwify não são 100% documentados publicamente, logamos o
@@ -169,12 +175,12 @@ export async function POST(req: Request) {
   // Chamar depois de gravar em `purchases` em cada branch de venda aprovada;
   // NÃO chamar em refund/cancelamento (não é conversão).
   async function reportGadsConversion() {
-    if (!gclid && !gbraid && !wbraid) return; // sem click-id, nada a reportar
+    if (!safeGclid && !safeGbraid && !safeWbraid) return; // sem click-id real, nada a reportar
     try {
       const result = await sendClickConversion({
-        gclid,
-        gbraid,
-        wbraid,
+        gclid: safeGclid,
+        gbraid: safeGbraid,
+        wbraid: safeWbraid,
         orderId: orderId ?? "unknown",
         valueBRL,
         conversionDateTime: new Date(),

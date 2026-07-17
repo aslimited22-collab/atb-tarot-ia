@@ -7,6 +7,7 @@
 //
 // NÃO toca em checkout/pagamento/auth. Falha aqui não afeta nada (try/catch + beacon).
 import { useEffect } from "react";
+import { isTestClickId } from "@/lib/click-id";
 
 function getCookie(n: string): string | null {
   const m = document.cookie.match(new RegExp("(?:^|; )" + n.replace(/([.*+?^${}()|[\]\\])/g, "\\$1") + "=([^;]*)"));
@@ -53,10 +54,17 @@ export default function AttributionTracker() {
       // de anúncio sobrescreve o anterior (janela de conversão da conta = 90 dias).
       // Cookie (o backend lê ao montar a URL do checkout Kiwify) + localStorage
       // (redundância). Captura própria — não depende da tag gtag nem do _gcl_aw.
-      const click = {
+      // isTestClickId: valores de teste (ATB_*/TEST*) não são persistidos —
+      // senão a QA polui a própria atribuição por 90 dias (caso 17/07).
+      const rawClick = {
         gclid: q.get("gclid"),
         gbraid: q.get("gbraid"),
         wbraid: q.get("wbraid"),
+      };
+      const click = {
+        gclid: isTestClickId(rawClick.gclid) ? null : rawClick.gclid,
+        gbraid: isTestClickId(rawClick.gbraid) ? null : rawClick.gbraid,
+        wbraid: isTestClickId(rawClick.wbraid) ? null : rawClick.wbraid,
       };
       if (Object.values(click).some(Boolean)) {
         const packed = JSON.stringify(click);

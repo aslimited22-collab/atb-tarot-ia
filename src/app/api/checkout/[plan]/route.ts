@@ -23,6 +23,7 @@ import {
 } from "@/lib/pricing";
 import { getSiteUrl } from "@/lib/site-url";
 import { logInfo, logWarn, logError } from "@/lib/logger";
+import { isTestClickId } from "@/lib/click-id";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,6 +72,11 @@ function getAttribution(req: Request): Attr {
     }
   } catch {
     /* ignore */
+  }
+  // Click-ids de TESTE (ATB_*/TEST*) nunca saem pro checkout — protege contra
+  // cookie poluído por QA (caso 17/07: gclid=ATB_REVIEW_TEST_0709 grudado 90d).
+  for (const k of CLICK_KEYS) {
+    if (out[k] && isTestClickId(out[k])) delete out[k];
   }
   // Veio de anúncio (gclid) sem utm na URL → rotula a origem pro painel do
   // Kiwify mostrar de onde veio a venda (o gclid sozinho não aparece lá).

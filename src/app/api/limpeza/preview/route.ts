@@ -5,6 +5,7 @@ import { generatePreview, VALID_THEMES, VALID_SIGNS, THEME_LABELS } from "@/lib/
 import { createCheckoutSession, currencyForRequest, detectIsInternational } from "@/lib/stripe";
 import { PLAN_PRICES } from "@/lib/pricing";
 import { getSiteUrl } from "@/lib/site-url";
+import { isTestClickId } from "@/lib/click-id";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -189,6 +190,10 @@ export async function POST(req: Request) {
         }
       } catch {
         /* best-effort */
+      }
+      // Click-ids de TESTE (ATB_*/TEST*) não saem pro checkout (cookie de QA).
+      for (const k of ["gclid", "gbraid", "wbraid"]) {
+        if (out[k] && isTestClickId(out[k])) delete out[k];
       }
       // Veio de anúncio (gclid) sem utm → rotula a origem pro painel do Kiwify.
       if (out.gclid && !out.utm_source) {
