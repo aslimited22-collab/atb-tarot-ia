@@ -37,6 +37,10 @@ function buildFallbackCheckout(base: string, orderId: string, email: string): st
       u.searchParams.set("utm_source", "google");
       u.searchParams.set("utm_medium", "cpc");
     }
+    // Redundância: Kiwify só documenta reconhecer src/sck/utm_*/s1/s2/s3 —
+    // duplica o gclid no slot livre "s1" pra o webhook conseguir achá-lo.
+    const gclidVal = u.searchParams.get("gclid");
+    if (gclidVal && !u.searchParams.get("s1")) u.searchParams.set("s1", gclidVal);
     return u.toString();
   } catch {
     return `${base}${base.includes("?") ? "&" : "?"}external_reference=${orderId}&email=${encodeURIComponent(email)}`;

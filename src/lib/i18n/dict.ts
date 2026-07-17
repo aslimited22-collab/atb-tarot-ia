@@ -3,8 +3,8 @@ import type { Locale } from "./locales";
 export const dict = {
   pt: {
     // Meta tags (SEO + OG)
-    "meta.site_title": "ATB — Sessão Espírita Transformadora",
-    "meta.site_description": "Converse com seu Espírito Mentor. Acolhimento, clareza e direção espiritual.",
+    "meta.site_title": "Limpeza Espiritual com ATB — Sessão Espírita Transformadora",
+    "meta.site_description": "Limpeza Espiritual personalizada com a ATB: oração, proteção dos santos e orientação espiritual. Pagamento único, receba no seu celular.",
 
     // Header
     "nav.signin": "Entrar",

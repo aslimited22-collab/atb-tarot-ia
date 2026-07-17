@@ -87,6 +87,11 @@ function withUtm(rawUrl: string, attr: Attr): string {
     for (const k of ALL_KEYS) {
       if (attr[k]) u.searchParams.set(k, attr[k]!);
     }
+    // Redundância: Kiwify só documenta reconhecer src/sck/utm_*/s1/s2/s3 como
+    // params de rastreamento — "gclid" pode não ser persistido/ecoado no
+    // webhook deles. Duplicamos o gclid no slot livre "s1" (se ainda não usado)
+    // pra aumentar a chance do webhook (T1) conseguir recuperá-lo.
+    if (attr.gclid && !u.searchParams.get("s1")) u.searchParams.set("s1", attr.gclid);
     return u.toString();
   } catch {
     return rawUrl; // nunca quebra o redirect de pagamento

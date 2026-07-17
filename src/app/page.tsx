@@ -21,6 +21,35 @@ export default function Home() {
   // Completa R$197/mês → Pergunta avulsa R$29. Botões vão pelo roteador
   // /api/checkout/[plan] (decide Kiwify BR vs Stripe intl server-side por IP).
 
+  // JSON-LD (rich results): usa as MESMAS chaves i18n do conteúdo visível
+  // (FAQ + preço da Limpeza) — nunca diverge do que a página realmente mostra,
+  // em qualquer locale. Product usa BRL sempre (preço-base do negócio é BR).
+  const faqEntries = [1, 2, 3, 4, 5, 6].map((n) => ({
+    "@type": "Question",
+    name: t(`landing.faq_q${n}` as any),
+    acceptedAnswer: { "@type": "Answer", text: t(`landing.faq_a${n}` as any) },
+  }));
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqEntries,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: t("landing.hero_badge" as any) || "Limpeza Espiritual com ATB",
+      description: t("meta.site_description" as any),
+      offers: {
+        "@type": "Offer",
+        price: "100.00",
+        priceCurrency: "BRL",
+        availability: "https://schema.org/InStock",
+        url: "https://atbtartot.com/limpeza",
+      },
+    },
+  ];
+
   const features = [
     { icon: "💬", title: t("features.chat.title"), desc: t("features.chat.desc") },
     { icon: "🔮", title: t("features.oracle.title"), desc: t("features.oracle.desc") },
@@ -36,6 +65,11 @@ export default function Home() {
 
   return (
     <main style={{ background: S.bg, color: S.text, minHeight: "100vh" }}>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* Header */}
       <header style={{ background: "rgba(30,0,64,0.92)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${S.sep}`, position: "sticky", top: 0, zIndex: 10 }}>

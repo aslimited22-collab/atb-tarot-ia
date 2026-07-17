@@ -9,6 +9,10 @@ import Script from "next/script";
 // .trim() defensivo: env setada via CLI pode vir com \n no fim (quebraria o send_to).
 export const GADS_ID = (process.env.NEXT_PUBLIC_GADS_ID || "AW-11337182960").trim();
 
+// GA4 (opcional): mesma lib gtag.js, custo zero de mais um <Script>. Sem a env,
+// GA4 simplesmente não é configurado — Google Ads continua funcionando normal.
+export const GA4_ID = (process.env.NEXT_PUBLIC_GA4_ID || "").trim();
+
 export default function GoogleAdsTag() {
   if (!GADS_ID) return null;
   return (
@@ -23,6 +27,7 @@ export default function GoogleAdsTag() {
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', '${GADS_ID}', { allow_enhanced_conversions: true });
+          ${GA4_ID ? `gtag('config', '${GA4_ID}');` : ""}
         `}
       </Script>
     </>

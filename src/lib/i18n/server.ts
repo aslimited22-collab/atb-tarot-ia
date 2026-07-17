@@ -34,6 +34,30 @@ export function getServerLocale(): Locale {
 }
 
 /**
+ * Locale ESPECÍFICO pra metadata/SEO (<title>, <meta description>, OG,
+ * JSON-LD). Diferente de getServerLocale(): NÃO usa geo-IP — só a escolha
+ * EXPLÍCITA do usuário (cookie atb_locale_set=1). Sem isso, sempre `pt`.
+ *
+ * Por quê: getServerLocale() usa x-vercel-ip-country pra servir conteúdo
+ * relevante a visitantes reais (correto pra eles). Mas o Googlebot e outros
+ * crawlers costumam geolocalizar como US → o <title>/<meta description>
+ * INDEXADOS saíam em inglês, mesmo sendo um negócio 100% BR (verificado:
+ * og:locale en-US, description "entertainment purposes only"). Metadata não
+ * pode depender de onde o robô está — só da escolha real de um visitante.
+ */
+export function getSeoLocale(): Locale {
+  try {
+    const c = cookies();
+    const explicit = c.get("atb_locale_set")?.value === "1";
+    const cookieLocale = c.get("atb_locale")?.value;
+    if (explicit && cookieLocale && (LOCALES as readonly string[]).includes(cookieLocale)) {
+      return cookieLocale as Locale;
+    }
+  } catch {}
+  return DEFAULT_LOCALE;
+}
+
+/**
  * Retorna uma função `t(key, vars?)` para usar em Server Components.
  * Suporta interpolação simples {var} no valor.
  */

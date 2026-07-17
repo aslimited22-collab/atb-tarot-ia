@@ -9,6 +9,7 @@ import { findUserByFuzzyEmail } from "@/lib/user-matching";
 import { reconcileChatCredits } from "@/lib/reconcileCredits";
 import { buildAbandonedEmail } from "@/lib/remarketing-email";
 import { magicLinkFromGenerate } from "@/lib/magic-entry";
+import { sendClickConversion, isGoogleAdsApiConfigured } from "@/lib/google-ads-conversions";
 
 export const runtime = "nodejs";
 
@@ -111,6 +112,81 @@ export async function POST(req: Request) {
   );
   const valueBRL = valueCents > 1000 ? valueCents / 100 : valueCents;
 
+  // ─── T1: click-id + UTM do pedido (pra conversão server-side no Google Ads) ───
+  // Kiwify só documenta reconhecer src/sck/utm_*/s1/s2/s3 como params de
+  // rastreamento — "gclid" não é nativo deles. Por isso o checkout também grava
+  // o gclid no slot "s1" (redundância — ver checkout/[plan]/route.ts e
+  // limpeza/preview/route.ts). Extração defensiva: tenta vários caminhos
+  // plausíveis; se nenhum bater, `gclid` fica undefined e nada quebra.
+  const trackingSrc: Record<string, unknown> =
+    order.TrackingParameters || order.trackingParameters || order.tracking_parameters ||
+    payload.TrackingParameters || payload.trackingParameters || {};
+  const gclid: string | undefined =
+    (typeof trackingSrc.s1 === "string" && trackingSrc.s1) ||
+    (typeof order.s1 === "string" && order.s1) ||
+    (typeof payload.s1 === "string" && payload.s1) ||
+    (typeof trackingSrc.gclid === "string" && trackingSrc.gclid) ||
+    (typeof order.gclid === "string" && order.gclid) ||
+    (typeof payload.gclid === "string" && payload.gclid) ||
+    undefined;
+  const gbraid: string | undefined =
+    (typeof trackingSrc.s2 === "string" && trackingSrc.s2) ||
+    (typeof order.gbraid === "string" && order.gbraid) ||
+    undefined;
+  const wbraid: string | undefined =
+    (typeof trackingSrc.s3 === "string" && trackingSrc.s3) ||
+    (typeof order.wbraid === "string" && order.wbraid) ||
+    undefined;
+  const trackUtmSource: string | undefined =
+    (typeof trackingSrc.utm_source === "string" && trackingSrc.utm_source) ||
+    (typeof order.utm_source === "string" && order.utm_source) ||
+    (typeof payload.utm_source === "string" && payload.utm_source) ||
+    undefined;
+  const trackUtmMedium: string | undefined =
+    (typeof trackingSrc.utm_medium === "string" && trackingSrc.utm_medium) ||
+    (typeof order.utm_medium === "string" && order.utm_medium) ||
+    undefined;
+  const trackUtmCampaign: string | undefined =
+    (typeof trackingSrc.utm_campaign === "string" && trackingSrc.utm_campaign) ||
+    (typeof order.utm_campaign === "string" && order.utm_campaign) ||
+    undefined;
+  const gadsTracking = { gclid, gbraid, wbraid, utm_source: trackUtmSource, utm_medium: trackUtmMedium, utm_campaign: trackUtmCampaign };
+
+  // Diagnóstico ÚNICO por venda: já que os nomes reais dos campos de tracking
+  // no payload da Kiwify não são 100% documentados publicamente, logamos o
+  // resultado da extração (+ payload cru truncado) na primeira venda aprovada
+  // pra confirmar/corrigir os caminhos acima com dado real de produção.
+  if (event === "order.approved" || event === "order_approved") {
+    logInfo("webhook.kiwify.tracking", "gclid extraction", {
+      orderId,
+      resolved: gadsTracking,
+      gadsApiConfigured: isGoogleAdsApiConfigured(),
+      rawPreview: raw.slice(0, 1200),
+    });
+  }
+
+  // Dispara o upload server-side pro Google Ads (fail-soft — nunca lança).
+  // Chamar depois de gravar em `purchases` em cada branch de venda aprovada;
+  // NÃO chamar em refund/cancelamento (não é conversão).
+  async function reportGadsConversion() {
+    if (!gclid && !gbraid && !wbraid) return; // sem click-id, nada a reportar
+    try {
+      const result = await sendClickConversion({
+        gclid,
+        gbraid,
+        wbraid,
+        orderId: orderId ?? "unknown",
+        valueBRL,
+        conversionDateTime: new Date(),
+      });
+      if (!result.ok && result.reason !== "not_configured") {
+        logWarn("webhook.kiwify.tracking", "gads conversion not sent", { orderId, reason: result.reason });
+      }
+    } catch (e) {
+      logWarn("webhook.kiwify.tracking", "gads conversion exception", { orderId, error: String(e) });
+    }
+  }
+
   if (!email) {
     return NextResponse.json({ error: "missing email" }, { status: 400 });
   }
@@ -211,10 +287,12 @@ export async function POST(req: Request) {
         event: "limpeza_v2_purchased",
         amount_cents: Math.round(valueBRL * 100),
         user_id: null,
+        ...gadsTracking,
       });
       if (purErr) {
         logWarn("webhook.kiwify", "purchases insert failed", { orderId: v2Order.id, error: purErr.message });
       }
+      await reportGadsConversion();
 
       if (!wasAlreadyPaid) {
         const baseUrl = getSiteUrl(req);
@@ -293,7 +371,9 @@ export async function POST(req: Request) {
         event: `${planKey}_purchased`,
         amount_cents: Math.round(valueBRL * 100),
         user_id: userRow?.id ?? null,
+        ...gadsTracking,
       });
+      await reportGadsConversion();
 
       // ⚠️ EMAIL DE BOAS-VINDAS COM MAGIC-LINK — sem senha, sem formulario.
       // Cliente 60+ aperta o botao e cai LOGADO direto no chat.
@@ -407,7 +487,9 @@ export async function POST(req: Request) {
       amount_cents: Math.round(valueBRL * 100),
       user_id: userRow?.id ?? null,
       fuzzy_matched: matchLimpeza.fuzzy,
+      ...gadsTracking,
     });
+    await reportGadsConversion();
 
     const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
 
@@ -545,7 +627,9 @@ export async function POST(req: Request) {
       amount_cents: Math.round(valueBRL * 100),
       user_id: matchEsp.user?.id ?? null,
       fuzzy_matched: matchEsp.fuzzy,
+      ...gadsTracking,
     });
+    await reportGadsConversion();
 
     const espFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
     // Magic-link 1-toque: cria a conta e loga DIRETO no Espírito Mentor, sem senha.
@@ -670,7 +754,9 @@ export async function POST(req: Request) {
       amount_cents: Math.round(valueBRL * 100),
       user_id: matchVid.user?.id ?? null,
       fuzzy_matched: matchVid.fuzzy,
+      ...gadsTracking,
     });
+    await reportGadsConversion();
 
     // Welcome email pro cliente (antes só existia email pro admin — cliente ficava sem nada após pagar R$497)
     const vidFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
@@ -796,7 +882,9 @@ export async function POST(req: Request) {
       amount_cents: valueCents > 0 ? Math.round(valueCents > 1000 ? valueCents : valueCents * 100) : null,
       user_id: userRow?.id ?? null,
       fuzzy_matched: matchSub.fuzzy,
+      ...gadsTracking,
     });
+    await reportGadsConversion();
 
     // Welcome email pra Basic/Premium se cliente NÃO tinha conta ainda.
     // Sem isso, cliente paga R$29 ou R$197/mês e fica sem saber como acessar.

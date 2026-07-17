@@ -204,7 +204,11 @@ export async function POST(req: Request) {
         const u = new URL(baseKiwify);
         u.searchParams.set("external_reference", orderId);
         u.searchParams.set("email", email);
-        for (const [k, v] of Object.entries(trackingParams())) u.searchParams.set(k, v);
+        const tp = trackingParams();
+        for (const [k, v] of Object.entries(tp)) u.searchParams.set(k, v);
+        // Redundância: Kiwify só documenta reconhecer src/sck/utm_*/s1/s2/s3 —
+        // duplica o gclid no slot livre "s1" pra o webhook (T1) conseguir achá-lo.
+        if (tp.gclid && !u.searchParams.get("s1")) u.searchParams.set("s1", tp.gclid);
         return u.toString();
       } catch {
         const sep = baseKiwify.includes("?") ? "&" : "?";

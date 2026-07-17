@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { GADS_ID } from "@/components/GoogleAdsTag";
+import { GADS_ID, GA4_ID } from "@/components/GoogleAdsTag";
 
 // Dispara o evento de conversão "Compra" do Google Ads nas páginas /obrigado-*.
 // Requer NEXT_PUBLIC_GADS_PURCHASE_LABEL (o rótulo da ação de conversão "Compra",
@@ -26,7 +26,9 @@ type Props = {
 
 export default function GoogleAdsPurchase({ value, orderId, email }: Props) {
   useEffect(() => {
-    if (!PURCHASE_LABEL || !GADS_ID) return;
+    const hasAds = !!(PURCHASE_LABEL && GADS_ID);
+    const hasGa4 = !!GA4_ID;
+    if (!hasAds && !hasGa4) return;
     // Dedupe local (além do transaction_id): evita re-disparo em re-render/reload na mesma sessão.
     const key = `gads_purchase_${orderId || value}`;
     try {
@@ -44,12 +46,22 @@ export default function GoogleAdsPurchase({ value, orderId, email }: Props) {
         return;
       }
       if (email) gtag("set", "user_data", { email: email.toLowerCase().trim() });
-      gtag("event", "conversion", {
-        send_to: `${GADS_ID}/${PURCHASE_LABEL}`,
-        value,
-        currency: "BRL",
-        ...(orderId ? { transaction_id: orderId } : {}),
-      });
+      if (hasAds) {
+        gtag("event", "conversion", {
+          send_to: `${GADS_ID}/${PURCHASE_LABEL}`,
+          value,
+          currency: "BRL",
+          ...(orderId ? { transaction_id: orderId } : {}),
+        });
+      }
+      if (hasGa4) {
+        gtag("event", "purchase", {
+          send_to: GA4_ID,
+          value,
+          currency: "BRL",
+          ...(orderId ? { transaction_id: orderId } : {}),
+        });
+      }
       try {
         sessionStorage.setItem(key, "1");
       } catch {
