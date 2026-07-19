@@ -7,6 +7,10 @@ const HIDDEN_PATHS = [
   "/dashboard/espirito-mentor",
   "/dashboard/limpeza-espiritual",
   "/limpeza/preview",
+  // Landing de tráfego pago R$29: WhatsApp NÃO pode concorrer com o CTA de
+  // compra (brief 18/07 — 12 begin_checkout, 0 compras). Lá o WhatsApp é só
+  // link discreto de suporte no rodapé da própria página.
+  "/limpeza-espiritual",
   "/entrega",
   "/admin",
 ];

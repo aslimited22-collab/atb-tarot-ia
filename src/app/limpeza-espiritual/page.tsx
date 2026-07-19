@@ -1,21 +1,26 @@
 import type { Metadata } from "next";
 
-// Landing focada de tráfego pago (Google Ads BR — "limpeza espiritual").
-// UMA oferta só: a entrada de R$29 (1 consulta/pergunta à ATB) como isca pro
-// público frio. A Limpeza completa R$100 é o próximo passo PÓS-compra, não
-// concorre aqui (princípio "uma oferta por página").
+// Landing de tráfego pago (Google Ads BR) — oferta única: "Primeira Consulta
+// Espiritual — R$29" (produto Kiwify pergunta1; o dono renomeia o produto no
+// painel pra bater). Regras de fricção (brief 18/07):
+//  - UM botão primário acima da dobra + o MESMO botão no fim. Nada de CTAs
+//    concorrentes no meio (o card da oferta é o CTA final, depois do FAQ).
+//  - WhatsApp NUNCA no caminho de compra: sem "fale antes de pagar", sem botão
+//    flutuante (oculto nesta rota via WhatsAppFloat.HIDDEN_PATHS). Vira link
+//    discreto de suporte no rodapé.
+//  - Linha de confiança colada no botão.
+//  - "consulta" é a palavra única do anúncio ao checkout.
 //
-// PT-hardcoded de propósito: o anúncio é BR-only. Tag do Google, captura de
-// gclid e evento "Iniciar checkout" já vêm do layout (globais) — o CTA aponta
-// pra /api/checkout/pergunta1, que herda o gclid e roteia Kiwify BR.
-//
-// Copy honesta: acolhimento, fé, orientação e proteção — sem promessa de cura
-// ou resultado garantido (política do Google + ética).
+// RASTREAMENTO (não mexer sem ler): os CTAs apontam pra /api/checkout/pergunta1
+// — o GoogleAdsFunnelEvents (layout) dispara begin_checkout nesse clique, e o
+// roteador anexa gclid/utm/s1 na URL do Kiwify. A conversão "Compra" é do
+// PIXEL DO KIWIFY no produto (ao aprovar). Intl continua caindo no Stripe
+// pelo mesmo roteador — nada aqui é BR-hardcoded no caminho de pagamento.
 
 export const metadata: Metadata = {
-  title: "Limpeza Espiritual com a ATB — Comece Sua Consulta Hoje",
+  title: "Primeira Consulta Espiritual — R$29 | ATB",
   description:
-    "Sua primeira consulta espiritual com a ATB por R$29: orientação, oração e proteção dos santos, no seu celular — com fé, respeito e sigilo. Pagamento único.",
+    "Sua Primeira Consulta Espiritual com a ATB por R$29: orientação, oração e proteção dos santos, no seu celular. Pix, cartão ou boleto — pagamento único, recebe na hora, com sigilo total.",
   alternates: { canonical: "https://atbtartot.com/limpeza-espiritual" },
   robots: { index: true, follow: true },
 };
@@ -32,15 +37,16 @@ const S = {
   sep: "rgba(196,181,253,0.18)",
 };
 
-const CHECKOUT = "/api/checkout/pergunta1"; // R$29 — herda gclid/utm no roteador
-const PRICE = "R$ 29";
+const CHECKOUT = "/api/checkout/pergunta1"; // R$29 — herda gclid/utm no roteador; begin_checkout dispara no clique
+const CTA_LABEL = "Quero minha consulta agora — R$29";
+const TRUST_LINE = "Pix, cartão ou boleto • Pagamento único • Recebe na hora, com sigilo total";
 
 const recebe = [
   ["🕯️", "Sua consulta com a ATB", "Você conta o que está pesando no coração e recebe uma orientação espiritual feita pro seu caso — com carinho e sem julgamento."],
   ["🙏", "Oração e proteção dos santos", "Uma oração de proteção contra inveja, mau-olhado e o que trava a sua vida, na força dos santos."],
   ["📿", "Um caminho pra seguir", "A ATB te aponta o primeiro passo pra aliviar o peso e abrir os seus caminhos — no amor, no trabalho e na saúde."],
   ["📱", "Tudo no seu celular", "Você recebe na hora, sem instalar nada. Simples pra qualquer idade."],
-  ["💬", "Acompanhamento no WhatsApp", "Ficou com dúvida? A gente te ajuda passo a passo. Você não fica sozinha."],
+  ["💬", "Acompanhamento até o fim", "Ficou com dúvida depois? A gente te ajuda passo a passo. Você não fica sozinha."],
 ];
 
 const passos = [
@@ -53,8 +59,8 @@ const faq: [string, string][] = [
   ["É seguro pagar?", "Sim. O pagamento é em ambiente 100% protegido, por Pix, cartão ou boleto. A ATB nunca vê os seus dados de pagamento."],
   ["Vou ter que pagar todo mês?", "Não. É pagamento único de R$29. Não é mensalidade e não cobramos de novo."],
   ["O que eu recebo depois de pagar?", "Na hora você recebe no seu celular a sua consulta com a ATB, com a orientação e a oração feitas pro seu caso."],
-  ["Preciso instalar algum aplicativo?", "Não precisa instalar nada. É só abrir no seu celular. Qualquer dúvida, a gente te ajuda pelo WhatsApp."],
-  ["E se eu não entender de celular?", "Fica tranquila. É bem simples, e você pode chamar a gente no WhatsApp que acompanhamos você até o fim."],
+  ["Preciso instalar algum aplicativo?", "Não precisa instalar nada. É só abrir no seu celular."],
+  ["E se eu não entender de celular?", "Fica tranquila. É bem simples — e depois da compra a gente acompanha você até o fim."],
   ["E se eu quiser a Limpeza completa?", "Depois da sua consulta, se você sentir que quer ir mais fundo, a ATB te guia na Limpeza Espiritual completa. Um passo de cada vez, no seu tempo."],
 ];
 
@@ -70,51 +76,62 @@ const btnGold: React.CSSProperties = {
   color: "#3a2400",
   fontWeight: 800,
   textDecoration: "none",
-  padding: "20px 30px",
+  padding: "22px 30px",
   borderRadius: 16,
-  fontSize: "1.2rem",
+  fontSize: "1.25rem",
   textAlign: "center",
   boxShadow: "0 12px 34px rgba(232,184,75,0.32)",
   border: "none",
+  lineHeight: 1.3,
+};
+
+const trustStyle: React.CSSProperties = {
+  marginTop: 10,
+  fontSize: "0.92rem",
+  color: S.text2,
+  textAlign: "center",
+  lineHeight: 1.5,
+  fontWeight: 500,
 };
 
 export default function LimpezaEspiritualPage() {
+  const waPhone = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "").trim();
+  const waHref = waPhone
+    ? `https://wa.me/${waPhone}?text=${encodeURIComponent("Oi! Tenho uma dúvida sobre a Primeira Consulta Espiritual.")}`
+    : null;
+
   return (
     <main style={{ background: S.bg, color: S.text, minHeight: "100vh" }}>
-      {/* Header enxuto — foco total, sem menus que distraem */}
+      {/* Header enxuto — só a marca; zero saídas concorrendo com o CTA */}
       <header style={{ borderBottom: `1px solid ${S.sep}`, background: "rgba(30,0,64,0.9)" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: "16px 22px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto", padding: "16px 22px", textAlign: "center" }}>
           <span className="serif" style={{ color: S.gold, fontSize: "1.5rem", fontWeight: 700, letterSpacing: "0.28em" }}>ATB</span>
-          <a href={CHECKOUT} style={{ ...btnGold, padding: "12px 20px", fontSize: "0.95rem" }}>Começar — {PRICE}</a>
         </div>
       </header>
 
-      {/* HERO */}
-      <section style={{ padding: "64px 22px 48px", background: "radial-gradient(ellipse at 60% -10%, #4a1a7a 0%, #2a0055 38%, #120025 74%)" }}>
+      {/* HERO — o ÚNICO CTA acima da dobra */}
+      <section style={{ padding: "56px 22px 48px", background: "radial-gradient(ellipse at 60% -10%, #4a1a7a 0%, #2a0055 38%, #120025 74%)" }}>
         <div style={{ maxWidth: 780, margin: "0 auto", textAlign: "center" }}>
           <div style={{ color: S.gold, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontSize: 15, marginBottom: 18 }}>
-            ✦ Limpeza Espiritual • Oração • Proteção dos Santos
+            ✦ Primeira Consulta Espiritual • Oração • Proteção dos Santos
           </div>
           <h1 className="serif" style={{ fontSize: "2.7rem", lineHeight: 1.12, margin: "0 0 20px", fontWeight: 700 }}>
             Tire o peso do seu coração e abra os caminhos da sua vida
           </h1>
           <p style={{ fontSize: "1.2rem", color: S.text2, lineHeight: 1.55, marginBottom: 30 }}>
-            Comece hoje com a sua <b style={{ color: S.text }}>primeira consulta espiritual com a ATB</b> — ela ouve a sua dor, reza por você e te aponta um caminho, com a força dos santos. No seu celular, com fé e sigilo.
+            Comece hoje com a sua <b style={{ color: S.text }}>Primeira Consulta Espiritual com a ATB</b> — ela ouve a sua dor, reza por você e te aponta um caminho, com a força dos santos. No seu celular, com fé e sigilo.
           </p>
-          <a href={CHECKOUT} style={{ ...btnGold, maxWidth: 460, margin: "0 auto", fontSize: "1.3rem", padding: "22px 34px" }}>
-            ✦ Quero minha consulta — {PRICE}
+          <a href={CHECKOUT} style={{ ...btnGold, maxWidth: 480, margin: "0 auto" }}>
+            ✦ {CTA_LABEL}
           </a>
-          <p style={{ marginTop: 18, fontSize: "0.98rem", color: S.text2, lineHeight: 1.6 }}>
-            🔒 <b style={{ color: S.gold2 }}>Pagamento único.</b> Não é mensalidade. Nunca cobramos de novo.<br />
-            💬 Fale com uma pessoa de verdade no WhatsApp <b>antes de pagar</b>.
-          </p>
+          <p style={trustStyle}>{TRUST_LINE}</p>
         </div>
       </section>
 
-      {/* O QUE VOCÊ RECEBE */}
+      {/* O QUE VOCÊ RECEBE — sem CTA no meio (regra: 1 acima da dobra + 1 no fim) */}
       <section style={{ padding: "56px 22px", background: "rgba(0,0,0,0.18)" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
-          <h2 className="serif" style={{ fontSize: "2rem", textAlign: "center", marginBottom: 8, fontWeight: 700 }}>O que você recebe</h2>
+          <h2 className="serif" style={{ fontSize: "2rem", textAlign: "center", marginBottom: 8, fontWeight: 700 }}>O que você recebe na sua consulta</h2>
           <p style={{ textAlign: "center", color: S.text2, marginBottom: 34, fontSize: "1.05rem" }}>
             Não é um áudio genérico da internet. É um atendimento feito pro seu caso.
           </p>
@@ -129,9 +146,6 @@ export default function LimpezaEspiritualPage() {
               </li>
             ))}
           </ul>
-          <div style={{ textAlign: "center", marginTop: 30 }}>
-            <a href={CHECKOUT} style={{ ...btnGold, maxWidth: 420, margin: "0 auto" }}>Começar minha consulta — {PRICE}</a>
-          </div>
         </div>
       </section>
 
@@ -169,7 +183,7 @@ export default function LimpezaEspiritualPage() {
       {/* PROVA */}
       <section style={{ padding: "56px 22px" }}>
         <div style={{ maxWidth: 960, margin: "0 auto" }}>
-          <h2 className="serif" style={{ fontSize: "2rem", textAlign: "center", marginBottom: 34, fontWeight: 700 }}>Quem já conversou com a ATB, sentiu a diferença</h2>
+          <h2 className="serif" style={{ fontSize: "2rem", textAlign: "center", marginBottom: 34, fontWeight: 700 }}>Quem já fez a consulta, sentiu a diferença</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
             {depoimentos.map(([txt, quem]) => (
               <div key={quem} style={{ background: "rgba(255,255,255,0.04)", borderLeft: `3px solid ${S.gold}`, borderRadius: 12, padding: 20 }}>
@@ -181,24 +195,8 @@ export default function LimpezaEspiritualPage() {
         </div>
       </section>
 
-      {/* OFERTA */}
-      <section id="oferta" style={{ padding: "56px 22px", background: "rgba(0,0,0,0.18)" }}>
-        <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center", background: "linear-gradient(180deg, rgba(61,26,99,0.7), rgba(28,11,46,0.7))", border: `1px solid ${S.gold}`, borderRadius: 22, padding: "40px 28px", boxShadow: "0 20px 60px rgba(0,0,0,0.45)" }}>
-          <div style={{ color: S.gold, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontSize: 14, marginBottom: 10 }}>✦ Sua primeira consulta com a ATB</div>
-          <div className="serif" style={{ fontSize: "3.4rem", color: "#fff", margin: "6px 0", fontWeight: 700 }}>
-            {PRICE}
-            <span style={{ display: "block", fontSize: "1rem", color: S.text2, fontWeight: 400 }}>pagamento único • recebe na hora no celular</span>
-          </div>
-          <a href={CHECKOUT} style={{ ...btnGold, marginTop: 14, fontSize: "1.3rem", padding: "22px 30px" }}>✦ Quero minha consulta — {PRICE}</a>
-          <p style={{ marginTop: 16, fontSize: "0.9rem", color: S.text2, lineHeight: 1.6 }}>
-            🔒 Pagamento 100% seguro por Pix, cartão ou boleto.<br />
-            💬 Antes de pagar, fale com a gente no WhatsApp — a gente te ajuda com calma. Você não fica sozinha.
-          </p>
-        </div>
-      </section>
-
       {/* FAQ — <details> nativo, sem JS */}
-      <section style={{ padding: "56px 22px" }}>
+      <section style={{ padding: "56px 22px", background: "rgba(0,0,0,0.18)" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2 className="serif" style={{ fontSize: "2rem", textAlign: "center", marginBottom: 30, fontWeight: 700 }}>Perguntas que toda pessoa faz</h2>
           {faq.map(([q, a]) => (
@@ -207,26 +205,49 @@ export default function LimpezaEspiritualPage() {
               <p style={{ padding: "0 18px 16px", color: S.text2, lineHeight: 1.55 }}>{a}</p>
             </details>
           ))}
-          <div style={{ textAlign: "center", marginTop: 30 }}>
-            <a href={CHECKOUT} style={{ ...btnGold, maxWidth: 440, margin: "0 auto", fontSize: "1.3rem" }}>✦ Quero minha consulta — {PRICE}</a>
+        </div>
+      </section>
+
+      {/* OFERTA FINAL — o MESMO botão do topo, fechando a página */}
+      <section id="oferta" style={{ padding: "56px 22px 64px" }}>
+        <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center", background: "linear-gradient(180deg, rgba(61,26,99,0.7), rgba(28,11,46,0.7))", border: `1px solid ${S.gold}`, borderRadius: 22, padding: "40px 28px", boxShadow: "0 20px 60px rgba(0,0,0,0.45)" }}>
+          <div style={{ color: S.gold, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontSize: 14, marginBottom: 10 }}>✦ Primeira Consulta Espiritual</div>
+          <div className="serif" style={{ fontSize: "3.4rem", color: "#fff", margin: "6px 0", fontWeight: 700 }}>
+            R$29
+            <span style={{ display: "block", fontSize: "1rem", color: S.text2, fontWeight: 400 }}>pagamento único • recebe na hora no celular</span>
           </div>
+          <a href={CHECKOUT} style={{ ...btnGold, marginTop: 14 }}>✦ {CTA_LABEL}</a>
+          <p style={trustStyle}>{TRUST_LINE}</p>
+          <p style={{ marginTop: 16, fontSize: "0.95rem", color: S.text2, fontWeight: 600 }}>
+            📢 +1 milhão de pessoas acompanham a ATB por mês.
+          </p>
         </div>
       </section>
 
       <footer style={{ padding: "36px 22px", textAlign: "center", color: S.muted, fontSize: "0.85rem", borderTop: `1px solid ${S.sep}` }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <p>O atendimento espiritual com a ATB é um serviço de fé e acolhimento e não substitui acompanhamento médico ou psicológico profissional.</p>
+          {waHref && (
+            <p style={{ marginTop: 12 }}>
+              <a href={waHref} target="_blank" rel="noopener noreferrer" style={{ color: S.muted, textDecoration: "underline" }}>
+                Dúvidas? Fale comigo no WhatsApp
+              </a>
+            </p>
+          )}
           <p style={{ marginTop: 10 }}>© 2026 ATB — Todos os direitos reservados</p>
         </div>
       </footer>
 
-      {/* Barra fixa mobile própria (R$29) — a global de R$100 fica oculta nesta rota */}
+      {/* Barra fixa mobile — o mesmo CTA, sempre à mão (não conta como "extra":
+          é o botão primário persistente no celular, público 45+) */}
       <div className="le-spacer" aria-hidden="true" />
-      <a href={CHECKOUT} className="le-bar" aria-label={`Quero minha consulta — ${PRICE}`}>
+      <a href={CHECKOUT} className="le-bar" aria-label={CTA_LABEL}>
         <span style={{ fontSize: 22, lineHeight: 1 }} aria-hidden="true">🕊️</span>
-        <span>Quero minha consulta — <strong>{PRICE}</strong></span>
+        <span>{CTA_LABEL}</span>
       </a>
-      <style>{`
+      {/* dangerouslySetInnerHTML evita hydration mismatch: <style>{`...`}</style>
+          escapa ">" no server ("&gt;") mas não no client → warning + overlay dev. */}
+      <style dangerouslySetInnerHTML={{ __html: `
         details > summary::-webkit-details-marker { display: none; }
         .le-spacer { display: none; }
         .le-bar { display: none; }
@@ -236,14 +257,14 @@ export default function LimpezaEspiritualPage() {
             position: fixed; left: 0; right: 0; bottom: 0;
             padding: 14px 16px calc(env(safe-area-inset-bottom, 0) + 14px);
             background: linear-gradient(135deg, #e8b84b, #c9950a);
-            color: #120025; font-size: 18px; font-weight: 800; text-align: center;
+            color: #120025; font-size: 17px; font-weight: 800; text-align: center;
             text-decoration: none; box-shadow: 0 -4px 16px rgba(0,0,0,0.45);
             z-index: 9997; min-height: 64px; display: flex; align-items: center;
             justify-content: center; gap: 10px; border-top: 2px solid rgba(232,184,75,0.7);
           }
           .le-bar:active { opacity: 0.92; }
         }
-      `}</style>
+      ` }} />
     </main>
   );
 }
