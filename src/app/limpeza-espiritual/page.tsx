@@ -201,7 +201,7 @@ export default function LimpezaEspiritualPage() {
           <h2 className="serif" style={{ fontSize: "2rem", textAlign: "center", marginBottom: 30, fontWeight: 700 }}>Perguntas que toda pessoa faz</h2>
           {faq.map(([q, a]) => (
             <details key={q} style={{ border: `1px solid ${S.sep}`, borderRadius: 12, marginBottom: 12, background: "rgba(0,0,0,0.15)", padding: "2px 0" }}>
-              <summary style={{ cursor: "pointer", padding: "16px 18px", fontWeight: 600, fontSize: "1.02rem", listStyle: "none" }}>{q}</summary>
+              <summary className="le-faq-q" style={{ cursor: "pointer", padding: "16px 44px 16px 18px", fontWeight: 600, fontSize: "1.02rem", listStyle: "none", position: "relative" }}>{q}</summary>
               <p style={{ padding: "0 18px 16px", color: S.text2, lineHeight: 1.55 }}>{a}</p>
             </details>
           ))}
@@ -234,7 +234,13 @@ export default function LimpezaEspiritualPage() {
               </a>
             </p>
           )}
-          <p style={{ marginTop: 10 }}>© 2026 ATB — Todos os direitos reservados</p>
+          <p style={{ marginTop: 10 }}>
+            © 2026 ATB — Todos os direitos reservados
+            {" · "}
+            <a href="/privacidade" style={{ color: S.muted, textDecoration: "underline" }}>Privacidade</a>
+            {" · "}
+            <a href="/termos" style={{ color: S.muted, textDecoration: "underline" }}>Termos</a>
+          </p>
         </div>
       </footer>
 
@@ -249,6 +255,12 @@ export default function LimpezaEspiritualPage() {
           escapa ">" no server ("&gt;") mas não no client → warning + overlay dev. */}
       <style dangerouslySetInnerHTML={{ __html: `
         details > summary::-webkit-details-marker { display: none; }
+        .le-faq-q::after {
+          content: "+"; position: absolute; right: 16px; top: 50%;
+          transform: translateY(-50%); color: #e8b84b; font-size: 1.5rem;
+          font-weight: 700; line-height: 1;
+        }
+        details[open] > .le-faq-q::after { content: "\\2212"; }
         .le-spacer { display: none; }
         .le-bar { display: none; }
         @media (max-width: 768px) {

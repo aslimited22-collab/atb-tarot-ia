@@ -134,7 +134,7 @@ export function planDisplayName(plan: PlanId): string {
     videochamada: "ATB — Vídeo Chamada ao Vivo",
     limpeza: "ATB — Limpeza Espiritual Personalizada",
     espirito: "ATB — Espírito Mentor",
-    pergunta1: "ATB — 1 Pergunta Espiritual",
+    pergunta1: "ATB — Primeira Consulta Espiritual", // "consulta" consistente do anúncio ao checkout (brief 18/07)
     pergunta3: "ATB — 3 Perguntas Espirituais",
     pergunta7: "ATB — 7 Perguntas Espirituais",
   }[plan];

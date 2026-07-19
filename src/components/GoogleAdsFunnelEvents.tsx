@@ -22,8 +22,18 @@ export default function GoogleAdsFunnelEvents() {
       //  - pay.kiwify.com.br direto (botão dourado do funil /limpeza pós-prévia)
       const link = target?.closest?.('a[href*="/api/checkout/"], a[href*="pay.kiwify.com.br"]');
       if (!link) return;
-      const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
-      if (typeof gtag !== "function") return;
+      // Se o gtag.js (afterInteractive) ainda não carregou, cria o stub padrão
+      // que ENFILEIRA no dataLayer — o gtag.js drena a fila quando carregar.
+      // Antes: early-return → clique rápido em 3G perdia o begin_checkout.
+      const w = window as unknown as { gtag?: (...args: unknown[]) => void; dataLayer?: unknown[] };
+      if (typeof w.gtag !== "function") {
+        w.dataLayer = w.dataLayer || [];
+        w.gtag = function gtag() {
+          // eslint-disable-next-line prefer-rest-params
+          (w.dataLayer as unknown[]).push(arguments);
+        };
+      }
+      const gtag = w.gtag;
       if (CHECKOUT_LABEL && GADS_ID) {
         gtag("event", "conversion", {
           send_to: `${GADS_ID}/${CHECKOUT_LABEL}`,
@@ -35,7 +45,13 @@ export default function GoogleAdsFunnelEvents() {
       }
     };
     document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
+    // auxclick: middle-click abre em nova aba SEM disparar "click" — sem este
+    // listener, a conversão de checkout não era registrada nesse caminho.
+    document.addEventListener("auxclick", onClick, true);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      document.removeEventListener("auxclick", onClick, true);
+    };
   }, []);
 
   return null;
