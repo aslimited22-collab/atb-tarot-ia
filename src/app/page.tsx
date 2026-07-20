@@ -519,6 +519,27 @@ export default function Home() {
                 {t("landing.video_card_note")}
               </p>
             </div>
+
+            {/* PRODUTO 5 — NUMEROLOGIA (R$45) — leva pra página de vendas /numerologia.
+                PT-hardcoded (produto BR-first; outros idiomas veriam o fallback PT
+                do dict de qualquer forma). */}
+            <div className="card lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", order: 4 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, background: "rgba(232,184,75,0.18)", color: S.gold, borderRadius: 999, padding: "5px 16px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em", border: "1px solid rgba(232,184,75,0.4)" }}>🔢 NOVO</div>
+              <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 8, fontWeight: 700, lineHeight: 1.1 }}>
+                Numerologia
+              </h3>
+              <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 10, lineHeight: 1 }}>
+                R$45
+              </div>
+              <p style={{ fontSize: 17, color: S.text, marginBottom: 24, fontWeight: 500, lineHeight: 1.5 }}>
+                Seus números da sorte pessoais, calculados pelo seu nome e data de nascimento. Mapa completo em PDF no seu e-mail.
+              </p>
+              <div style={{ flex: 1 }} />
+              <a href="/numerologia?utm_source=home&utm_medium=card&utm_campaign=card_numerologia" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>Quero meus números ✨</a>
+              <p style={{ fontSize: 15, color: S.muted, marginTop: 14, lineHeight: 1.5, textAlign: "center", fontWeight: 500 }}>
+                Pagamento único · recebe em até 24h
+              </p>
+            </div>
           </div>
         </div>
       </section>

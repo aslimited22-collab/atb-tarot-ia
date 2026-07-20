@@ -182,7 +182,13 @@ export async function GET(
           },
         },
       ],
-      success_url: `${baseUrl}/dashboard?welcome=${plan}`,
+      // Numerologia: pós-pagamento o cliente PREENCHE nome+nascimento em
+      // /numerologia/dados (o webhook cria a order e a página resolve a session
+      // pelo payment_id). {CHECKOUT_SESSION_ID} é template do próprio Stripe.
+      success_url:
+        plan === "numerologia"
+          ? `${baseUrl}/numerologia/dados?pedido={CHECKOUT_SESSION_ID}`
+          : `${baseUrl}/dashboard?welcome=${plan}`,
       cancel_url: `${baseUrl}/#planos`,
       billing_address_collection: "auto",
       metadata: {
