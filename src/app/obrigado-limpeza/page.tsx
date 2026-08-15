@@ -32,6 +32,11 @@ export default async function ObrigadoLimpezaPage({
     }
   }
 
+  // NOTA: aqui NÃO disparamos a conversão "Compra" do Google Ads — pro produto
+  // Limpeza quem dispara é o PIXEL DO KIWIFY (configurado no produto, "ao aprovar
+  // cartão/pix"). Disparar aqui também contaria a venda 2x (contagem = "Todas" e
+  // o redirect da Kiwify vem só com ?email=, sem transaction_id pra dedupe).
+
   // Já está logado?
   if (user) {
     // Se logado E tem compra de limpeza, vai direto para a sessão

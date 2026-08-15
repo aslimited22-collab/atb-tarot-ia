@@ -72,6 +72,24 @@ export async function middleware(request: NextRequest) {
   // respeitada. Sem esse marcador, RE-DETECTAMOS por geo a cada load — assim
   // um cookie 'en' grudado por bug antigo se auto-corrige pra 'pt' no Brasil.
   // ============================================================
+  // ?lang=xx na URL = escolha EXPLÍCITA (links de campanha, hreflang alternates
+  // do layout — que apontavam pra /?lang=xx mas nada lia o parâmetro até aqui).
+  // Grava os dois cookies (valor + marcador de escolha manual) e persiste.
+  const urlLang = request.nextUrl.searchParams.get("lang");
+  const VALID_LANGS = ["pt", "en", "es", "de", "it", "ja"];
+  if (urlLang && VALID_LANGS.includes(urlLang)) {
+    const response = await updateSession(request);
+    const cookieOpts = {
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax" as const,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    };
+    response.cookies.set("atb_locale", urlLang, cookieOpts);
+    response.cookies.set("atb_locale_set", "1", cookieOpts);
+    return response;
+  }
+
   const explicitChoice = request.cookies.get("atb_locale_set")?.value === "1";
   if (!explicitChoice) {
     const acceptLang = request.headers.get("accept-language") || "";

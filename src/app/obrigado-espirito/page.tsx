@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ObrigadoEspiritoClient from "./client";
+import GoogleAdsPurchase from "@/components/GoogleAdsPurchase";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +26,9 @@ export default async function ObrigadoEspiritoPage({
   let customerEmail = (searchParams?.email || "").toLowerCase().trim();
   const orderRef = (searchParams?.order || searchParams?.order_id || "").trim();
 
-  // Se veio orderId Kiwify, busca purchase pra resolver email
-  if (orderRef && !customerEmail) {
+  // Busca a compra pra (a) resolver email e (b) confirmar que houve pagamento.
+  let purchaseConfirmed = false;
+  if (orderRef) {
     const admin = createAdminClient();
     const { data: purchase } = await admin
       .from("purchases")
@@ -34,14 +36,21 @@ export default async function ObrigadoEspiritoPage({
       .eq("kiwify_order_id", orderRef)
       .eq("plan", "espirito")
       .maybeSingle();
-    if (purchase?.email) {
-      customerEmail = purchase.email.toLowerCase();
+    if (purchase) {
+      purchaseConfirmed = true;
+      if (purchase.email && !customerEmail) customerEmail = purchase.email.toLowerCase();
     }
   }
 
+  // Conversão "Compra" do Google Ads (Espírito R$437) — SÓ dispara com compra
+  // confirmada no banco, pra não contar visita/scanner/refresh como conversão.
+  const gadsPurchase = purchaseConfirmed ? (
+    <GoogleAdsPurchase value={437} orderId={orderRef || undefined} email={customerEmail || undefined} />
+  ) : null;
+
   // Já logado?
   if (user) {
-    return <ObrigadoEspiritoClient mode="logged-purchased" email={(user.email || "").toLowerCase()} />;
+    return <>{gadsPurchase}<ObrigadoEspiritoClient mode="logged-purchased" email={(user.email || "").toLowerCase()} /></>;
   }
 
   // Não logado — checa se já tem conta
@@ -54,9 +63,9 @@ export default async function ObrigadoEspiritoPage({
       .maybeSingle();
 
     if (existingUser) {
-      return <ObrigadoEspiritoClient mode="account-exists" email={customerEmail} />;
+      return <>{gadsPurchase}<ObrigadoEspiritoClient mode="account-exists" email={customerEmail} /></>;
     }
   }
 
-  return <ObrigadoEspiritoClient mode="needs-signup" email={customerEmail} />;
+  return <>{gadsPurchase}<ObrigadoEspiritoClient mode="needs-signup" email={customerEmail} /></>;
 }

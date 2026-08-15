@@ -5,6 +5,7 @@ import { generatePreview, VALID_THEMES, VALID_SIGNS, THEME_LABELS } from "@/lib/
 import { createCheckoutSession, currencyForRequest, detectIsInternational } from "@/lib/stripe";
 import { PLAN_PRICES } from "@/lib/pricing";
 import { getSiteUrl } from "@/lib/site-url";
+import { isTestClickId } from "@/lib/click-id";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -100,7 +101,7 @@ export async function POST(req: Request) {
     // (exceto JPY). Logo: JPY usa o valor inteiro; demais dividem por 100.
     const limpezaCents = PLAN_PRICES.limpeza[moneyInfo.currency];
     const stripeUnits = moneyInfo.currency === "jpy" ? limpezaCents : limpezaCents / 100;
-    const amount = isStripe ? stripeUnits : Number(process.env.LIMPEZA_V2_PRICE || 97);
+    const amount = isStripe ? stripeUnits : Number(process.env.LIMPEZA_V2_PRICE || 100);
     const currency = isStripe ? moneyInfo.currency.toUpperCase() : "BRL";
     const locale = isStripe ? moneyInfo.locale : "pt-BR";
 
@@ -115,21 +116,24 @@ export async function POST(req: Request) {
       );
     }
 
-    // M-1: Gera preview com DeepSeek ANTES de criar a order. Se a IA falhar,
-    // não fica order pending órfã no banco.
-    let previewText: string;
-    try {
-      previewText = await generatePreview({
-        name,
-        theme: THEME_LABELS[theme as keyof typeof THEME_LABELS] || theme,
-        sign,
-        question,
-      });
-    } catch {
-      return NextResponse.json(
-        { error: "Não conseguimos preparar sua prévia agora. Tente em alguns minutos." },
-        { status: 502 }
-      );
+    // M-1: usa a prévia já gerada no passo 1 (/api/limpeza/generate-preview) se
+    // veio no body — evita 2ª chamada ao DeepSeek. Renderizada como texto (React
+    // escapa), sem risco de XSS. Fallback: gera agora se não veio / veio inválida.
+    let previewText: string = typeof body?.previewText === "string" ? body.previewText.trim() : "";
+    if (previewText.length < 10 || previewText.length > 2000) {
+      try {
+        previewText = await generatePreview({
+          name,
+          theme: THEME_LABELS[theme as keyof typeof THEME_LABELS] || theme,
+          sign,
+          question,
+        });
+      } catch {
+        return NextResponse.json(
+          { error: "Não conseguimos preparar sua prévia agora. Tente em alguns minutos." },
+          { status: 502 }
+        );
+      }
     }
 
     // Cap defensivo de 80 palavras (caso a IA passe)
@@ -163,10 +167,58 @@ export async function POST(req: Request) {
 
     // M-5: Monta URL do checkout (Kiwify ou Stripe). Se ambos falharem,
     // limpamos a order recém-criada e retornamos 503.
+
+    // Atribuição Google Ads: anexa gclid/gbraid/wbraid + utm_* (cookies atb_gclid/
+    // atb_attr do AttributionTracker) na URL do checkout Kiwify. O pixel da Kiwify
+    // captura o gclid da URL e carimba a conversão — sem isso o Google não atribui
+    // a venda ao anúncio. Best-effort: qualquer falha cai na URL original.
+    function trackingParams(): Record<string, string> {
+      const out: Record<string, string> = {};
+      try {
+        const cookie = req.headers.get("cookie") || "";
+        for (const [name, keys] of [
+          ["atb_gclid", ["gclid", "gbraid", "wbraid"]],
+          ["atb_attr", ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]],
+        ] as const) {
+          const m = cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+          if (!m) continue;
+          const obj = JSON.parse(decodeURIComponent(m[1])) as Record<string, unknown>;
+          for (const k of keys) {
+            const v = obj[k];
+            if (typeof v === "string" && v) out[k] = v.slice(0, 150);
+          }
+        }
+      } catch {
+        /* best-effort */
+      }
+      // Click-ids de TESTE (ATB_*/TEST*) não saem pro checkout (cookie de QA).
+      for (const k of ["gclid", "gbraid", "wbraid"]) {
+        if (out[k] && isTestClickId(out[k])) delete out[k];
+      }
+      // Veio de anúncio (gclid) sem utm → rotula a origem pro painel do Kiwify.
+      if (out.gclid && !out.utm_source) {
+        out.utm_source = "google";
+        out.utm_medium = "cpc";
+      }
+      return out;
+    }
+
     function buildKiwifyUrl(orderId: string): string | null {
       if (!baseKiwify) return null;
-      const sep = baseKiwify.includes("?") ? "&" : "?";
-      return `${baseKiwify}${sep}external_reference=${orderId}&email=${encodeURIComponent(email)}`;
+      try {
+        const u = new URL(baseKiwify);
+        u.searchParams.set("external_reference", orderId);
+        u.searchParams.set("email", email);
+        const tp = trackingParams();
+        for (const [k, v] of Object.entries(tp)) u.searchParams.set(k, v);
+        // Redundância: Kiwify só documenta reconhecer src/sck/utm_*/s1/s2/s3 —
+        // duplica o gclid no slot livre "s1" pra o webhook (T1) conseguir achá-lo.
+        if (tp.gclid && !u.searchParams.get("s1")) u.searchParams.set("s1", tp.gclid);
+        return u.toString();
+      } catch {
+        const sep = baseKiwify.includes("?") ? "&" : "?";
+        return `${baseKiwify}${sep}external_reference=${orderId}&email=${encodeURIComponent(email)}`;
+      }
     }
 
     let checkoutUrl: string | null = null;
@@ -177,7 +229,10 @@ export async function POST(req: Request) {
           orderId: order.id,
           email,
           name,
-          amount: moneyInfo.amount,
+          // FIX: era moneyInfo.amount (placeholder $19/€18/¥2900) — cobrava a
+          // menos e divergia da prévia. `amount` = stripeUnits do PLAN_PRICES
+          // ($100/€100/¥10000), o mesmo valor gravado na order e mostrado ao cliente.
+          amount,
           currency: moneyInfo.currency,
           locale: moneyInfo.locale,
           successUrl: `${baseUrl}/entrega/${order.id}?provider=stripe`,
@@ -212,6 +267,30 @@ export async function POST(req: Request) {
 
     // Atualiza order com checkout_url
     await admin.from("orders").update({ checkout_url: checkoutUrl }).eq("id", order.id);
+
+    // Lead "preencheu-não-pagou": entra na régua de remarketing (o cron pega
+    // leads com converted_at null, sem filtrar por source, e usa este checkout_url
+    // no e-mail). Quando este e-mail comprar, o webhook marca converted_at e para
+    // a régua. Best-effort: nunca bloqueia o checkout. dedup por dia.
+    try {
+      const day = new Date().toISOString().slice(0, 10);
+      await admin.from("leads").upsert(
+        {
+          email,
+          name,
+          phone: phone || null,
+          source: "funnel_limpeza",
+          product_label: "limpeza",
+          checkout_url: checkoutUrl,
+          locale,
+          amount_cents: Math.round(Number(amount) * 100) || null,
+          dedup_key: `funnel_limpeza:${email}:${day}`,
+        },
+        { onConflict: "dedup_key", ignoreDuplicates: true }
+      );
+    } catch {
+      /* best-effort — remarketing não pode travar a venda */
+    }
 
     return NextResponse.json({
       ok: true,

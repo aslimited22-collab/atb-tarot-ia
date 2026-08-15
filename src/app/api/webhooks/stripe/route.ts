@@ -397,6 +397,126 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, plan: "espirito", email });
   }
 
+  // ---------- BRANCH 2c: Limpeza compra DIRETA intl (sem funil / sem order_id) ----------
+  // Home CTA + barra sticky → /api/checkout/limpeza → Stripe com metadata.plan="limpeza"
+  // e SEM order_id. Espelha o V1 do Kiwify (BR): cria conta + magic-link 1-toque +
+  // welcome localizado. A limpeza via FUNIL tem order_id e NÃO seta metadata.plan
+  // (createCheckoutSession), então cai na BRANCH 3 — não aqui. Sem este branch, o
+  // cliente intl pagava e ficava órfão (mesmo incidente do cliente US $100).
+  if (plan === "limpeza") {
+    if (!email) {
+      return NextResponse.json({ error: "missing email" }, { status: 400 });
+    }
+    logInfo("webhook.stripe", "limpeza direta paid intl", { email, currency, amountTotal });
+
+    await admin.from("purchases").insert({
+      email,
+      name: name ?? null,
+      kiwify_order_id: paymentId,
+      plan: "limpeza",
+      event: "limpeza_purchased_intl",
+      amount_cents: amountTotal,
+      user_id: null,
+    });
+
+    let lMagicUrl = `${getSiteUrl(req)}/dashboard/limpeza-espiritual`;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo: `${getSiteUrl(req)}/auth/callback?next=${encodeURIComponent("/dashboard/limpeza-espiritual")}` },
+      });
+      lMagicUrl = magicLinkFromGenerate(linkData, getSiteUrl(req), lMagicUrl);
+    } catch (e) {
+      logWarn("webhook.stripe.limpeza", "magic-link gen failed", { email, error: String(e) });
+    }
+
+    // Captura idioma real do comprador (país/moeda) no user recém-criado.
+    try { await admin.from("users").update({ locale: buyerLoc }).eq("email", email); } catch {}
+
+    const { subject: lSubject, html: lHtml } = buildWelcomeEmail({ product: "limpeza", locale: buyerLoc, name, magicUrl: lMagicUrl });
+    await sendCustomerEmailWithLog({
+      scope: "webhook.stripe.limpeza",
+      to: email,
+      subject: lSubject,
+      html: lHtml,
+      refId: paymentId,
+    });
+
+    return NextResponse.json({ ok: true, plan: "limpeza", email });
+  }
+
+  // ---------- BRANCH 2d: Numerologia intl (R$45 / $45 / €45) ----------
+  // /api/checkout/numerologia → Stripe com metadata.plan="numerologia" e
+  // success_url /numerologia/dados?pedido={CHECKOUT_SESSION_ID}. Cria o pedido
+  // (orders, product_type=numerologia) com payment_id = session.id — a página
+  // de dados resolve por esse id via /api/numerologia/pedido. Entrega (PDF por
+  // e-mail) dispara quando a cliente preenche nome+nascimento.
+  if (plan === "numerologia") {
+    if (!email) {
+      return NextResponse.json({ error: "missing email" }, { status: 400 });
+    }
+    logInfo("webhook.stripe", "numerologia paid intl", { email, currency, amountTotal });
+
+    const { data: numOrder, error: numOrderErr } = await admin
+      .from("orders")
+      .insert({
+        name: name || "Cliente ATB",
+        email,
+        theme: "numerologia",
+        question: "mapa numerologico",
+        amount: Math.round((amountTotal || 4500) / 100),
+        currency: (currency || "usd").toUpperCase(),
+        status: "paid",
+        product_type: "numerologia",
+        payment_provider: "stripe",
+        payment_id: paymentId,
+        locale: buyerLoc === "pt" ? "pt-BR" : buyerLoc,
+      })
+      .select("id")
+      .single();
+
+    if (numOrderErr || !numOrder) {
+      logError("webhook.stripe.numerologia", "order insert failed", { error: numOrderErr?.message, paymentId });
+      return NextResponse.json({ error: "order insert failed" }, { status: 500 });
+    }
+
+    await admin.from("purchases").insert({
+      email,
+      name: name ?? null,
+      kiwify_order_id: paymentId,
+      plan: "numerologia",
+      event: "numerologia_purchased_intl",
+      amount_cents: amountTotal,
+      user_id: null,
+    });
+
+    // E-mail com o link de dados (redundância da success_url — se a cliente
+    // fechar a aba antes de preencher, o link chega no e-mail).
+    const numDadosLink = `${getSiteUrl(req)}/numerologia/dados?pedido=${numOrder.id}`;
+    await sendCustomerEmailWithLog({
+      scope: "webhook.stripe.numerologia",
+      to: email,
+      subject: "🔢 Falta 1 passo: seus dados pro seu mapa de Numerologia",
+      html: `
+<div style="max-width:560px;margin:0 auto;padding:30px 20px;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
+  <div style="background:linear-gradient(135deg,#1e0040,#2a0055);border-radius:20px;padding:36px 24px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+    <div style="font-size:56px;margin-bottom:12px;">🔢</div>
+    <h1 style="color:#e8b84b;font-size:26px;margin:0 0 12px;">Sua Numerologia está confirmada!</h1>
+    <p style="color:#fbf8ff;font-size:17px;line-height:1.65;margin:0 0 22px;">
+      Pra ATB preparar o seu mapa, preencha seu <strong style="color:#f5c860;">nome completo</strong> e sua <strong style="color:#f5c860;">data de nascimento</strong>:
+    </p>
+    <a href="${numDadosLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:18px;padding:18px 32px;border-radius:14px;text-decoration:none;">✨ Preencher e receber meu mapa</a>
+    <p style="color:#c4b5fd;font-size:13px;margin:20px 0 0;">Leva menos de 1 minuto. Seu mapa chega em PDF neste e-mail.</p>
+  </div>
+  <div style="text-align:center;margin-top:16px;color:#9575cd;font-size:12px;">ATB · atbtartot.com</div>
+</div>`,
+      refId: numOrder.id,
+    });
+
+    return NextResponse.json({ ok: true, plan: "numerologia", orderId: numOrder.id });
+  }
+
   // ---------- BRANCH 3 (fluxo legado): Limpeza V2 com order UUID ----------
   if (!orderId || !/^[0-9a-f-]{36}$/i.test(orderId)) {
     logWarn("webhook.stripe", "missing/invalid order_id (and no recognized plan)", { orderId, plan, eventId: event.id });

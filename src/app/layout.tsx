@@ -5,10 +5,12 @@ import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { CookieBanner } from "@/components/CookieBanner";
 import { AnalyticsWrapper } from "@/components/AnalyticsWrapper";
 import AttributionTracker from "@/components/AttributionTracker";
+import GoogleAdsTag from "@/components/GoogleAdsTag";
+import GoogleAdsFunnelEvents from "@/components/GoogleAdsFunnelEvents";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 import GlobalLangSwitcher from "@/components/GlobalLangSwitcher";
-import { getServerLocale } from "@/lib/i18n/server";
+import { getServerLocale, getSeoLocale } from "@/lib/i18n/server";
 import { translate } from "@/lib/i18n/dict";
 import { LOCALES, type Locale } from "@/lib/i18n/locales";
 
@@ -26,7 +28,10 @@ const HTML_LANG: Record<Locale, string> = {
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://atbtartot.com";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = getServerLocale();
+  // getSeoLocale (não getServerLocale): metadata/SEO nunca deve variar por
+  // geo-IP do robô que está buscando — só por escolha explícita de um
+  // visitante real. Ver comentário em src/lib/i18n/server.ts.
+  const locale = getSeoLocale();
   const title = translate(locale, "meta.site_title");
   const description = translate(locale, "meta.site_description");
 
@@ -70,6 +75,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CookieBanner />
           <AnalyticsWrapper />
           <AttributionTracker />
+          <GoogleAdsTag />
+          <GoogleAdsFunnelEvents />
           <Toaster
             position="top-center"
             toastOptions={{

@@ -21,6 +21,35 @@ export default function Home() {
   // Completa R$197/mês → Pergunta avulsa R$29. Botões vão pelo roteador
   // /api/checkout/[plan] (decide Kiwify BR vs Stripe intl server-side por IP).
 
+  // JSON-LD (rich results): usa as MESMAS chaves i18n do conteúdo visível
+  // (FAQ + preço da Limpeza) — nunca diverge do que a página realmente mostra,
+  // em qualquer locale. Product usa BRL sempre (preço-base do negócio é BR).
+  const faqEntries = [1, 2, 3, 4, 5, 6].map((n) => ({
+    "@type": "Question",
+    name: t(`landing.faq_q${n}` as any),
+    acceptedAnswer: { "@type": "Answer", text: t(`landing.faq_a${n}` as any) },
+  }));
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqEntries,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: t("landing.hero_badge" as any) || "Limpeza Espiritual com ATB",
+      description: t("meta.site_description" as any),
+      offers: {
+        "@type": "Offer",
+        price: "100.00",
+        priceCurrency: "BRL",
+        availability: "https://schema.org/InStock",
+        url: "https://atbtartot.com/limpeza",
+      },
+    },
+  ];
+
   const features = [
     { icon: "💬", title: t("features.chat.title"), desc: t("features.chat.desc") },
     { icon: "🔮", title: t("features.oracle.title"), desc: t("features.oracle.desc") },
@@ -36,6 +65,11 @@ export default function Home() {
 
   return (
     <main style={{ background: S.bg, color: S.text, minHeight: "100vh" }}>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* Header */}
       <header style={{ background: "rgba(30,0,64,0.92)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${S.sep}`, position: "sticky", top: 0, zIndex: 10 }}>
@@ -485,6 +519,32 @@ export default function Home() {
                 {t("landing.video_card_note")}
               </p>
             </div>
+
+            {/* PRODUTO 5 — NUMEROLOGIA (R$45) — leva pra página de vendas /numerologia.
+                PT-hardcoded (produto BR-first; outros idiomas veriam o fallback PT
+                do dict de qualquer forma).
+                GATE: só aparece quando o checkout Kiwify existir no build — sem a
+                env, o CTA BR viraria loop morto (307 → /#planos) disparando
+                begin_checkout falso. NEXT_PUBLIC_ é inlined no build do client. */}
+            {process.env.NEXT_PUBLIC_KIWIFY_NUMEROLOGIA_URL && (
+            <div className="card lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", order: 4 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, background: "rgba(232,184,75,0.18)", color: S.gold, borderRadius: 999, padding: "5px 16px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em", border: "1px solid rgba(232,184,75,0.4)" }}>🔢 NOVO</div>
+              <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 8, fontWeight: 700, lineHeight: 1.1 }}>
+                Numerologia
+              </h3>
+              <div style={{ fontSize: "2.6rem", fontWeight: 800, color: S.text, marginBottom: 10, lineHeight: 1 }}>
+                R$45
+              </div>
+              <p style={{ fontSize: 17, color: S.text, marginBottom: 24, fontWeight: 500, lineHeight: 1.5 }}>
+                Seus números da sorte pessoais, calculados pelo seu nome e data de nascimento. Mapa completo em PDF no seu e-mail.
+              </p>
+              <div style={{ flex: 1 }} />
+              <a href="/numerologia?utm_source=home&utm_medium=card&utm_campaign=card_numerologia" className="btn-gold btn-big" style={{ textAlign: "center", display: "block", padding: "20px 24px", fontSize: "1.2rem", fontWeight: 800, textDecoration: "none", border: "none" }}>Quero meus números ✨</a>
+              <p style={{ fontSize: 15, color: S.muted, marginTop: 14, lineHeight: 1.5, textAlign: "center", fontWeight: 500 }}>
+                Pagamento único · recebe em até 24h
+              </p>
+            </div>
+            )}
           </div>
         </div>
       </section>

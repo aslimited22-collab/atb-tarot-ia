@@ -58,6 +58,11 @@ export default async function ObrigadoPerguntaPage({
     purchaseConfirmed = (count ?? 0) > 0;
   }
 
+  // NOTA: aqui NÃO disparamos a conversão "Compra" do Google Ads — pra Pergunta
+  // quem dispara é o PIXEL DO KIWIFY (produto → Pixels → G Ads, "Compra Pergunta",
+  // ao aprovar cartão/pix — verificado no painel). Disparar aqui também contaria
+  // a venda 2x (contagem = "Todas", sem dedupe entre pixel e site).
+
   // Cliente já logado → redireciona direto pro chat (skip spinner — webhook irrelevante)
   if (user) {
     return <ObrigadoPerguntaClient mode="logged-with-credits" email={(user.email || "").toLowerCase()} name={customerName} purchaseConfirmed={true} />;

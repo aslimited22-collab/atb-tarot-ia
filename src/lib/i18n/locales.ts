@@ -31,6 +31,12 @@ export function localeFromSignals(country?: string | null, acceptLang?: string |
   const c = (country || "").toUpperCase();
   const al = (acceptLang || "").toLowerCase();
 
+  // 0. Aparelho em PORTUGUÊS vence qualquer geo: brasileira viajando/VPN nos
+  //    EUA (geo US) caía em inglês — errado pro negócio BR-first. Quem tem o
+  //    dispositivo em pt lê português, não importa onde esteja. (Só pt tem
+  //    esse privilégio — é a língua do produto; as demais seguem geo-first.)
+  if (al.startsWith("pt")) return "pt";
+
   // 1. Geo-IP é o sinal mais forte
   if (c === "BR") return "pt";
   if (ES_COUNTRIES.includes(c)) return "es";

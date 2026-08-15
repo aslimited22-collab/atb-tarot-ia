@@ -1,12 +1,55 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerT } from "@/lib/i18n/server";
+import { isTestClickId } from "@/lib/click-id";
 import { PreviewClient } from "./PreviewClient";
 
 export const dynamic = "force-dynamic";
 
-const PRICE = Number(process.env.LIMPEZA_V2_PRICE || 97);
+const PRICE = Number(process.env.LIMPEZA_V2_PRICE || 100);
+
+// Fallback do checkout (order sem checkout_url): monta a URL do Kiwify anexando
+// gclid/utm dos cookies — mesma atribuição do caminho principal (/api/limpeza/preview).
+function buildFallbackCheckout(base: string, orderId: string, email: string): string {
+  try {
+    const u = new URL(base);
+    u.searchParams.set("external_reference", orderId);
+    u.searchParams.set("email", email);
+    const jar = cookies();
+    for (const [name, keys] of [
+      ["atb_gclid", ["gclid", "gbraid", "wbraid"]],
+      ["atb_attr", ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]],
+    ] as const) {
+      try {
+        const raw = jar.get(name)?.value;
+        if (!raw) continue;
+        let obj: Record<string, unknown> | null = null;
+        try { obj = JSON.parse(decodeURIComponent(raw)); } catch { obj = JSON.parse(raw); }
+        for (const k of keys) {
+          const v = obj?.[k];
+          if (typeof v !== "string" || !v) continue;
+          // Click-ids de TESTE (ATB_*/TEST*) não saem pro checkout (cookie de QA).
+          if (name === "atb_gclid" && isTestClickId(v)) continue;
+          u.searchParams.set(k, v.slice(0, 150));
+        }
+      } catch { /* best-effort */ }
+    }
+    // Veio de anúncio (gclid) sem utm → rotula a origem pro painel do Kiwify.
+    if (u.searchParams.get("gclid") && !u.searchParams.get("utm_source")) {
+      u.searchParams.set("utm_source", "google");
+      u.searchParams.set("utm_medium", "cpc");
+    }
+    // Redundância: Kiwify só documenta reconhecer src/sck/utm_*/s1/s2/s3 —
+    // duplica o gclid no slot livre "s1" pra o webhook conseguir achá-lo.
+    const gclidVal = u.searchParams.get("gclid");
+    if (gclidVal && !u.searchParams.get("s1")) u.searchParams.set("s1", gclidVal);
+    return u.toString();
+  } catch {
+    return `${base}${base.includes("?") ? "&" : "?"}external_reference=${orderId}&email=${encodeURIComponent(email)}`;
+  }
+}
 
 export default async function PreviewPage({ params }: { params: { orderId: string } }) {
   const orderId = params.orderId;
@@ -37,9 +80,7 @@ export default async function PreviewPage({ params }: { params: { orderId: strin
   const baseCheckout = process.env.NEXT_PUBLIC_KIWIFY_LIMPEZA_URL || "";
   const checkoutUrl =
     order.checkout_url ||
-    (baseCheckout
-      ? `${baseCheckout}${baseCheckout.includes("?") ? "&" : "?"}external_reference=${order.id}&email=${encodeURIComponent(order.email)}`
-      : "#");
+    (baseCheckout ? buildFallbackCheckout(baseCheckout, order.id, order.email) : "#");
 
   const firstName = (order.name || "querida").split(" ")[0];
   const price = order.amount || PRICE;

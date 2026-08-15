@@ -12,7 +12,8 @@ export type PlanId =
   | "espirito"
   | "pergunta1"
   | "pergunta3"
-  | "pergunta7";
+  | "pergunta7"
+  | "numerologia";
 export type Currency = "brl" | "usd" | "eur" | "jpy";
 export type CheckoutMode = "subscription" | "payment";
 
@@ -75,6 +76,12 @@ export const PLAN_PRICES: Record<PlanId, Record<Currency, number>> = {
     eur: 3990, // €39,90
     jpy: 3990, // ¥3990
   },
+  numerologia: {
+    brl: 4500, // R$45,00 (one-time) — mapa numerológico em PDF por e-mail
+    usd: 4500, // $45.00
+    eur: 4500, // €45,00
+    jpy: 4500, // ¥4500
+  },
 };
 
 /**
@@ -100,6 +107,7 @@ export const PLAN_TYPE: Record<PlanId, CheckoutMode> = {
   pergunta1: "payment",
   pergunta3: "payment",
   pergunta7: "payment",
+  numerologia: "payment",
 };
 
 /**
@@ -118,6 +126,7 @@ export function kiwifyUrlFor(plan: PlanId): string | undefined {
     pergunta1: process.env.NEXT_PUBLIC_KIWIFY_PERGUNTA1_URL,
     pergunta3: process.env.NEXT_PUBLIC_KIWIFY_PERGUNTA3_URL,
     pergunta7: process.env.NEXT_PUBLIC_KIWIFY_PERGUNTA7_URL,
+    numerologia: process.env.NEXT_PUBLIC_KIWIFY_NUMEROLOGIA_URL,
   };
   return map[plan];
 }
@@ -134,9 +143,12 @@ export function planDisplayName(plan: PlanId): string {
     videochamada: "ATB — Vídeo Chamada ao Vivo",
     limpeza: "ATB — Limpeza Espiritual Personalizada",
     espirito: "ATB — Espírito Mentor",
-    pergunta1: "ATB — 1 Pergunta Espiritual",
+    pergunta1: "ATB — Primeira Consulta Espiritual", // "consulta" consistente do anúncio ao checkout (brief 18/07)
     pergunta3: "ATB — 3 Perguntas Espirituais",
     pergunta7: "ATB — 7 Perguntas Espirituais",
+    // Idêntico ao nome do produto no checkout Kiwify (brief: "consulta"→landing,
+    // "Numerologia"→landing/checkout com a MESMA palavra do início ao fim).
+    numerologia: "Numerologia",
   }[plan];
 }
 
@@ -167,7 +179,8 @@ export function isValidPlan(s: string): s is PlanId {
     s === "espirito" ||
     s === "pergunta1" ||
     s === "pergunta3" ||
-    s === "pergunta7"
+    s === "pergunta7" ||
+    s === "numerologia"
   );
 }
 

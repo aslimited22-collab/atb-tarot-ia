@@ -9,7 +9,10 @@ const HIDDEN_PATHS = [
   "/api",
   "/login",
   "/cadastro",
-  "/limpeza/preview",
+  // Todo o funil /limpeza* (form → prévia → oferta) tem seu próprio fluxo/CTA:
+  // a barra global (R$100 direto) mostraria preço cedo demais e pularia a prévia.
+  // (cobre /limpeza, /limpeza/previa, /limpeza/preview e /limpeza-espiritual)
+  "/limpeza",
   "/entrega",
   "/admin",
   "/obrigado-",

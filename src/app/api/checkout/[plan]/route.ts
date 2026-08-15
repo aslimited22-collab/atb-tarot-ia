@@ -23,6 +23,7 @@ import {
 } from "@/lib/pricing";
 import { getSiteUrl } from "@/lib/site-url";
 import { logInfo, logWarn, logError } from "@/lib/logger";
+import { isTestClickId } from "@/lib/click-id";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,8 +32,15 @@ export const dynamic = "force-dynamic";
 // AttributionTracker) e repassa ao checkout — pra Kiwify/Stripe atribuírem a venda
 // ao canal. PURAMENTE ADITIVO: nunca altera produto/preço/fluxo; qualquer falha
 // cai no comportamento original (try/catch).
-type Attr = { utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string; utm_term?: string };
+type Attr = {
+  utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string; utm_term?: string;
+  gclid?: string; gbraid?: string; wbraid?: string;
+};
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
+// Click IDs do Google Ads — repassados na URL do Kiwify pro pixel deles
+// carimbar a conversão com o clique do anúncio (atribuição da venda).
+const CLICK_KEYS = ["gclid", "gbraid", "wbraid"] as const;
+const ALL_KEYS = [...UTM_KEYS, ...CLICK_KEYS] as const;
 
 function getAttribution(req: Request): Attr {
   const out: Attr = {};
@@ -40,25 +48,41 @@ function getAttribution(req: Request): Attr {
   //    tem prioridade — atribui a campanha específica que trouxe o clique.
   try {
     const sp = new URL(req.url).searchParams;
-    for (const k of UTM_KEYS) {
+    for (const k of ALL_KEYS) {
       const v = sp.get(k);
       if (v) out[k] = v.slice(0, 150);
     }
   } catch {
     /* ignore */
   }
-  // 2) Cookie atb_attr (first-touch da landing) preenche o que faltar.
+  // 2) Cookies (first-touch utm em atb_attr; last-touch click ids em atb_gclid)
+  //    preenchem o que faltar.
   try {
     const cookie = req.headers.get("cookie") || "";
-    const m = cookie.match(/(?:^|;\s*)atb_attr=([^;]+)/);
-    if (m) {
+    for (const [name, keys] of [
+      ["atb_attr", UTM_KEYS],
+      ["atb_gclid", CLICK_KEYS],
+    ] as const) {
+      const m = cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+      if (!m) continue;
       const obj = JSON.parse(decodeURIComponent(m[1])) as Record<string, unknown>;
-      for (const k of UTM_KEYS) {
+      for (const k of keys) {
         if (!out[k] && typeof obj[k] === "string" && obj[k]) out[k] = (obj[k] as string).slice(0, 150);
       }
     }
   } catch {
     /* ignore */
+  }
+  // Click-ids de TESTE (ATB_*/TEST*) nunca saem pro checkout — protege contra
+  // cookie poluído por QA (caso 17/07: gclid=ATB_REVIEW_TEST_0709 grudado 90d).
+  for (const k of CLICK_KEYS) {
+    if (out[k] && isTestClickId(out[k])) delete out[k];
+  }
+  // Veio de anúncio (gclid) sem utm na URL → rotula a origem pro painel do
+  // Kiwify mostrar de onde veio a venda (o gclid sozinho não aparece lá).
+  if (out.gclid && !out.utm_source) {
+    out.utm_source = "google";
+    out.utm_medium = "cpc";
   }
   return out;
 }
@@ -66,9 +90,14 @@ function getAttribution(req: Request): Attr {
 function withUtm(rawUrl: string, attr: Attr): string {
   try {
     const u = new URL(rawUrl);
-    for (const k of UTM_KEYS) {
+    for (const k of ALL_KEYS) {
       if (attr[k]) u.searchParams.set(k, attr[k]!);
     }
+    // Redundância: Kiwify só documenta reconhecer src/sck/utm_*/s1/s2/s3 como
+    // params de rastreamento — "gclid" pode não ser persistido/ecoado no
+    // webhook deles. Duplicamos o gclid no slot livre "s1" (se ainda não usado)
+    // pra aumentar a chance do webhook (T1) conseguir recuperá-lo.
+    if (attr.gclid && !u.searchParams.get("s1")) u.searchParams.set("s1", attr.gclid);
     return u.toString();
   } catch {
     return rawUrl; // nunca quebra o redirect de pagamento
@@ -153,7 +182,13 @@ export async function GET(
           },
         },
       ],
-      success_url: `${baseUrl}/dashboard?welcome=${plan}`,
+      // Numerologia: pós-pagamento o cliente PREENCHE nome+nascimento em
+      // /numerologia/dados (o webhook cria a order e a página resolve a session
+      // pelo payment_id). {CHECKOUT_SESSION_ID} é template do próprio Stripe.
+      success_url:
+        plan === "numerologia"
+          ? `${baseUrl}/numerologia/dados?pedido={CHECKOUT_SESSION_ID}`
+          : `${baseUrl}/dashboard?welcome=${plan}`,
       cancel_url: `${baseUrl}/#planos`,
       billing_address_collection: "auto",
       metadata: {

@@ -7,7 +7,7 @@ import { getServerT } from "@/lib/i18n/server";
 export const metadata = {
   title: "Limpeza Espiritual personalizada da ATB",
   description:
-    "Receba sua Limpeza Espiritual personalizada da ATB. Escreva seu nome e o que está sentindo. A ATB prepara uma orientação espiritual simples, acolhedora e personalizada para você.",
+    "Receba sua Limpeza Espiritual personalizada da ATB. Escreva seu nome e o que está sentindo. A ATB prepara uma prévia espiritual gratuita, feita pro seu caso.",
 };
 
 export default function LimpezaV2Page() {
@@ -59,6 +59,7 @@ export default function LimpezaV2Page() {
               width={1536}
               height={1024}
               priority
+              sizes="(max-width: 760px) 100vw, 720px"
               style={{ width: "100%", height: "auto", display: "block" }}
             />
           </div>

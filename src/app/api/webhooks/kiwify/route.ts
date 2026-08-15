@@ -9,6 +9,8 @@ import { findUserByFuzzyEmail } from "@/lib/user-matching";
 import { reconcileChatCredits } from "@/lib/reconcileCredits";
 import { buildAbandonedEmail } from "@/lib/remarketing-email";
 import { magicLinkFromGenerate } from "@/lib/magic-entry";
+import { sendClickConversion, isGoogleAdsApiConfigured } from "@/lib/google-ads-conversions";
+import { isTestClickId } from "@/lib/click-id";
 
 export const runtime = "nodejs";
 
@@ -111,6 +113,86 @@ export async function POST(req: Request) {
   );
   const valueBRL = valueCents > 1000 ? valueCents / 100 : valueCents;
 
+  // ─── T1: click-id + UTM do pedido (pra conversão server-side no Google Ads) ───
+  // Kiwify só documenta reconhecer src/sck/utm_*/s1/s2/s3 como params de
+  // rastreamento — "gclid" não é nativo deles. Por isso o checkout também grava
+  // o gclid no slot "s1" (redundância — ver checkout/[plan]/route.ts e
+  // limpeza/preview/route.ts). Extração defensiva: tenta vários caminhos
+  // plausíveis; se nenhum bater, `gclid` fica undefined e nada quebra.
+  const trackingSrc: Record<string, unknown> =
+    order.TrackingParameters || order.trackingParameters || order.tracking_parameters ||
+    payload.TrackingParameters || payload.trackingParameters || {};
+  const gclid: string | undefined =
+    (typeof trackingSrc.s1 === "string" && trackingSrc.s1) ||
+    (typeof order.s1 === "string" && order.s1) ||
+    (typeof payload.s1 === "string" && payload.s1) ||
+    (typeof trackingSrc.gclid === "string" && trackingSrc.gclid) ||
+    (typeof order.gclid === "string" && order.gclid) ||
+    (typeof payload.gclid === "string" && payload.gclid) ||
+    undefined;
+  const gbraid: string | undefined =
+    (typeof trackingSrc.s2 === "string" && trackingSrc.s2) ||
+    (typeof order.gbraid === "string" && order.gbraid) ||
+    undefined;
+  const wbraid: string | undefined =
+    (typeof trackingSrc.s3 === "string" && trackingSrc.s3) ||
+    (typeof order.wbraid === "string" && order.wbraid) ||
+    undefined;
+  const trackUtmSource: string | undefined =
+    (typeof trackingSrc.utm_source === "string" && trackingSrc.utm_source) ||
+    (typeof order.utm_source === "string" && order.utm_source) ||
+    (typeof payload.utm_source === "string" && payload.utm_source) ||
+    undefined;
+  const trackUtmMedium: string | undefined =
+    (typeof trackingSrc.utm_medium === "string" && trackingSrc.utm_medium) ||
+    (typeof order.utm_medium === "string" && order.utm_medium) ||
+    undefined;
+  const trackUtmCampaign: string | undefined =
+    (typeof trackingSrc.utm_campaign === "string" && trackingSrc.utm_campaign) ||
+    (typeof order.utm_campaign === "string" && order.utm_campaign) ||
+    undefined;
+  // Click-ids de TESTE (ATB_*/TEST*) nunca entram em purchases nem sobem pro
+  // Google — compra-teste de QA com gclid falso não vira conversão inválida.
+  const safeGclid = isTestClickId(gclid) ? undefined : gclid;
+  const safeGbraid = isTestClickId(gbraid) ? undefined : gbraid;
+  const safeWbraid = isTestClickId(wbraid) ? undefined : wbraid;
+  const gadsTracking = { gclid: safeGclid, gbraid: safeGbraid, wbraid: safeWbraid, utm_source: trackUtmSource, utm_medium: trackUtmMedium, utm_campaign: trackUtmCampaign };
+
+  // Diagnóstico ÚNICO por venda: já que os nomes reais dos campos de tracking
+  // no payload da Kiwify não são 100% documentados publicamente, logamos o
+  // resultado da extração (+ payload cru truncado) na primeira venda aprovada
+  // pra confirmar/corrigir os caminhos acima com dado real de produção.
+  if (event === "order.approved" || event === "order_approved") {
+    logInfo("webhook.kiwify.tracking", "gclid extraction", {
+      orderId,
+      resolved: gadsTracking,
+      gadsApiConfigured: isGoogleAdsApiConfigured(),
+      rawPreview: raw.slice(0, 1200),
+    });
+  }
+
+  // Dispara o upload server-side pro Google Ads (fail-soft — nunca lança).
+  // Chamar depois de gravar em `purchases` em cada branch de venda aprovada;
+  // NÃO chamar em refund/cancelamento (não é conversão).
+  async function reportGadsConversion() {
+    if (!safeGclid && !safeGbraid && !safeWbraid) return; // sem click-id real, nada a reportar
+    try {
+      const result = await sendClickConversion({
+        gclid: safeGclid,
+        gbraid: safeGbraid,
+        wbraid: safeWbraid,
+        orderId: orderId ?? "unknown",
+        valueBRL,
+        conversionDateTime: new Date(),
+      });
+      if (!result.ok && result.reason !== "not_configured") {
+        logWarn("webhook.kiwify.tracking", "gads conversion not sent", { orderId, reason: result.reason });
+      }
+    } catch (e) {
+      logWarn("webhook.kiwify.tracking", "gads conversion exception", { orderId, error: String(e) });
+    }
+  }
+
   if (!email) {
     return NextResponse.json({ error: "missing email" }, { status: 400 });
   }
@@ -211,10 +293,12 @@ export async function POST(req: Request) {
         event: "limpeza_v2_purchased",
         amount_cents: Math.round(valueBRL * 100),
         user_id: null,
+        ...gadsTracking,
       });
       if (purErr) {
         logWarn("webhook.kiwify", "purchases insert failed", { orderId: v2Order.id, error: purErr.message });
       }
+      await reportGadsConversion();
 
       if (!wasAlreadyPaid) {
         const baseUrl = getSiteUrl(req);
@@ -293,7 +377,9 @@ export async function POST(req: Request) {
         event: `${planKey}_purchased`,
         amount_cents: Math.round(valueBRL * 100),
         user_id: userRow?.id ?? null,
+        ...gadsTracking,
       });
+      await reportGadsConversion();
 
       // ⚠️ EMAIL DE BOAS-VINDAS COM MAGIC-LINK — sem senha, sem formulario.
       // Cliente 60+ aperta o botao e cai LOGADO direto no chat.
@@ -407,7 +493,9 @@ export async function POST(req: Request) {
       amount_cents: Math.round(valueBRL * 100),
       user_id: userRow?.id ?? null,
       fuzzy_matched: matchLimpeza.fuzzy,
+      ...gadsTracking,
     });
+    await reportGadsConversion();
 
     const firstName = customerName ? customerName.split(" ")[0] : "querida alma";
 
@@ -545,7 +633,9 @@ export async function POST(req: Request) {
       amount_cents: Math.round(valueBRL * 100),
       user_id: matchEsp.user?.id ?? null,
       fuzzy_matched: matchEsp.fuzzy,
+      ...gadsTracking,
     });
+    await reportGadsConversion();
 
     const espFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
     // Magic-link 1-toque: cria a conta e loga DIRETO no Espírito Mentor, sem senha.
@@ -670,7 +760,9 @@ export async function POST(req: Request) {
       amount_cents: Math.round(valueBRL * 100),
       user_id: matchVid.user?.id ?? null,
       fuzzy_matched: matchVid.fuzzy,
+      ...gadsTracking,
     });
+    await reportGadsConversion();
 
     // Welcome email pro cliente (antes só existia email pro admin — cliente ficava sem nada após pagar R$497)
     const vidFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
@@ -775,6 +867,109 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, plan: "video_call" });
   }
 
+  // NUMEROLOGIA (R$45) — mapa numerológico em PDF por e-mail. Detecta por
+  // product-id OU faixa de valor 42–48 (livre: perguntas 14-41, limpeza 95-110).
+  // PRECISA vir antes do catch-all de assinatura, senão R$45 vira "premium".
+  const numeroProductId = process.env.KIWIFY_NUMEROLOGIA_PRODUCT_ID;
+  const isNumeroByProduct = numeroProductId && productId && productId === numeroProductId;
+  const isNumeroByValue = !numeroProductId && valueBRL >= 42 && valueBRL <= 48;
+
+  if ((event === "order.approved" || event === "order_approved") && (isNumeroByProduct || isNumeroByValue)) {
+    // Cria o PEDIDO — o cliente preenche nome completo + nascimento em
+    // /numerologia/dados (a página de obrigado da Kiwify aponta pra lá com
+    // ?pedido={order_id da Kiwify}, resolvido via payment_id; o e-mail abaixo
+    // leva o link com o NOSSO UUID). theme/question são NOT NULL no schema.
+    const { data: numOrder, error: numOrderErr } = await admin
+      .from("orders")
+      .insert({
+        name: customerName || "Cliente ATB",
+        email: email.toLowerCase(),
+        theme: "numerologia",
+        question: "mapa numerologico",
+        amount: Math.round(valueBRL),
+        currency: "BRL",
+        status: "paid",
+        product_type: "numerologia",
+        payment_provider: "kiwify",
+        payment_id: orderId ?? null,
+      })
+      .select("id")
+      .single();
+
+    if (numOrderErr || !numOrder) {
+      logError("webhook.kiwify.numerologia", "order insert failed", {
+        error: numOrderErr?.message,
+        kiwifyOrderId: orderId,
+      });
+      // 500 → Kiwify reenvia o webhook (retry nativo). Nada foi entregue ainda.
+      return NextResponse.json({ error: "order insert failed" }, { status: 500 });
+    }
+
+    await admin.from("purchases").insert({
+      email: email.toLowerCase(),
+      name: customerName ?? null,
+      kiwify_order_id: orderId ?? "unknown",
+      plan: "numerologia",
+      event: "numerologia_purchased",
+      amount_cents: Math.round(valueBRL * 100),
+      user_id: null,
+      ...gadsTracking,
+    });
+    await reportGadsConversion();
+
+    const numFirstName = customerName ? customerName.split(" ")[0] : "querida alma";
+    const dadosLink = `${getSiteUrl(req)}/numerologia/dados?pedido=${numOrder.id}`;
+    await sendCustomerEmailWithLog({
+      scope: "webhook.kiwify.numerologia",
+      to: email.toLowerCase(),
+      subject: "🔢 Falta 1 passo: seus dados pro seu mapa de Numerologia",
+      html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#120025;font-family:Georgia,serif;color:#fbf8ff;">
+  <div style="max-width:560px;margin:0 auto;padding:30px 20px;">
+    <div style="background:linear-gradient(135deg,#1e0040 0%,#2a0055 50%,#1e0040 100%);border-radius:20px;padding:40px 28px;text-align:center;border:2px solid rgba(232,184,75,0.5);">
+      <div style="font-size:64px;margin-bottom:16px;">🔢</div>
+      <h1 style="color:#e8b84b;font-size:30px;margin:0 0 12px;line-height:1.15;">Sua Numerologia está confirmada!</h1>
+      <p style="color:#fbf8ff;font-size:18px;line-height:1.65;margin:0 0 22px;">
+        Olá, <strong style="color:#f5c860;">${escapeHtml(numFirstName)}</strong>!<br>
+        Pra ATB preparar o seu mapa, ela precisa de <strong style="color:#f5c860;">2 informações</strong>: seu nome completo e sua data de nascimento.
+      </p>
+      <a href="${dadosLink}" style="display:inline-block;background:linear-gradient(135deg,#e8b84b,#c9950a);color:#120025;font-weight:800;font-size:20px;padding:20px 36px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+        ✨ Preencher e receber meu mapa
+      </a>
+      <p style="color:#c4b5fd;font-size:14px;line-height:1.6;margin:22px 0 0;">
+        Leva menos de 1 minuto. Seu mapa chega em PDF neste mesmo e-mail.
+      </p>
+    </div>
+    <div style="text-align:center;margin-top:20px;color:#9575cd;font-size:12px;">
+      Pedido: ${escapeHtml(orderId) || "N/A"} · ATB · atbtartot.com
+    </div>
+  </div>
+</body>
+</html>`,
+      refId: numOrder.id,
+    });
+
+    const numAdmin = process.env.ADMIN_NOTIFY_EMAIL;
+    if (numAdmin) {
+      await sendCustomerEmailWithLog({
+        scope: "webhook.kiwify.numerologia.admin",
+        to: numAdmin,
+        subject: "💰 Nova venda: Numerologia (R$45)",
+        html: `<p><strong>Cliente:</strong> ${escapeHtml(customerName) || "Não informado"}</p>
+               <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+               <p><strong>Valor:</strong> R$ ${valueBRL.toFixed(2)}</p>
+               <p><strong>Pedido:</strong> ${escapeHtml(orderId) || "N/A"}</p>
+               <p>E-mail pedindo nome+nascimento já enviado. Entrega automática após preenchimento.</p>`,
+        refId: numOrder.id,
+      });
+    }
+
+    return NextResponse.json({ ok: true, plan: "numerologia", orderId: numOrder.id });
+  }
+
   if (event === "order.approved" || event === "order_approved") {
     const plan = planFromValue(valueBRL);
     const update: Record<string, any> = { plan, kiwify_order_id: orderId ?? null };
@@ -796,7 +991,9 @@ export async function POST(req: Request) {
       amount_cents: valueCents > 0 ? Math.round(valueCents > 1000 ? valueCents : valueCents * 100) : null,
       user_id: userRow?.id ?? null,
       fuzzy_matched: matchSub.fuzzy,
+      ...gadsTracking,
     });
+    await reportGadsConversion();
 
     // Welcome email pra Basic/Premium se cliente NÃO tinha conta ainda.
     // Sem isso, cliente paga R$29 ou R$197/mês e fica sem saber como acessar.
