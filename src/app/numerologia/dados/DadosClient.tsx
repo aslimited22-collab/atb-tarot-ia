@@ -16,6 +16,13 @@ const S = {
   muted: "#9575cd",
 };
 
+// Suporte no beco sem saída (público 45+): link de WhatsApp se o número existir
+// no build (NEXT_PUBLIC_ é inlined em client components).
+const WA_PHONE = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "").trim();
+const WA_HREF = WA_PHONE
+  ? `https://wa.me/${WA_PHONE}?text=${encodeURIComponent("Oi! Comprei a Numerologia e preciso de ajuda com o meu pedido.")}`
+  : "";
+
 type Phase = "resolving" | "not_found" | "form" | "submitting" | "done" | "already";
 
 export default function DadosClient({ token }: { token: string }) {
@@ -101,10 +108,12 @@ export default function DadosClient({ token }: { token: string }) {
         <div className="card-gold" style={{ padding: "32px 24px", textAlign: "center" }}>
           {phase === "resolving" && (
             <>
-              <div style={{ fontSize: 48, marginBottom: 12 }} aria-hidden="true">🕊️</div>
-              <h1 className="serif" style={{ fontSize: "1.6rem", color: S.gold2, marginBottom: 10 }}>Confirmando seu pagamento…</h1>
+              <div className="num-spin" style={{ fontSize: 48, marginBottom: 12, display: "inline-block" }} aria-hidden="true">🕊️</div>
+              <h1 className="serif" style={{ fontSize: "1.6rem", color: S.gold2, marginBottom: 10 }}>
+                Confirmando seu pagamento<span className="num-dots" aria-hidden="true" />
+              </h1>
               <p style={{ color: S.text2, lineHeight: 1.6 }}>
-                Leva só alguns segundos. Não feche esta página.
+                Pode levar até 2 minutos se o banco demorar. Não feche esta página.
               </p>
             </>
           )}
@@ -113,11 +122,26 @@ export default function DadosClient({ token }: { token: string }) {
             <>
               <div style={{ fontSize: 48, marginBottom: 12 }} aria-hidden="true">🔎</div>
               <h1 className="serif" style={{ fontSize: "1.5rem", color: S.gold2, marginBottom: 10 }}>Não encontramos seu pedido ainda</h1>
-              <p style={{ color: S.text2, lineHeight: 1.65 }}>
-                Se você acabou de pagar, aguarde 1 minuto e recarregue esta página.
+              <p style={{ color: S.text2, lineHeight: 1.65, marginBottom: 20 }}>
+                Se você acabou de pagar, espere 1 minuto e toque no botão abaixo.
                 Também enviamos o link certo pro seu e-mail de compra — procure por
                 <b style={{ color: S.gold2 }}> &quot;Numerologia&quot;</b> (olhe o spam).
               </p>
+              <button
+                type="button"
+                className="btn-gold btn-big"
+                onClick={() => window.location.reload()}
+                style={{ width: "100%", border: "none", cursor: "pointer" }}
+              >
+                🔄 Tentar de novo
+              </button>
+              {WA_HREF && (
+                <p style={{ marginTop: 16, fontSize: "0.9rem" }}>
+                  <a href={WA_HREF} target="_blank" rel="noopener noreferrer" style={{ color: S.muted, textDecoration: "underline" }}>
+                    Precisa de ajuda? Fale com a gente no WhatsApp
+                  </a>
+                </p>
+              )}
             </>
           )}
 
@@ -193,7 +217,9 @@ export default function DadosClient({ token }: { token: string }) {
                   ? "Olhe o seu e-mail: seu mapa de Numerologia chegou em PDF (confira também o spam)."
                   : "A ATB está preparando o seu mapa. Ele chega em PDF no seu e-mail em até 24h — normalmente em poucos minutos."}
               </p>
-              {orderId && (
+              {/* Botão só quando a entrega CONFIRMOU — senão o clique cai num 409
+                  "ainda preparando" e contradiz o "chega em até 24h" acima. */}
+              {orderId && delivered && (
                 <a
                   href={`/numerologia/download/${orderId}`}
                   className="btn-gold"
@@ -230,6 +256,12 @@ export default function DadosClient({ token }: { token: string }) {
           ATB · atbtartot.com
         </p>
       </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes num-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+        .num-spin { animation: num-float 1.6s ease-in-out infinite; }
+        @keyframes num-ellipsis { 0% { content: "" } 25% { content: "." } 50% { content: ".." } 75% { content: "..." } }
+        .num-dots::after { content: "..."; animation: num-ellipsis 1.6s steps(1) infinite; }
+      ` }} />
     </main>
   );
 }

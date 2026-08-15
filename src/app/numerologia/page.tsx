@@ -92,7 +92,7 @@ export default function NumerologiaPage() {
           <div style={{ color: S.gold, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", fontSize: 15, marginBottom: 18 }}>
             ✦ Numerologia • Seus números, seu caminho
           </div>
-          <h1 className="serif" style={{ fontSize: "2.6rem", lineHeight: 1.12, margin: "0 0 20px", fontWeight: 700 }}>
+          <h1 className="serif" style={{ fontSize: "clamp(1.9rem, 6vw, 2.6rem)", lineHeight: 1.12, margin: "0 0 20px", fontWeight: 700 }}>
             Descubra os números da sorte que nasceram com você
           </h1>
           <p style={{ fontSize: "1.15rem", color: S.text2, lineHeight: 1.55, marginBottom: 28 }}>

@@ -79,6 +79,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "O pagamento deste pedido ainda não foi confirmado." }, { status: 409 });
   }
 
+  // Trava de sobrescrita: depois que o mapa foi GERADO, os dados não mudam mais
+  // — um re-POST (link antigo, curioso com o UUID) trocaria nome/nascimento e o
+  // PDF regenerado no download divergiria do mapa entregue. Quem precisar
+  // corrigir dados usa o suporte (admin regenera).
+  const { data: existing } = await admin
+    .from("readings")
+    .select("generation_status")
+    .eq("order_id", orderId)
+    .maybeSingle();
+  if (existing?.generation_status === "completed") {
+    return NextResponse.json({ ok: true, delivered: true, already: true });
+  }
+
   const { error: updErr } = await admin
     .from("orders")
     .update({ name: nameCheck.value.trim(), birth_date: birthDate })

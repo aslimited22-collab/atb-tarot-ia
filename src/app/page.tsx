@@ -522,7 +522,11 @@ export default function Home() {
 
             {/* PRODUTO 5 — NUMEROLOGIA (R$45) — leva pra página de vendas /numerologia.
                 PT-hardcoded (produto BR-first; outros idiomas veriam o fallback PT
-                do dict de qualquer forma). */}
+                do dict de qualquer forma).
+                GATE: só aparece quando o checkout Kiwify existir no build — sem a
+                env, o CTA BR viraria loop morto (307 → /#planos) disparando
+                begin_checkout falso. NEXT_PUBLIC_ é inlined no build do client. */}
+            {process.env.NEXT_PUBLIC_KIWIFY_NUMEROLOGIA_URL && (
             <div className="card lift" style={{ padding: "36px 28px", display: "flex", flexDirection: "column", order: 4 }}>
               <div style={{ fontSize: 13, fontWeight: 700, background: "rgba(232,184,75,0.18)", color: S.gold, borderRadius: 999, padding: "5px 16px", display: "inline-block", marginBottom: 14, alignSelf: "flex-start", letterSpacing: "0.05em", border: "1px solid rgba(232,184,75,0.4)" }}>🔢 NOVO</div>
               <h3 className="serif" style={{ fontSize: "1.8rem", color: S.gold, marginBottom: 8, fontWeight: 700, lineHeight: 1.1 }}>
@@ -540,6 +544,7 @@ export default function Home() {
                 Pagamento único · recebe em até 24h
               </p>
             </div>
+            )}
           </div>
         </div>
       </section>

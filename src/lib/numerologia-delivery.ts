@@ -145,7 +145,15 @@ export async function deliverNumerologiaOrder(orderId: string): Promise<Numerolo
   // 3) E-mail direto pelo Resend (anexo + BCC — a fila não suporta)
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://atbtartot.com";
   const downloadLink = `${baseUrl}/numerologia/download/${orderId}`;
-  const firstName = order.name.split(" ")[0];
+  // Escapa entidades HTML: o nome vem da cliente (form público) e é interpolado
+  // no corpo HTML do e-mail — sem isso, "<img onerror=...>" no nome viraria
+  // markup ativo no cliente de e-mail.
+  const firstName = order.name
+    .split(" ")[0]
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 
   const html = `
   <div style="background:#120025;padding:32px 16px;font-family:Georgia,serif;">
